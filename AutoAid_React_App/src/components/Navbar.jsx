@@ -33,18 +33,25 @@ const Navbar = () => {
                             </button>
                             <div className="absolute left-0 mt-2 w-max min-w-[180px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-500 transform group-hover:translate-y-0 translate-y-2 z-50 pt-2">
                                 <div className="glassmorphism rounded-xl overflow-hidden shadow-glow-lg border border-border-dark p-2 flex flex-col gap-1 bg-[#121A2A]">
-                                    {['Breakdown Repair', 'Temporary Driver', 'Fuel Delivery', 'Lockout Service', 'Towing Service', 'Route Planning'].map((item, index) => (
-                                        <a
-                                            key={item}
-                                            href="#"
+                                    {[
+                                        { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
+                                        { name: 'Temporary Driver', path: '#' },
+                                        { name: 'Fuel Delivery', path: '#' },
+                                        { name: 'Lockout Service', path: '#' },
+                                        { name: 'Towing Service', path: '#' },
+                                        { name: 'Route Planning', path: '#' }
+                                    ].map((item, index) => (
+                                        <Link
+                                            key={item.name}
+                                            to={item.path}
                                             className="block px-4 py-2 text-sm text-text-muted hover:text-white transition-all duration-500 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group/item"
                                             style={{ transitionDelay: `${index * 150}ms` }}
                                         >
                                             <span className="relative inline-block">
-                                                {item}
+                                                {item.name}
                                                 <span className="absolute left-0 -bottom-1 w-full h-0.5 bg-[#13c8ec] transform scale-x-0 transition-transform duration-300 origin-bottom-right group-hover/item:scale-x-100 group-hover/item:origin-bottom-left"></span>
                                             </span>
-                                        </a>
+                                        </Link>
                                     ))}
                                 </div>
                             </div>
@@ -92,10 +99,17 @@ const Navbar = () => {
                             <FaChevronDown className={`text-xs transition-transform duration-300 ${isServicesOpen ? 'rotate-180' : ''}`} />
                         </button>
                         <div className={`${isServicesOpen ? 'block' : 'hidden'} pl-4 space-y-1 mt-1`}>
-                            {['Breakdown Repair', 'Temporary Driver', 'Fuel Delivery', 'Lockout Service', 'Towing Service', 'Route Planning'].map((item) => (
-                                <a key={item} href="#" className="block px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-white hover:bg-white/5">
-                                    {item}
-                                </a>
+                            {[
+                                { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
+                                { name: 'Temporary Driver', path: '#' },
+                                { name: 'Fuel Delivery', path: '#' },
+                                { name: 'Lockout Service', path: '#' },
+                                { name: 'Towing Service', path: '#' },
+                                { name: 'Route Planning', path: '#' }
+                            ].map((item) => (
+                                <Link key={item.name} to={item.path} className="block px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-white hover:bg-white/5">
+                                    {item.name}
+                                </Link>
                             ))}
                         </div>
                     </div>
