@@ -2,7 +2,7 @@ import React from 'react';
 
 const About = () => {
     return (
-        <div className="pt-20">
+        <div className="pt-0">
             {/* Hero Section */}
             <section className="relative py-20 bg-background-dark overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
