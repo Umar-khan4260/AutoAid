@@ -35,10 +35,10 @@ const Navbar = () => {
                                 <div className="glassmorphism rounded-xl overflow-hidden shadow-glow-lg border border-border-dark p-2 flex flex-col gap-1 bg-[#121A2A]">
                                     {[
                                         { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
-                                        { name: 'Temporary Driver', path: '#' },
-                                        { name: 'Fuel Delivery', path: '#' },
-                                        { name: 'Lockout Service', path: '#' },
-                                        { name: 'Towing Service', path: '#' },
+                                        { name: 'Temporary Driver', path: '/services/temporary-driver' },
+                                        { name: 'Fuel Delivery', path: '/services/fuel-delivery' },
+                                        { name: 'Lockout Service', path: '/services/lockout-service' },
+                                        { name: 'Towing Service', path: '/services/towing-service' },
                                         { name: 'Route Planning', path: '#' }
                                     ].map((item, index) => (
                                         <Link
@@ -101,10 +101,10 @@ const Navbar = () => {
                         <div className={`${isServicesOpen ? 'block' : 'hidden'} pl-4 space-y-1 mt-1`}>
                             {[
                                 { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
-                                { name: 'Temporary Driver', path: '#' },
-                                { name: 'Fuel Delivery', path: '#' },
-                                { name: 'Lockout Service', path: '#' },
-                                { name: 'Towing Service', path: '#' },
+                                { name: 'Temporary Driver', path: '/services/temporary-driver' },
+                                { name: 'Fuel Delivery', path: '/services/fuel-delivery' },
+                                { name: 'Lockout Service', path: '/services/lockout-service' },
+                                { name: 'Towing Service', path: '/services/towing-service' },
                                 { name: 'Route Planning', path: '#' }
                             ].map((item) => (
                                 <Link key={item.name} to={item.path} className="block px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-white hover:bg-white/5">

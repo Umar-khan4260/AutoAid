@@ -10,11 +10,11 @@
 }
 
 .step-connector {
-  border-top: 2px dashed #1B2B47;
+  border-top: 2px dashed #1b2b47;
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #13c8ec, #8899A9);
+  background: linear-gradient(90deg, #13c8ec, #8899a9);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -23,9 +23,13 @@
 
 .gradient-border-card {
   border: 1px solid;
-  border-image-source: linear-gradient(to bottom right, rgba(45, 156, 219, 0.25), rgba(18, 26, 42, 0));
+  border-image-source: linear-gradient(
+    to bottom right,
+    rgba(45, 156, 219, 0.25),
+    rgba(18, 26, 42, 0)
+  );
   border-image-slice: 1;
-  background-color: #121A2A;
+  background-color: #121a2a;
 }
 
 .pulsing-dot {
@@ -33,7 +37,6 @@
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
@@ -51,7 +54,7 @@
 }
 
 .nav-link-underline::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   bottom: -4px;
@@ -100,4 +103,23 @@
 
 .pause-on-hover:hover {
   animation-play-state: paused;
+}
+
+/* Custom Scrollbar for Dropdowns */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(18, 26, 42, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #13c8ec;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #0fa3c7;
 }
