@@ -50,9 +50,9 @@ const Navbar = () => {
                             </div>
                         </div>
 
-                        <a className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline" href="#">How It Works</a>
-                        <a className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline" href="#">Providers</a>
-                        <a className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline" href="#">Route Alerts</a>
+
+                        <Link to="/careers" className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline">Careers</Link>
+                        <Link to="/about" className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline">About Us</Link>
                         <Link to="/contact" className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline">Contact</Link>
                     </nav>
 
@@ -100,9 +100,9 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    <a className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5" href="#">How It Works</a>
-                    <a className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5" href="#">Providers</a>
-                    <a className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5" href="#">Route Alerts</a>
+
+                    <Link to="/careers" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">Careers</Link>
+                    <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">About Us</Link>
                     <Link to="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">Contact</Link>
 
                     <div className="pt-4 flex flex-col gap-3">
