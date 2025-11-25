@@ -15,6 +15,7 @@ import AuditLogs from './pages/admin/AuditLogs';
 
 import BreakdownRepair from './pages/BreakdownRepair';
 import LockoutService from './pages/LockoutService';
+import TowingService from './pages/TowingService';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/services/breakdown-repair" element={<BreakdownRepair />} />
             <Route path="/services/lockout-service" element={<LockoutService />} />
+            <Route path="/services/towing-service" element={<TowingService />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>

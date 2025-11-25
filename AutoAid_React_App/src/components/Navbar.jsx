@@ -38,7 +38,7 @@ const Navbar = () => {
                                         { name: 'Temporary Driver', path: '#' },
                                         { name: 'Fuel Delivery', path: '#' },
                                         { name: 'Lockout Service', path: '/services/lockout-service' },
-                                        { name: 'Towing Service', path: '#' },
+                                        { name: 'Towing Service', path: '/services/towing-service' },
                                         { name: 'Route Planning', path: '#' }
                                     ].map((item, index) => (
                                         <Link
@@ -104,7 +104,7 @@ const Navbar = () => {
                                 { name: 'Temporary Driver', path: '#' },
                                 { name: 'Fuel Delivery', path: '#' },
                                 { name: 'Lockout Service', path: '/services/lockout-service' },
-                                { name: 'Towing Service', path: '#' },
+                                { name: 'Towing Service', path: '/services/towing-service' },
                                 { name: 'Route Planning', path: '#' }
                             ].map((item) => (
                                 <Link key={item.name} to={item.path} className="block px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-white hover:bg-white/5">
