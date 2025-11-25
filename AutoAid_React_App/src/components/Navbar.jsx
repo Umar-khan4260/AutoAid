@@ -36,7 +36,7 @@ const Navbar = () => {
                                     {[
                                         { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
                                         { name: 'Temporary Driver', path: '#' },
-                                        { name: 'Fuel Delivery', path: '#' },
+                                        { name: 'Fuel Delivery', path: '/services/fuel-delivery' },
                                         { name: 'Lockout Service', path: '/services/lockout-service' },
                                         { name: 'Towing Service', path: '/services/towing-service' },
                                         { name: 'Route Planning', path: '#' }
@@ -102,7 +102,7 @@ const Navbar = () => {
                             {[
                                 { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
                                 { name: 'Temporary Driver', path: '#' },
-                                { name: 'Fuel Delivery', path: '#' },
+                                { name: 'Fuel Delivery', path: '/services/fuel-delivery' },
                                 { name: 'Lockout Service', path: '/services/lockout-service' },
                                 { name: 'Towing Service', path: '/services/towing-service' },
                                 { name: 'Route Planning', path: '#' }
