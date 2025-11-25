@@ -37,7 +37,7 @@ const Navbar = () => {
                                         { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
                                         { name: 'Temporary Driver', path: '#' },
                                         { name: 'Fuel Delivery', path: '#' },
-                                        { name: 'Lockout Service', path: '#' },
+                                        { name: 'Lockout Service', path: '/services/lockout-service' },
                                         { name: 'Towing Service', path: '#' },
                                         { name: 'Route Planning', path: '#' }
                                     ].map((item, index) => (
@@ -103,7 +103,7 @@ const Navbar = () => {
                                 { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
                                 { name: 'Temporary Driver', path: '#' },
                                 { name: 'Fuel Delivery', path: '#' },
-                                { name: 'Lockout Service', path: '#' },
+                                { name: 'Lockout Service', path: '/services/lockout-service' },
                                 { name: 'Towing Service', path: '#' },
                                 { name: 'Route Planning', path: '#' }
                             ].map((item) => (

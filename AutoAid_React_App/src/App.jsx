@@ -14,6 +14,7 @@ import DisputeResolution from './pages/admin/DisputeResolution';
 import AuditLogs from './pages/admin/AuditLogs';
 
 import BreakdownRepair from './pages/BreakdownRepair';
+import LockoutService from './pages/LockoutService';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/services/breakdown-repair" element={<BreakdownRepair />} />
+            <Route path="/services/lockout-service" element={<LockoutService />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
