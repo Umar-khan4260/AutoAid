@@ -13,6 +13,8 @@ import UserManagement from './pages/admin/UserManagement';
 import DisputeResolution from './pages/admin/DisputeResolution';
 import AuditLogs from './pages/admin/AuditLogs';
 
+import BreakdownRepair from './pages/BreakdownRepair';
+
 function App() {
   return (
     <Router>
@@ -24,6 +26,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/services/breakdown-repair" element={<BreakdownRepair />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
