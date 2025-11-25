@@ -35,7 +35,7 @@ const Navbar = () => {
                                 <div className="glassmorphism rounded-xl overflow-hidden shadow-glow-lg border border-border-dark p-2 flex flex-col gap-1 bg-[#121A2A]">
                                     {[
                                         { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
-                                        { name: 'Temporary Driver', path: '#' },
+                                        { name: 'Temporary Driver', path: '/services/temporary-driver' },
                                         { name: 'Fuel Delivery', path: '/services/fuel-delivery' },
                                         { name: 'Lockout Service', path: '/services/lockout-service' },
                                         { name: 'Towing Service', path: '/services/towing-service' },
@@ -101,7 +101,7 @@ const Navbar = () => {
                         <div className={`${isServicesOpen ? 'block' : 'hidden'} pl-4 space-y-1 mt-1`}>
                             {[
                                 { name: 'Breakdown Repair', path: '/services/breakdown-repair' },
-                                { name: 'Temporary Driver', path: '#' },
+                                { name: 'Temporary Driver', path: '/services/temporary-driver' },
                                 { name: 'Fuel Delivery', path: '/services/fuel-delivery' },
                                 { name: 'Lockout Service', path: '/services/lockout-service' },
                                 { name: 'Towing Service', path: '/services/towing-service' },

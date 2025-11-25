@@ -17,6 +17,7 @@ import BreakdownRepair from './pages/BreakdownRepair';
 import LockoutService from './pages/LockoutService';
 import TowingService from './pages/TowingService';
 import FuelDelivery from './pages/FuelDelivery';
+import TemporaryDriver from './pages/TemporaryDriver';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="/services/lockout-service" element={<LockoutService />} />
             <Route path="/services/towing-service" element={<TowingService />} />
             <Route path="/services/fuel-delivery" element={<FuelDelivery />} />
+            <Route path="/services/temporary-driver" element={<TemporaryDriver />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
