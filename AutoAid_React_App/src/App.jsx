@@ -19,16 +19,37 @@ import UserManagement from './pages/admin/UserManagement';
 import DisputeResolution from './pages/admin/DisputeResolution';
 import AuditLogs from './pages/admin/AuditLogs';
 
+import BreakdownRepair from './pages/BreakdownRepair';
+import LockoutService from './pages/LockoutService';
+import TowingService from './pages/TowingService';
+import FuelDelivery from './pages/FuelDelivery';
+import TemporaryDriver from './pages/TemporaryDriver';
+
 function App() {
   return (
     <Router>
-      <Routes>
+
+
+      <div className="bg-background-dark font-display text-white min-h-screen">
+        <Navbar />
+        <main className="flex flex-col">
+           <Routes>
         {/* Public Route without Layout */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/verify-account" element={<VerifyAccount />} />
-        <Route path="/account-success" element={<AccountSuccess />} />
-        <Route path="/provider-signup" element={<ProviderSignup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/verify-account" element={<VerifyAccount />} />
+            <Route path="/account-success" element={<AccountSuccess />} />
+            <Route path="/provider-signup" element={<ProviderSignup />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/services/breakdown-repair" element={<BreakdownRepair />} />
+            <Route path="/services/lockout-service" element={<LockoutService />} />
+            <Route path="/services/towing-service" element={<TowingService />} />
+            <Route path="/services/fuel-delivery" element={<FuelDelivery />} />
+            <Route path="/services/temporary-driver" element={<TemporaryDriver />} />
+
 
         {/* Main Layout Routes */}
         <Route element={<MainLayout />}>
