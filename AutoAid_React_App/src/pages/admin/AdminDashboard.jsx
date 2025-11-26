@@ -1,13 +1,14 @@
 import React from 'react';
 import StatCard from '../../components/admin/StatCard';
+import { FaUsers, FaTools, FaHourglassHalf, FaBalanceScale } from 'react-icons/fa';
 
 const AdminDashboard = () => {
     // Mock data
     const stats = [
-        { title: 'Total Users', value: '12,345', change: 12, icon: '👥', color: 'blue' },
-        { title: 'Active Providers', value: '1,234', change: 5, icon: '🔧', color: 'green' },
-        { title: 'Pending Approvals', value: '45', change: -2, icon: '⏳', color: 'yellow' },
-        { title: 'Active Disputes', value: '8', change: 0, icon: '⚖️', color: 'red' },
+        { title: 'Total Users', value: '12,345', change: 12, icon: <FaUsers />, color: 'blue' },
+        { title: 'Active Providers', value: '1,234', change: 5, icon: <FaTools />, color: 'green' },
+        { title: 'Pending Approvals', value: '45', change: -2, icon: <FaHourglassHalf />, color: 'yellow' },
+        { title: 'Active Disputes', value: '8', change: 0, icon: <FaBalanceScale />, color: 'red' },
     ];
 
     const recentActivity = [

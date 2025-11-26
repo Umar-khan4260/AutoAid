@@ -1,18 +1,29 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import MainLayout from './components/MainLayout';
+import AdminLayout from './components/AdminLayout';
+
+// Pages
 import Home from './pages/Home';
 import About from './pages/About';
 import Careers from './pages/Careers';
 import Contact from './pages/Contact';
-import AdminLayout from './components/AdminLayout';
+
+// Auth Pages
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import VerifyAccount from './pages/VerifyAccount';
+import AccountSuccess from './pages/AccountSuccess';
+import ProviderSignup from './pages/ProviderSignup';
+
+// Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProviderApprovals from './pages/admin/ProviderApprovals';
 import UserManagement from './pages/admin/UserManagement';
 import DisputeResolution from './pages/admin/DisputeResolution';
 import AuditLogs from './pages/admin/AuditLogs';
 
+// Service Pages
 import BreakdownRepair from './pages/BreakdownRepair';
 import LockoutService from './pages/LockoutService';
 import TowingService from './pages/TowingService';
@@ -24,9 +35,16 @@ function App() {
   return (
     <Router>
       <div className="bg-background-dark font-display text-white min-h-screen">
-        <Navbar />
-        <main className="flex flex-col">
-          <Routes>
+        <Routes>
+          {/* Public Routes without Layout */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-account" element={<VerifyAccount />} />
+          <Route path="/account-success" element={<AccountSuccess />} />
+          <Route path="/provider-signup" element={<ProviderSignup />} />
+          
+          {/* Main Layout Routes */}
+          <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
@@ -39,18 +57,17 @@ function App() {
             <Route path="/services/fuel-delivery" element={<FuelDelivery />} />
             <Route path="/services/temporary-driver" element={<TemporaryDriver />} />
             <Route path="/services/route-planning" element={<RoutePlanning />} />
+          </Route>
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="providers" element={<ProviderApprovals />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="disputes" element={<DisputeResolution />} />
-              <Route path="audit-logs" element={<AuditLogs />} />
-            </Route>
-          </Routes>
-        </main>
-        <Footer />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="providers" element={<ProviderApprovals />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="disputes" element={<DisputeResolution />} />
+            <Route path="audit-logs" element={<AuditLogs />} />
+          </Route>
+        </Routes>
       </div>
     </Router>
   );
