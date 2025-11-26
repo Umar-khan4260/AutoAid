@@ -7,12 +7,6 @@ import About from './pages/About';
 import Careers from './pages/Careers';
 import Contact from './pages/Contact';
 import AdminLayout from './components/AdminLayout';
-import MainLayout from './components/MainLayout';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import VerifyAccount from './pages/VerifyAccount';
-import AccountSuccess from './pages/AccountSuccess';
-import ProviderSignup from './pages/ProviderSignup';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProviderApprovals from './pages/admin/ProviderApprovals';
 import UserManagement from './pages/admin/UserManagement';
@@ -24,6 +18,7 @@ import LockoutService from './pages/LockoutService';
 import TowingService from './pages/TowingService';
 import FuelDelivery from './pages/FuelDelivery';
 import TemporaryDriver from './pages/TemporaryDriver';
+import RoutePlanning from './pages/RoutePlanning';
 
 function App() {
   return (
@@ -32,12 +27,10 @@ function App() {
         <Navbar />
         <main className="flex flex-col">
           <Routes>
-            {/* Public Routes without Layout */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/verify-account" element={<VerifyAccount />} />
-            <Route path="/account-success" element={<AccountSuccess />} />
-            <Route path="/provider-signup" element={<ProviderSignup />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/contact" element={<Contact />} />
             
             {/* Service Routes */}
             <Route path="/services/breakdown-repair" element={<BreakdownRepair />} />
@@ -45,12 +38,7 @@ function App() {
             <Route path="/services/towing-service" element={<TowingService />} />
             <Route path="/services/fuel-delivery" element={<FuelDelivery />} />
             <Route path="/services/temporary-driver" element={<TemporaryDriver />} />
-
-            {/* Main Routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/careers" element={<Careers />} />
-            <Route path="/contact" element={<Contact />} />
+            <Route path="/services/route-planning" element={<RoutePlanning />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
