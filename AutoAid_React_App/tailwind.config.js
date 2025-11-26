@@ -14,6 +14,8 @@ export default {
         "card-dark": "#121A2A",
         "border-dark": "rgba(45, 156, 219, 0.15)",
         "text-muted": "#8899A9",
+        "text-dark": "#F9FAFB",
+        "subtle-dark": "#9CA3AF",
       },
       fontFamily: {
         "display": ["Inter", "sans-serif"]

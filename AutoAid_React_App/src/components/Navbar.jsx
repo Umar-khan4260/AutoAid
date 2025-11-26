@@ -64,12 +64,12 @@ const Navbar = () => {
                     </nav>
 
                     <div className="hidden lg:flex items-center gap-3">
-                        <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 text-white text-sm font-bold leading-normal tracking-wide hover:bg-white/10 transition-colors duration-300">
+                        <Link to="/login" className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 text-white text-sm font-bold leading-normal tracking-wide hover:bg-white/10 transition-colors duration-300">
                             <span className="truncate">Login</span>
-                        </button>
-                        <button className="relative flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold leading-normal tracking-wide transition-all duration-300 hover:shadow-button-glow hover:scale-105">
+                        </Link>
+                        <Link to="/signup" className="relative flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold leading-normal tracking-wide transition-all duration-300 hover:shadow-button-glow hover:scale-105">
                             <span className="truncate">Sign Up</span>
-                        </button>
+                        </Link>
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -120,12 +120,12 @@ const Navbar = () => {
                     <Link to="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">Contact</Link>
 
                     <div className="pt-4 flex flex-col gap-3">
-                        <button className="w-full flex items-center justify-center rounded-full h-10 px-5 text-white text-sm font-bold border border-white/20 hover:bg-white/10 transition-colors">
+                        <Link to="/login" className="w-full flex items-center justify-center rounded-full h-10 px-5 text-white text-sm font-bold border border-white/20 hover:bg-white/10 transition-colors">
                             Login
-                        </button>
-                        <button className="w-full flex items-center justify-center rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold hover:shadow-button-glow transition-all">
+                        </Link>
+                        <Link to="/signup" className="w-full flex items-center justify-center rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold hover:shadow-button-glow transition-all">
                             Sign Up
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
