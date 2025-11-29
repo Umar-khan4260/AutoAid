@@ -46,7 +46,6 @@ import ProviderHistory from './pages/provider/ProviderHistory';
 
 function App() {
   let a = 10;
-  let b = 20;
   return (
     <Router>
       <div className="bg-background-dark font-display text-white min-h-screen">
