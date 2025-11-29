@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaCar } from 'react-icons/fa';
-import { MdMail, MdLock } from 'react-icons/md';
-import { FcGoogle } from 'react-icons/fc';
+import { MdMail } from 'react-icons/md';
 
-const Login = () => {
+const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
+    const navigate = useNavigate();
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,26 +15,14 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        let isValid = true;
-
         if (!validateEmail(email)) {
             setEmailError('Please enter a valid email address.');
-            isValid = false;
-        } else {
-            setEmailError('');
+            return;
         }
-
-        if (password.length < 6) {
-            setPasswordError('Password must be at least 6 characters.');
-            isValid = false;
-        } else {
-            setPasswordError('');
-        }
-
-        if (!isValid) return;
-
-        // Proceed with login logic here
-        console.log('Login submitted with:', email);
+        setEmailError('');
+        // Proceed with password reset logic here (e.g., API call)
+        console.log('Reset password requested for:', email);
+        navigate('/reset-password');
     };
 
     return (
@@ -69,8 +55,8 @@ const Login = () => {
                     <div className="w-full lg:w-1/2 flex items-center justify-center p-4">
                         <div className="w-full max-w-md p-8 space-y-6 bg-card-dark rounded-lg shadow-xl border border-border-dark">
                             <div className="text-center">
-                                <h1 className="text-3xl font-bold tracking-tight text-text-dark">Welcome Back</h1>
-                                <p className="mt-2 text-subtle-dark">Sign in to continue to your account.</p>
+                                <h1 className="text-3xl font-bold tracking-tight text-text-dark">Forgot Password</h1>
+                                <p className="mt-2 text-subtle-dark">Enter your email to reset your password.</p>
                             </div>
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
@@ -96,60 +82,19 @@ const Login = () => {
                                     {emailError && <p className="mt-1 text-sm text-red-500">{emailError}</p>}
                                 </div>
                                 <div>
-                                    <div className="flex items-center justify-between">
-                                        <label className="block text-sm font-medium text-subtle-dark" htmlFor="password">
-                                            Password
-                                        </label>
-                                        <Link className="text-sm text-primary hover:underline" to="/forgot-password">
-                                            Forgot Password?
-                                        </Link>
-                                    </div>
-                                    <div className="mt-1 relative">
-                                        <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
-                                        <input
-                                            autoComplete="current-password"
-                                            className={`block w-full pl-10 pr-3 py-2 border ${passwordError ? 'border-red-500' : 'border-border-dark'} rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark`}
-                                            id="password"
-                                            name="password"
-                                            required
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => {
-                                                setPassword(e.target.value);
-                                                if (passwordError) setPasswordError('');
-                                            }}
-                                        />
-                                    </div>
-                                    {passwordError && <p className="mt-1 text-sm text-red-500">{passwordError}</p>}
-                                </div>
-                                <div>
                                     <button
                                         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-background-dark bg-primary hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card-dark focus:ring-primary transition-colors duration-200"
                                         type="submit"
                                     >
-                                        Login
+                                        Reset Password
                                     </button>
                                 </div>
                             </form>
-                            <div className="relative flex items-center py-2">
-                                <div className="flex-grow border-t border-border-dark"></div>
-                                <span className="flex-shrink mx-4 text-subtle-dark text-sm">Or continue with</span>
-                                <div className="flex-grow border-t border-border-dark"></div>
-                            </div>
-                            <div>
-                                <button
-                                    className="w-full flex items-center justify-center py-2.5 px-4 border border-border-dark rounded-md shadow-sm text-sm font-medium text-text-dark bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card-dark focus:ring-primary transition-colors duration-200"
-                                    type="button"
-                                >
-                                    <FcGoogle className="w-5 h-5 mr-3" />
-                                    <span>Sign in with Google</span>
-                                </button>
-                            </div>
                             <div className="text-center text-sm text-subtle-dark">
                                 <p>
-                                    Don't have an account?{' '}
-                                    <Link className="font-medium text-primary hover:underline" to="/signup">
-                                        Sign Up Now
+                                    Remember your password?{' '}
+                                    <Link className="font-medium text-primary hover:underline" to="/login">
+                                        Login
                                     </Link>
                                 </p>
                             </div>
@@ -161,4 +106,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default ForgotPassword;
