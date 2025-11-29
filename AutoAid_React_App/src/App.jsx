@@ -15,6 +15,9 @@ import Signup from './pages/Signup';
 import VerifyAccount from './pages/VerifyAccount';
 import AccountSuccess from './pages/AccountSuccess';
 import ProviderSignup from './pages/ProviderSignup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import PasswordResetSuccess from './pages/PasswordResetSuccess';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -56,6 +59,9 @@ function App() {
           <Route path="/verify-account" element={<VerifyAccount />} />
           <Route path="/account-success" element={<AccountSuccess />} />
           <Route path="/provider-signup" element={<ProviderSignup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
 
           {/* Main Layout Routes */}
           <Route path="/" element={<MainLayout />}>
