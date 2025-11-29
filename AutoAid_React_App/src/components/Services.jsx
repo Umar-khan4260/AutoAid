@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FaCarCrash, FaGasPump, FaRoute, FaUnlock } from 'react-icons/fa';
 import driverIcon from '../assets/driver-icon.png';
 import towingIcon from '../assets/towing-icon.png';
@@ -8,6 +9,7 @@ const services = [
     icon: <FaCarCrash />,
     title: 'Breakdown Repair',
     description: 'Get instant mechanical help from verified professionals near you.',
+    path: '/services/breakdown-repair',
   },
   {
     icon: (
@@ -27,21 +29,25 @@ const services = [
     ),
     title: 'Temporary Driver',
     description: 'AI-powered drivers when you need a safe and reliable replacement.',
+    path: '/services/temporary-driver',
   },
   {
     icon: <FaGasPump />,
     title: 'Fuel Delivery',
     description: "Out of gas? We'll deliver fuel directly to your location.",
+    path: '/services/fuel-delivery',
   },
   {
     icon: <FaRoute />,
     title: 'Route Planning',
     description: 'Smart path planning for smooth and hassle-free trips.',
+    path: '/services/route-planning',
   },
   {
     icon: <FaUnlock />,
     title: 'Lockout Service',
     description: "Locked out of your car? We'll get you back in, damage-free.",
+    path: '/services/lockout-service',
   },
   {
     icon: (
@@ -61,6 +67,7 @@ const services = [
     ),
     title: 'Towing Service',
     description: 'Reliable, professional towing to any destination you choose.',
+    path: '/services/towing-service',
   },
 ];
 
@@ -74,7 +81,7 @@ const Services = () => {
               <span className="text-5xl text-primary flex items-center justify-center h-[48px]">{service.icon}</span>
               <p className="text-white text-xl font-bold leading-normal">{service.title}</p>
               <p className="text-text-muted text-sm font-normal leading-normal">{service.description}</p>
-              <a className="mt-2 text-primary font-bold text-sm hover:underline" href="#">Request Now</a>
+              <Link className="mt-2 text-primary font-bold text-sm hover:underline" to={service.path}>Request Now</Link>
             </div>
           ))}
         </div>
