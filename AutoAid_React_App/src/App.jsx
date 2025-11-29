@@ -15,6 +15,9 @@ import Signup from './pages/Signup';
 import VerifyAccount from './pages/VerifyAccount';
 import AccountSuccess from './pages/AccountSuccess';
 import ProviderSignup from './pages/ProviderSignup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import PasswordResetSuccess from './pages/PasswordResetSuccess';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -42,14 +45,17 @@ function App() {
           <Route path="/verify-account" element={<VerifyAccount />} />
           <Route path="/account-success" element={<AccountSuccess />} />
           <Route path="/provider-signup" element={<ProviderSignup />} />
-          
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+
           {/* Main Layout Routes */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/contact" element={<Contact />} />
-            
+
             {/* Service Routes */}
             <Route path="/services/breakdown-repair" element={<BreakdownRepair />} />
             <Route path="/services/lockout-service" element={<LockoutService />} />
