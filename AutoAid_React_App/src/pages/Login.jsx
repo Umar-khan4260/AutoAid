@@ -7,8 +7,6 @@ import { FcGoogle } from 'react-icons/fc';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,24 +15,11 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        let isValid = true;
-
         if (!validateEmail(email)) {
             setEmailError('Please enter a valid email address.');
-            isValid = false;
-        } else {
-            setEmailError('');
+            return;
         }
-
-        if (password.length < 6) {
-            setPasswordError('Password must be at least 6 characters.');
-            isValid = false;
-        } else {
-            setPasswordError('');
-        }
-
-        if (!isValid) return;
-
+        setEmailError('');
         // Proceed with login logic here
         console.log('Login submitted with:', email);
     };
@@ -100,27 +85,21 @@ const Login = () => {
                                         <label className="block text-sm font-medium text-subtle-dark" htmlFor="password">
                                             Password
                                         </label>
-                                        <Link className="text-sm text-primary hover:underline" to="/forgot-password">
+                                        <a className="text-sm text-primary hover:underline" href="#">
                                             Forgot Password?
-                                        </Link>
+                                        </a>
                                     </div>
                                     <div className="mt-1 relative">
                                         <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
                                         <input
                                             autoComplete="current-password"
-                                            className={`block w-full pl-10 pr-3 py-2 border ${passwordError ? 'border-red-500' : 'border-border-dark'} rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark`}
+                                            className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
                                             id="password"
                                             name="password"
                                             required
                                             type="password"
-                                            value={password}
-                                            onChange={(e) => {
-                                                setPassword(e.target.value);
-                                                if (passwordError) setPasswordError('');
-                                            }}
                                         />
                                     </div>
-                                    {passwordError && <p className="mt-1 text-sm text-red-500">{passwordError}</p>}
                                 </div>
                                 <div>
                                     <button

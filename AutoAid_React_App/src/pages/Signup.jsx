@@ -20,21 +20,8 @@ const Signup = () => {
         return re.test(String(email).toLowerCase());
     };
 
-    const validatePakistaniContactNumber = (number) => {
-        const re = /^(0)(3\d{9}|[1-9]\d{9})$/;
-        return re.test(number);
-    };
-
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        if (name === 'contactNumber') {
-            // Only allow digits
-            if (!/^\d*$/.test(value)) return;
-            // Limit to 11 digits
-            if (value.length > 11) return;
-        }
-
         setFormData((prev) => ({ ...prev, [name]: value }));
         // Clear error when user types
         if (errors[name]) {
@@ -50,16 +37,8 @@ const Signup = () => {
             newErrors.email = 'Please enter a valid email address.';
         }
 
-        if (!validatePakistaniContactNumber(formData.contactNumber)) {
-            newErrors.contactNumber = 'Please enter a valid 11-digit Pakistani contact number.';
-        }
-
         if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match.';
-        }
-
-        if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters.';
         }
 
         if (Object.keys(newErrors).length > 0) {
@@ -157,17 +136,16 @@ const Signup = () => {
                                         <MdCall className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
                                         <input
                                             autoComplete="tel"
-                                            className={`block w-full pl-10 pr-3 py-2 border ${errors.contactNumber ? 'border-red-500' : 'border-border-dark'} rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark`}
+                                            className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
                                             id="contactNumber"
                                             name="contactNumber"
-                                            placeholder="03001234567"
+                                            placeholder="(123) 456-7890"
                                             required
                                             type="tel"
                                             value={formData.contactNumber}
                                             onChange={handleChange}
                                         />
                                     </div>
-                                    {errors.contactNumber && <p className="mt-1 text-sm text-red-500">{errors.contactNumber}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-subtle-dark" htmlFor="password">
@@ -177,7 +155,7 @@ const Signup = () => {
                                         <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
                                         <input
                                             autoComplete="new-password"
-                                            className={`block w-full pl-10 pr-3 py-2 border ${errors.password ? 'border-red-500' : 'border-border-dark'} rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark`}
+                                            className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
                                             id="password"
                                             name="password"
                                             placeholder="••••••••"
@@ -187,7 +165,6 @@ const Signup = () => {
                                             onChange={handleChange}
                                         />
                                     </div>
-                                    {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-subtle-dark" htmlFor="confirmPassword">
