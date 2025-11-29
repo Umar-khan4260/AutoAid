@@ -62,9 +62,6 @@ function App() {
             <Route path="about" element={<About />} />
             <Route path="careers" element={<Careers />} />
             <Route path="contact" element={<Contact />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
             <Route path="services/breakdown-repair" element={<BreakdownRepair />} />
             <Route path="services/lockout-service" element={<LockoutService />} />
             <Route path="services/towing-service" element={<TowingService />} />
