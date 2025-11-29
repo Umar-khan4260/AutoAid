@@ -35,6 +35,7 @@ import TemporaryDriver from './pages/TemporaryDriver';
 import RoutePlanning from './pages/RoutePlanning';
 
 function App() {
+  let a = 10;
   return (
     <Router>
       <div className="bg-background-dark font-display text-white min-h-screen">
