@@ -11,6 +11,7 @@ export default {
         "primary": "#13c8ec",
         "background-light": "#f6f8f8",
         "background-dark": "#0A101C",
+        "surface-dark": "#121A2A", // Added missing color
         "card-dark": "#121A2A",
         "border-dark": "rgba(45, 156, 219, 0.15)",
         "text-muted": "#8899A9",
