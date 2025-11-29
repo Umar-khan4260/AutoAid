@@ -15,6 +15,9 @@ import Signup from './pages/Signup';
 import VerifyAccount from './pages/VerifyAccount';
 import AccountSuccess from './pages/AccountSuccess';
 import ProviderSignup from './pages/ProviderSignup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import PasswordResetSuccess from './pages/PasswordResetSuccess';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
