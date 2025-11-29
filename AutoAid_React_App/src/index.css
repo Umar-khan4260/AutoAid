@@ -123,3 +123,18 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #0fa3c7;
 }
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
