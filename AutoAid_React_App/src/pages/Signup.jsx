@@ -35,6 +35,11 @@ const Signup = () => {
             if (value.length > 11) return;
         }
 
+        // Only allow alphabets and spaces for Full Name
+        if (name === 'fullName') {
+            if (!/^[a-zA-Z\s]*$/.test(value)) return;
+        }
+
         setFormData((prev) => ({ ...prev, [name]: value }));
         // Clear error when user types
         if (errors[name]) {
@@ -45,6 +50,11 @@ const Signup = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const newErrors = {};
+
+        // Full Name Validation
+        if (!formData.fullName.trim()) {
+            newErrors.fullName = 'Full Name is required.';
+        }
 
         if (!validateEmail(formData.email)) {
             newErrors.email = 'Please enter a valid email address.';
@@ -117,7 +127,7 @@ const Signup = () => {
                                         <MdPerson className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
                                         <input
                                             autoComplete="name"
-                                            className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                            className={`block w-full pl-10 pr-3 py-2 border ${errors.fullName ? 'border-red-500' : 'border-border-dark'} rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark`}
                                             id="fullName"
                                             name="fullName"
                                             placeholder="John Doe"
@@ -127,6 +137,7 @@ const Signup = () => {
                                             onChange={handleChange}
                                         />
                                     </div>
+                                    {errors.fullName && <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-subtle-dark" htmlFor="email">
