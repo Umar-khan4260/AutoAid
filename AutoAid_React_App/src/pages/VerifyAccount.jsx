@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaCar } from 'react-icons/fa';
 import { MdArrowBack } from 'react-icons/md';
 
@@ -35,12 +35,40 @@ const VerifyAccount = () => {
         }
     };
 
-    const handleVerify = () => {
+    const location = useLocation();
+    const email = location.state?.email;
+    const [error, setError] = useState('');
+
+    const handleVerify = async () => {
         const otpValue = otp.join('');
         console.log('Verifying OTP:', otpValue);
-        // Add verification logic here
-        // Navigate to success page
-        navigate('/account-success');
+        
+        if (!email) {
+            setError('Email not found. Please signup again.');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/api/auth/verify-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, otp: otpValue }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Navigate to success page
+                navigate('/account-success');
+            } else {
+                setError(data.error || 'Verification failed');
+            }
+        } catch (error) {
+            console.error('Verification error:', error);
+            setError('Network error. Please try again.');
+        }
     };
 
     return (
@@ -82,6 +110,7 @@ const VerifyAccount = () => {
                         ))}
                     </fieldset>
 
+                    {error && <p className="text-sm text-red-500 text-center">{error}</p>}
                     {/* Primary Button (CTA) */}
                     <button
                         onClick={handleVerify}
