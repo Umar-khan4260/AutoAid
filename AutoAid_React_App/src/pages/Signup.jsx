@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaCar } from 'react-icons/fa';
 import { MdMail, MdLock, MdPerson, MdCall } from 'react-icons/md';
 import { FcGoogle } from 'react-icons/fc';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -47,7 +49,7 @@ const Signup = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = {};
 
@@ -79,8 +81,45 @@ const Signup = () => {
 
         // Proceed with signup logic here
         console.log('Signup submitted with:', formData);
-        // Navigate to OTP verification
-        navigate('/verify-account');
+
+        try {
+            // 1. Create user in Firebase (Client Side)
+            const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+            const user = userCredential.user;
+            console.log('Firebase User Created:', user.uid);
+
+            // 2. Send data to Backend
+            const response = await fetch('http://localhost:3000/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    uid: user.uid // Send the UID to backend
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Navigate to OTP verification with email
+                navigate('/verify-account', { state: { email: formData.email } });
+            } else {
+                setErrors({ ...errors, api: data.error || 'Signup failed' });
+            }
+        } catch (error) {
+            console.error('Signup error:', error);
+            let errorMessage = 'Network error. Please try again.';
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'Email is already in use.';
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'Password is too weak.';
+            }
+            setErrors({ ...errors, api: errorMessage });
+            // Temporary: Alert the actual error for debugging
+            alert(`Debug Error: ${error.message}`);
+        }
     };
 
     return (
@@ -222,6 +261,7 @@ const Signup = () => {
                                     {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
                                 </div>
                                 <div className="pt-2">
+                                    {errors.api && <p className="text-sm text-red-500 text-center mb-2">{errors.api}</p>}
                                     <button
                                         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-background-dark bg-primary hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card-dark focus:ring-primary transition-colors duration-200"
                                         type="submit"
