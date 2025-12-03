@@ -28,6 +28,28 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  status: {
+    type: String,
+    enum: ['active', 'pending', 'suspended'],
+    default: 'active'
+  },
+  isAdminApproved: {
+    type: Boolean,
+    default: false
+  },
+  providerDetails: {
+    serviceType: String,
+    dob: Date,
+    gender: String,
+    profileImage: String,
+    cnicImage: String,
+    licenseImage: String,
+    vehicleDetails: {
+        number: String,
+        make: String,
+        model: String
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now,
