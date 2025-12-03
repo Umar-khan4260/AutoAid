@@ -22,6 +22,24 @@ exports.signup = async (req, res) => {
         return res.status(400).json({ error: 'Missing UID from Firebase' });
     }
 
+    // Extract Provider Details if role is provider
+    let providerDetails = {};
+    if (role === 'provider') {
+        providerDetails = {
+            serviceType: req.body.serviceType,
+            dob: req.body.dob,
+            gender: req.body.gender,
+            profileImage: req.files['profileImage'] ? req.files['profileImage'][0].path : null,
+            cnicImage: req.files['cnicImage'] ? req.files['cnicImage'][0].path : null,
+            licenseImage: req.files['licenseImage'] ? req.files['licenseImage'][0].path : null,
+            vehicleDetails: {
+                number: req.body.towingVehicleNumber,
+                make: req.body.towingMake,
+                model: req.body.towingModel
+            }
+        };
+    }
+
     // 2. Generate OTP
     const otpValue = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -33,7 +51,8 @@ exports.signup = async (req, res) => {
             uid,
             fullName,
             contactNumber,
-            role: role || 'user'
+            role: role || 'user',
+            providerDetails: role === 'provider' ? providerDetails : undefined
         }
     });
 
@@ -68,7 +87,7 @@ exports.verifyEmail = async (req, res) => {
         }
 
         // Create User from stored data
-        const { uid, fullName, contactNumber, role } = otpRecord.userData;
+        const { uid, fullName, contactNumber, role, providerDetails } = otpRecord.userData;
 
         // Double check if user already exists (idempotency)
         let user = await User.findOne({ email });
@@ -79,11 +98,19 @@ exports.verifyEmail = async (req, res) => {
                 fullName,
                 contactNumber,
                 role,
-                isVerified: true
+                isVerified: true,
+                status: role === 'provider' ? 'pending' : 'active',
+                isAdminApproved: false, // Default false
+                providerDetails: providerDetails
             });
         } else {
              // If user exists but was unverified (edge case), just update
              user.isVerified = true;
+             if (role === 'provider') {
+                 user.status = 'pending';
+                 user.isAdminApproved = false;
+             }
+             if (providerDetails) user.providerDetails = providerDetails;
              await user.save();
         }
 
@@ -92,12 +119,14 @@ exports.verifyEmail = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Email verified and account created successfully',
+            message: role === 'provider' ? 'Email verified. Account pending approval.' : 'Email verified and account created successfully',
             user: {
                 uid: user.uid,
                 email: user.email,
                 fullName: user.fullName,
-                isVerified: user.isVerified
+                isVerified: user.isVerified,
+                role: user.role,
+                status: user.status
             }
         });
 

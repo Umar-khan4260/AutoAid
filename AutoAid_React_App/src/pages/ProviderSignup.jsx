@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom';
 import { FaTools, FaGasPump, FaUserTie, FaTruck, FaKey, FaUpload, FaCar } from 'react-icons/fa';
 import { MdPerson, MdMail, MdCall, MdCalendarToday, MdLock } from 'react-icons/md';
 import { FcGoogle } from 'react-icons/fc';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
 const ProviderSignup = () => {
+    const navigate = useNavigate();
     const [serviceType, setServiceType] = useState('');
+    const [files, setFiles] = useState({});
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -29,8 +34,69 @@ const ProviderSignup = () => {
     };
 
     const handleFileChange = (e, id) => {
-        const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+        const file = e.target.files[0];
+        const fileName = file ? file.name : 'No file chosen';
         document.getElementById(`${id}-name`).textContent = fileName;
+        
+        // Map id to backend field name
+        let fieldName = '';
+        if (id === 'profile-pic') fieldName = 'profileImage';
+        if (id === 'cnic-pic') fieldName = 'cnicImage';
+        if (id === 'license-pic') fieldName = 'licenseImage';
+
+        if (file && fieldName) {
+            setFiles(prev => ({ ...prev, [fieldName]: file }));
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (formData.password !== formData.confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
+
+        try {
+            // 1. Create user in Firebase
+            const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+            const user = userCredential.user;
+            console.log('Firebase User Created:', user.uid);
+
+            // 2. Prepare FormData
+            const data = new FormData();
+            data.append('uid', user.uid);
+            data.append('role', 'provider');
+            data.append('serviceType', serviceType);
+            
+            // Append text fields
+            Object.keys(formData).forEach(key => {
+                data.append(key, formData[key]);
+            });
+
+            // Append files
+            Object.keys(files).forEach(key => {
+                data.append(key, files[key]);
+            });
+
+            // 3. Send to Backend
+            const response = await fetch('http://localhost:3000/api/auth/signup', {
+                method: 'POST',
+                body: data, // No Content-Type header needed for FormData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                navigate('/verify-account', { state: { email: formData.email } });
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+
+        } catch (error) {
+            console.error("Signup Error:", error);
+            alert(`Error: ${error.message}`);
+        }
     };
 
     return (
@@ -68,7 +134,7 @@ const ProviderSignup = () => {
                                 <h1 className="text-3xl font-bold tracking-tight text-text-dark">Service Provider Registration</h1>
                                 <p className="mt-2 text-subtle-dark">Join our network to provide assistance.</p>
                             </div>
-                            <form className="space-y-4">
+                            <form className="space-y-4" onSubmit={handleSubmit}>
                                 <div>
                                     <label className="block text-sm font-medium text-subtle-dark mb-2">Service Type</label>
                                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center">

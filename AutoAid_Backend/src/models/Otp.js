@@ -13,7 +13,8 @@ const OtpSchema = new mongoose.Schema({
     uid: String,
     fullName: String,
     contactNumber: String,
-    role: String
+    role: String,
+    providerDetails: Object
   },
   createdAt: {
     type: Date,
