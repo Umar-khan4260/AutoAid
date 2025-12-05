@@ -39,6 +39,7 @@ const UserSchema = new mongoose.Schema({
   },
   providerDetails: {
     serviceType: String,
+    age: Number,
     dob: Date,
     gender: String,
     profileImage: String,

@@ -60,8 +60,23 @@ const VerifyAccount = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Navigate to success page
-                navigate('/account-success');
+                // Navigate to success page with dynamic message based on role
+                const userRole = data.user.role;
+                if (userRole === 'provider') {
+                    navigate('/account-success', {
+                        state: {
+                            title: "Account Verified!",
+                            message: "Your account is verified. Please wait for Admin approval before you can start providing services."
+                        }
+                    });
+                } else {
+                    navigate('/account-success', {
+                        state: {
+                            title: "Account Created Successfully!",
+                            message: "Your account is ready. Proceed to the Home to get started."
+                        }
+                    });
+                }
             } else {
                 setError(data.error || 'Verification failed');
             }

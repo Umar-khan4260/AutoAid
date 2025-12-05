@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import VerifyAccount from './pages/VerifyAccount';
 import AccountSuccess from './pages/AccountSuccess';
+import AccountUnsuccess from './pages/AccountUnsuccess';
 import ProviderSignup from './pages/ProviderSignup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -58,6 +59,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify-account" element={<VerifyAccount />} />
           <Route path="/account-success" element={<AccountSuccess />} />
+          <Route path="/account-unsuccess" element={<AccountUnsuccess />} />
           <Route path="/provider-signup" element={<ProviderSignup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

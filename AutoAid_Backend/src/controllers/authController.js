@@ -27,6 +27,7 @@ exports.signup = async (req, res) => {
     if (role === 'provider') {
         providerDetails = {
             serviceType: req.body.serviceType,
+            age: req.body.age,
             dob: req.body.dob,
             gender: req.body.gender,
             profileImage: req.files['profileImage'] ? req.files['profileImage'][0].path : null,
