@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaCar } from 'react-icons/fa';
 import { MdMail } from 'react-icons/md';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -13,16 +15,33 @@ const ForgotPassword = () => {
         return re.test(String(email).toLowerCase());
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateEmail(email)) {
             setEmailError('Please enter a valid email address.');
             return;
         }
         setEmailError('');
-        // Proceed with password reset logic here (e.g., API call)
-        console.log('Reset password requested for:', email);
-        navigate('/reset-password');
+
+        try {
+            const actionCodeSettings = {
+                // URL you want to redirect back to. The domain (www.example.com) for this
+                // URL must be in the authorized domains list in the Firebase Console.
+                url: 'http://localhost:5173/reset-password',
+                handleCodeInApp: true,
+            };
+
+            await sendPasswordResetEmail(auth, email, actionCodeSettings);
+            alert('Password reset email sent! Please check your inbox.');
+            navigate('/login');
+        } catch (error) {
+            console.error('Error sending password reset email:', error);
+            if (error.code === 'auth/user-not-found') {
+                setEmailError('No user found with this email address.');
+            } else {
+                setEmailError('Failed to send reset email. Please try again.');
+            }
+        }
     };
 
     return (

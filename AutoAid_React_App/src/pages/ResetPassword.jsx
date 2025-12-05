@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FaCar } from 'react-icons/fa';
 import { MdLock } from 'react-icons/md';
+import { confirmPasswordReset } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const ResetPassword = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const oobCode = searchParams.get('oobCode');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
             setError('Passwords do not match.');
@@ -20,9 +24,19 @@ const ResetPassword = () => {
             return;
         }
         setError('');
-        // Proceed with password update logic here
-        console.log('Password reset submitted');
-        navigate('/password-reset-success');
+
+        if (!oobCode) {
+            setError('Invalid or missing reset code.');
+            return;
+        }
+
+        try {
+            await confirmPasswordReset(auth, oobCode, password);
+            navigate('/password-reset-success');
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            setError('Failed to reset password. The link may have expired.');
+        }
     };
 
     return (

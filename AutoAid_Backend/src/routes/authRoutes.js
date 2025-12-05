@@ -9,5 +9,6 @@ router.post('/signup', upload.fields([
     { name: 'licenseImage', maxCount: 1 }
 ]), signup);
 router.post('/verify-email', verifyEmail);
+router.post('/login', require('../controllers/authController').login);
 
 module.exports = router;

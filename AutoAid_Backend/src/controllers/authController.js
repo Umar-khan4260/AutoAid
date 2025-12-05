@@ -136,3 +136,48 @@ exports.verifyEmail = async (req, res) => {
         res.status(500).json({ error: 'Server Error: ' + error.message });
     }
 };
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+exports.login = async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        // 1. Verify Firebase Token
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const { uid, email } = decodedToken;
+
+        // 2. Check if user exists in MongoDB
+        const user = await User.findOne({ uid });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found in database' });
+        }
+
+        // 3. Check Status
+        if (user.status === 'suspended') {
+            return res.status(403).json({ error: 'Account suspended. Please contact support.' });
+        }
+
+        if (user.role === 'provider' && user.status === 'pending') {
+            return res.status(403).json({ error: 'Account pending approval. Please wait for admin verification.' });
+        }
+
+        // 4. Return User Details
+        res.status(200).json({
+            success: true,
+            user: {
+                uid: user.uid,
+                email: user.email,
+                fullName: user.fullName,
+                role: user.role,
+                status: user.status,
+                providerDetails: user.providerDetails
+            }
+        });
+
+    } catch (error) {
+        console.error('Login Error:', error);
+        res.status(401).json({ error: 'Invalid or expired token' });
+    }
+};
