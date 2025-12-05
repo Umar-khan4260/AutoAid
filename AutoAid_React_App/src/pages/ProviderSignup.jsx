@@ -30,7 +30,15 @@ const ProviderSignup = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+
+        if (name === 'fullName') {
+            // Only allow alphabets and spaces
+            if (/^[a-zA-Z\s]*$/.test(value)) {
+                setFormData((prev) => ({ ...prev, [name]: value }));
+            }
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleFileChange = (e, id) => {
@@ -49,11 +57,28 @@ const ProviderSignup = () => {
         }
     };
 
+    const calculateAge = (dob) => {
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
         if (formData.password !== formData.confirmPassword) {
             alert("Passwords do not match");
+            return;
+        }
+
+        const age = calculateAge(formData.dob);
+        if (age < 18) {
+            alert("You must be at least 18 years old to register as a provider.");
             return;
         }
 
@@ -68,6 +93,7 @@ const ProviderSignup = () => {
             data.append('uid', user.uid);
             data.append('role', 'provider');
             data.append('serviceType', serviceType);
+            data.append('age', age.toString());
             
             // Append text fields
             Object.keys(formData).forEach(key => {
