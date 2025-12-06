@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { FaMapMarkerAlt, FaSearch, FaExclamationTriangle, FaRoad, FaClock, FaSyncAlt, FaMap, FaDirections, FaCalendarAlt } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+
 const RoutePlanning = () => {
+    const { currentUser } = useAuth();
     const [formData, setFormData] = useState({
         startLocation: '',
         endLocation: '',
@@ -68,10 +71,36 @@ const RoutePlanning = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!currentUser) {
+            alert('Please login to use route planning features.');
+            return;
+        }
+
         setIsSearching(true);
-        // Simulate API call
+        
+        // Save request to DB
+        try {
+            await fetch('http://localhost:3000/api/services/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    uid: currentUser.uid,
+                    serviceType: 'Route Planning',
+                    contactNumber: 'N/A', // Route planning might not have a contact number, or we can fetch from user profile if needed. For now sending N/A as it's not in the form.
+                    details: formData
+                }),
+            });
+        } catch (error) {
+            console.error('Error saving route request:', error);
+            // We continue even if save fails, as the main feature is showing the alerts
+        }
+
+        // Simulate API call for results
         setTimeout(() => {
             setIsSearching(false);
             setShowResults(true);

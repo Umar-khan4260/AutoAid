@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { FaPhone, FaGasPump, FaTint } from 'react-icons/fa';
 import CustomSelect from '../components/CustomSelect';
 import { validatePhoneNumber } from '../utils/formValidation';
 
 const FuelDelivery = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const [formData, setFormData] = useState({
         fuelType: '',
         quantity: '',
@@ -52,13 +54,40 @@ const FuelDelivery = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!currentUser) {
+            alert('Please login to request a service.');
+            return;
+        }
         
         if (validateForm()) {
-            console.log('Fuel Delivery Request submitted:', formData);
-            // alert('Fuel delivery request submitted successfully!');
-            navigate('/nearby-providers', { state: { serviceType: 'Fuel Delivery' } });
+            try {
+                const response = await fetch('http://localhost:3000/api/services/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        uid: currentUser.uid,
+                        serviceType: 'Fuel Delivery',
+                        contactNumber: formData.contactNumber,
+                        details: formData
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log('Fuel Delivery Request submitted:', formData);
+                    navigate('/nearby-providers', { state: { serviceType: 'Fuel Delivery' } });
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Failed to submit request'}`);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                alert('Network error. Please try again.');
+            }
         }
     };
 

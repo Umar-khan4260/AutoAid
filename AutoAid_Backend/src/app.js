@@ -17,6 +17,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/services', require('./routes/serviceRoutes'));
 
 app.get('/', (req, res) => {
   res.send('AutoAid Backend is running');
