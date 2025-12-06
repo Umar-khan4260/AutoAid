@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { FaPhone, FaUserTie, FaClock, FaMapMarkerAlt, FaCalendarAlt, FaRoute } from 'react-icons/fa';
 import CustomSelect from '../components/CustomSelect';
 import { validatePhoneNumber } from '../utils/formValidation';
 
 const TemporaryDriver = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const [formData, setFormData] = useState({
         pickupLocation: '',
         destination: '',
@@ -76,13 +78,40 @@ const TemporaryDriver = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!currentUser) {
+            alert('Please login to request a service.');
+            return;
+        }
         
         if (validateForm()) {
-            console.log('Temporary Driver Request submitted:', formData);
-            // alert('Driver request submitted successfully! Our AI will match you with the best driver.');
-            navigate('/nearby-providers', { state: { serviceType: 'Temporary Driver' } });
+            try {
+                const response = await fetch('http://localhost:3000/api/services/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        uid: currentUser.uid,
+                        serviceType: 'Temporary Driver',
+                        contactNumber: formData.contactNumber,
+                        details: formData
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log('Temporary Driver Request submitted:', formData);
+                    navigate('/nearby-providers', { state: { serviceType: 'Temporary Driver' } });
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Failed to submit request'}`);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                alert('Network error. Please try again.');
+            }
         }
     };
 

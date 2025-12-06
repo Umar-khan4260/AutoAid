@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { FaCar, FaTools, FaPhone, FaExclamationTriangle, FaIdCard, FaChevronDown } from 'react-icons/fa';
 
 // Custom Select Component
@@ -85,6 +86,7 @@ const CustomSelect = ({ label, icon: Icon, options, value, onChange, name, place
 
 const BreakdownRepair = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const [formData, setFormData] = useState({
         issueType: '',
         carCompany: '',
@@ -160,17 +162,46 @@ const BreakdownRepair = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
+        if (!currentUser) {
+            alert('Please login to request a service.');
+            // navigate('/login'); // Optional: redirect to login
+            return;
+        }
+
         if (validateForm()) {
             const submissionData = {
                 ...formData,
                 carCompany: formData.carCompany === 'Other' ? formData.otherCompany : formData.carCompany
             };
-            console.log('Form submitted:', submissionData);
-            // alert('Request submitted successfully!');
-            navigate('/nearby-providers', { state: { serviceType: 'Breakdown Repair' } });
+
+            try {
+                const response = await fetch('http://localhost:3000/api/services/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        uid: currentUser.uid,
+                        serviceType: 'Breakdown Repair',
+                        contactNumber: formData.contactNumber,
+                        details: submissionData
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log('Breakdown Repair Request submitted:', submissionData);
+                    navigate('/nearby-providers', { state: { serviceType: 'Breakdown Repair' } });
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Failed to submit request'}`);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                alert('Network error. Please try again.');
+            }
         }
     };
 
