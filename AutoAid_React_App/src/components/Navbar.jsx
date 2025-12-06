@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaBars, FaChevronDown, FaCar, FaTimes } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaBars, FaChevronDown, FaCar, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isServicesOpen, setIsServicesOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const { currentUser, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/');
+            setIsProfileOpen(false);
+        } catch (error) {
+            console.error("Failed to log out", error);
+        }
+    };
 
     return (
         <header className="sticky top-0 z-50 w-full transition-all duration-300 glassmorphism shadow-nav">
@@ -64,12 +78,41 @@ const Navbar = () => {
                     </nav>
 
                     <div className="hidden lg:flex items-center gap-3">
-                        <Link to="/login" className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 text-white text-sm font-bold leading-normal tracking-wide hover:bg-white/10 transition-colors duration-300">
-                            <span className="truncate">Login</span>
-                        </Link>
-                        <Link to="/signup" className="relative flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold leading-normal tracking-wide transition-all duration-300 hover:shadow-button-glow hover:scale-105">
-                            <span className="truncate">Sign Up</span>
-                        </Link>
+                        {currentUser ? (
+                            <div className="relative group">
+                                <button
+                                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                    className="flex items-center gap-2 text-white hover:text-primary transition-colors focus:outline-none"
+                                >
+                                    <FaUserCircle className="text-3xl" />
+                                    <span className="text-sm font-medium">{currentUser.email}</span>
+                                    <FaChevronDown className={`text-xs transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                {/* Profile Dropdown */}
+                                <div className="absolute right-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 pt-2">
+                                    <div className="glassmorphism rounded-xl overflow-hidden shadow-glow-lg border border-border-dark p-2 flex flex-col gap-1 bg-[#121A2A]">
+                                        <Link to="/profile" className="block px-4 py-2 text-sm text-text-muted hover:text-white hover:bg-white/10 rounded-md transition-colors">
+                                            Profile
+                                        </Link>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full text-left px-4 py-2 text-sm text-text-muted hover:text-red-500 hover:bg-white/10 rounded-md transition-colors flex items-center gap-2"
+                                        >
+                                            <FaSignOutAlt /> Logout
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <Link to="/login" className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 text-white text-sm font-bold leading-normal tracking-wide hover:bg-white/10 transition-colors duration-300">
+                                    <span className="truncate">Login</span>
+                                </Link>
+                                <Link to="/signup" className="relative flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold leading-normal tracking-wide transition-all duration-300 hover:shadow-button-glow hover:scale-105">
+                                    <span className="truncate">Sign Up</span>
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -120,12 +163,30 @@ const Navbar = () => {
                     <Link to="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">Contact</Link>
 
                     <div className="pt-4 flex flex-col gap-3">
-                        <Link to="/login" className="w-full flex items-center justify-center rounded-full h-10 px-5 text-white text-sm font-bold border border-white/20 hover:bg-white/10 transition-colors">
-                            Login
-                        </Link>
-                        <Link to="/signup" className="w-full flex items-center justify-center rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold hover:shadow-button-glow transition-all">
-                            Sign Up
-                        </Link>
+                        {currentUser ? (
+                            <>
+                                <div className="flex items-center gap-3 px-3 py-2 text-white border-b border-white/10 mb-2">
+                                    <FaUserCircle className="text-2xl" />
+                                    <span className="text-sm font-medium">{currentUser.email}</span>
+                                </div>
+                                <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">Profile</Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-400 hover:text-red-300 hover:bg-white/5 flex items-center gap-2"
+                                >
+                                    <FaSignOutAlt /> Logout
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/login" className="w-full flex items-center justify-center rounded-full h-10 px-5 text-white text-sm font-bold border border-white/20 hover:bg-white/10 transition-colors">
+                                    Login
+                                </Link>
+                                <Link to="/signup" className="w-full flex items-center justify-center rounded-full h-10 px-5 bg-gradient-to-r from-primary to-blue-500 text-background-dark text-sm font-bold hover:shadow-button-glow transition-all">
+                                    Sign Up
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

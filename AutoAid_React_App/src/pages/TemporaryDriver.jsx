@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaPhone, FaUserTie, FaClock, FaMapMarkerAlt, FaCalendarAlt, FaRoute } from 'react-icons/fa';
 import CustomSelect from '../components/CustomSelect';
 import { validatePhoneNumber } from '../utils/formValidation';
 
 const TemporaryDriver = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         pickupLocation: '',
         destination: '',
@@ -79,7 +81,8 @@ const TemporaryDriver = () => {
         
         if (validateForm()) {
             console.log('Temporary Driver Request submitted:', formData);
-            alert('Driver request submitted successfully! Our AI will match you with the best driver.');
+            // alert('Driver request submitted successfully! Our AI will match you with the best driver.');
+            navigate('/nearby-providers', { state: { serviceType: 'Temporary Driver' } });
         }
     };
 

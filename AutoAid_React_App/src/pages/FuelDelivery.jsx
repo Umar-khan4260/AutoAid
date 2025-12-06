@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaPhone, FaGasPump, FaTint } from 'react-icons/fa';
 import CustomSelect from '../components/CustomSelect';
 import { validatePhoneNumber } from '../utils/formValidation';
 
 const FuelDelivery = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fuelType: '',
         quantity: '',
@@ -55,7 +57,8 @@ const FuelDelivery = () => {
         
         if (validateForm()) {
             console.log('Fuel Delivery Request submitted:', formData);
-            alert('Fuel delivery request submitted successfully!');
+            // alert('Fuel delivery request submitted successfully!');
+            navigate('/nearby-providers', { state: { serviceType: 'Fuel Delivery' } });
         }
     };
 
