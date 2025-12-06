@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaCar, FaPhone, FaIdCard, FaKey } from 'react-icons/fa';
 import CustomSelect from '../components/CustomSelect';
 import { 
@@ -9,6 +10,7 @@ import {
 } from '../utils/formValidation';
 
 const LockoutService = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         lockoutType: '',
         carCompany: '',
@@ -70,7 +72,8 @@ const LockoutService = () => {
                 carCompany: formData.carCompany === 'Other' ? formData.otherCompany : formData.carCompany
             };
             console.log('Lockout Service Request submitted:', submissionData);
-            alert('Lockout assistance request submitted successfully!');
+            // alert('Lockout assistance request submitted successfully!');
+            navigate('/nearby-providers', { state: { serviceType: 'Lockout Service' } });
         }
     };
 

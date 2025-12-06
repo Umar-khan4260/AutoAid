@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaCar, FaPhone, FaIdCard, FaTruck } from 'react-icons/fa';
 import CustomSelect from '../components/CustomSelect';
 import { 
@@ -9,6 +10,7 @@ import {
 } from '../utils/formValidation';
 
 const TowingService = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         carCompany: '',
         otherCompany: '',
@@ -63,7 +65,8 @@ const TowingService = () => {
                 carCompany: formData.carCompany === 'Other' ? formData.otherCompany : formData.carCompany
             };
             console.log('Towing Service Request submitted:', submissionData);
-            alert('Towing service request submitted successfully!');
+            // alert('Towing service request submitted successfully!');
+            navigate('/nearby-providers', { state: { serviceType: 'Towing Service' } });
         }
     };
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaCar, FaTools, FaPhone, FaExclamationTriangle, FaIdCard, FaChevronDown } from 'react-icons/fa';
 
 // Custom Select Component
@@ -83,6 +84,7 @@ const CustomSelect = ({ label, icon: Icon, options, value, onChange, name, place
 };
 
 const BreakdownRepair = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         issueType: '',
         carCompany: '',
@@ -167,7 +169,8 @@ const BreakdownRepair = () => {
                 carCompany: formData.carCompany === 'Other' ? formData.otherCompany : formData.carCompany
             };
             console.log('Form submitted:', submissionData);
-            alert('Request submitted successfully!');
+            // alert('Request submitted successfully!');
+            navigate('/nearby-providers', { state: { serviceType: 'Breakdown Repair' } });
         }
     };
 
