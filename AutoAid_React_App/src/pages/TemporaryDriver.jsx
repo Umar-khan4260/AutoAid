@@ -85,7 +85,7 @@ const TemporaryDriver = () => {
             alert('Please login to request a service.');
             return;
         }
-        
+
         if (validateForm()) {
             try {
                 const response = await fetch('http://localhost:3000/api/services/request', {
@@ -93,6 +93,7 @@ const TemporaryDriver = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                         uid: currentUser.uid,
                         serviceType: 'Temporary Driver',

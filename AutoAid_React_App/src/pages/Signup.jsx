@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaCar } from 'react-icons/fa';
 import { MdMail, MdLock, MdPerson, MdCall } from 'react-icons/md';
-import { FcGoogle } from 'react-icons/fc';
+
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -270,20 +270,7 @@ const Signup = () => {
                                     </button>
                                 </div>
                             </form>
-                            <div className="relative flex items-center py-2">
-                                <div className="flex-grow border-t border-border-dark"></div>
-                                <span className="flex-shrink mx-4 text-subtle-dark text-sm">Or</span>
-                                <div className="flex-grow border-t border-border-dark"></div>
-                            </div>
-                            <div>
-                                <button
-                                    className="w-full flex items-center justify-center py-2.5 px-4 border border-border-dark rounded-md shadow-sm text-sm font-medium text-text-dark bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card-dark focus:ring-primary transition-colors duration-200"
-                                    type="button"
-                                >
-                                    <FcGoogle className="w-5 h-5 mr-3" />
-                                    <span>Sign Up with Google</span>
-                                </button>
-                            </div>
+
                             <div className="text-center text-sm text-subtle-dark">
                                 <p>
                                     Already have an account?{' '}

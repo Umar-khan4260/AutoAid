@@ -80,21 +80,22 @@ const RoutePlanning = () => {
         }
 
         setIsSearching(true);
-        
-        // Save request to DB
         try {
-            await fetch('http://localhost:3000/api/services/request', {
+            const response = await fetch('http://localhost:3000/api/services/request', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     uid: currentUser.uid,
                     serviceType: 'Route Planning',
-                    contactNumber: 'N/A', // Route planning might not have a contact number, or we can fetch from user profile if needed. For now sending N/A as it's not in the form.
                     details: formData
                 }),
             });
+            if (!response.ok) {
+                 console.error('Failed to save route request');
+            }
         } catch (error) {
             console.error('Error saving route request:', error);
             // We continue even if save fails, as the main feature is showing the alerts
