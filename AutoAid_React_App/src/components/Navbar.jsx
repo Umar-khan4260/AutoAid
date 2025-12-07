@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { FaBars, FaChevronDown, FaCar, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
@@ -34,13 +34,26 @@ const Navbar = () => {
                     </div>
 
                     {/* Desktop Navigation */}
+                    {/* Desktop Navigation */}
                     <nav className="hidden lg:flex items-center gap-8">
-                        <Link to="/" className="text-white text-base font-medium leading-normal transition-colors nav-link-underline active">Home</Link>
+                        <NavLink 
+                            to="/" 
+                            end
+                            className={({ isActive }) => 
+                                `text-base font-medium leading-normal transition-colors nav-link-underline ${
+                                    isActive ? 'text-white active' : 'text-text-muted hover:text-white'
+                                }`
+                            }
+                        >
+                            Home
+                        </NavLink>
 
                         {/* Services Dropdown */}
                         <div className="relative group">
                             <button
-                                className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline flex items-center gap-1 focus:outline-none"
+                                className={`text-base font-medium leading-normal transition-colors nav-link-underline flex items-center gap-1 focus:outline-none ${
+                                    isServicesOpen ? 'text-white' : 'text-text-muted hover:text-white'
+                                }`}
                             >
                                 Services
                                 <FaChevronDown className="text-xs transition-transform duration-300 group-hover:rotate-180" />
@@ -55,26 +68,57 @@ const Navbar = () => {
                                         { name: 'Towing Service', path: '/services/towing-service' },
                                         { name: 'Route Planning', path: '/services/route-planning' }
                                     ].map((item, index) => (
-                                        <Link
+                                        <NavLink
                                             key={item.name}
                                             to={item.path}
-                                            className="block px-4 py-2 text-sm text-text-muted hover:text-white transition-all duration-500 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group/item"
+                                            className={({ isActive }) => 
+                                                `block px-4 py-2 text-sm transition-all duration-500 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group/item ${
+                                                    isActive ? 'text-white bg-white/10' : 'text-text-muted hover:text-white'
+                                                }`
+                                            }
                                             style={{ transitionDelay: `${index * 150}ms` }}
                                         >
                                             <span className="relative inline-block">
                                                 {item.name}
                                                 <span className="absolute left-0 -bottom-1 w-full h-0.5 bg-[#13c8ec] transform scale-x-0 transition-transform duration-300 origin-bottom-right group-hover/item:scale-x-100 group-hover/item:origin-bottom-left"></span>
                                             </span>
-                                        </Link>
+                                        </NavLink>
                                     ))}
                                 </div>
                             </div>
                         </div>
 
 
-                        <Link to="/careers" className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline">Careers</Link>
-                        <Link to="/about" className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline">About Us</Link>
-                        <Link to="/contact" className="text-text-muted text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline">Contact</Link>
+                        <NavLink 
+                            to="/careers" 
+                            className={({ isActive }) => 
+                                `text-base font-medium leading-normal transition-colors nav-link-underline ${
+                                    isActive ? 'text-white active' : 'text-text-muted hover:text-white'
+                                }`
+                            }
+                        >
+                            Careers
+                        </NavLink>
+                        <NavLink 
+                            to="/about" 
+                            className={({ isActive }) => 
+                                `text-base font-medium leading-normal transition-colors nav-link-underline ${
+                                    isActive ? 'text-white active' : 'text-text-muted hover:text-white'
+                                }`
+                            }
+                        >
+                            About Us
+                        </NavLink>
+                        <NavLink 
+                            to="/contact" 
+                            className={({ isActive }) => 
+                                `text-base font-medium leading-normal transition-colors nav-link-underline ${
+                                    isActive ? 'text-white active' : 'text-text-muted hover:text-white'
+                                }`
+                            }
+                        >
+                            Contact
+                        </NavLink>
                     </nav>
 
                     <div className="hidden lg:flex items-center gap-3">
@@ -130,13 +174,25 @@ const Navbar = () => {
             {/* Mobile Menu */}
             <div className={`lg:hidden absolute top-20 left-0 w-full bg-[#121A2A] border-b border-border-dark shadow-xl transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                 <div className="px-4 pt-2 pb-6 space-y-2">
-                    <Link to="/" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-primary/10">Home</Link>
+                    <NavLink 
+                        to="/" 
+                        end
+                        className={({ isActive }) => 
+                            `block px-3 py-2 rounded-md text-base font-medium ${
+                                isActive ? 'text-white bg-primary/10' : 'text-text-muted hover:text-white hover:bg-white/5'
+                            }`
+                        }
+                    >
+                        Home
+                    </NavLink>
 
                     {/* Mobile Services Dropdown */}
                     <div>
                         <button
                             onClick={() => setIsServicesOpen(!isServicesOpen)}
-                            className="flex items-center justify-between w-full px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5"
+                            className={`flex items-center justify-between w-full px-3 py-2 rounded-md text-base font-medium ${
+                                isServicesOpen ? 'text-white' : 'text-text-muted hover:text-white hover:bg-white/5'
+                            }`}
                         >
                             Services
                             <FaChevronDown className={`text-xs transition-transform duration-300 ${isServicesOpen ? 'rotate-180' : ''}`} />
@@ -150,17 +206,52 @@ const Navbar = () => {
                                 { name: 'Towing Service', path: '/services/towing-service' },
                                 { name: 'Route Planning', path: '/services/route-planning' }
                             ].map((item) => (
-                                <Link key={item.name} to={item.path} className="block px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-white hover:bg-white/5">
+                                <NavLink 
+                                    key={item.name} 
+                                    to={item.path} 
+                                    className={({ isActive }) => 
+                                        `block px-3 py-2 rounded-md text-sm font-medium ${
+                                            isActive ? 'text-white bg-white/10' : 'text-text-muted hover:text-white hover:bg-white/5'
+                                        }`
+                                    }
+                                >
                                     {item.name}
-                                </Link>
+                                </NavLink>
                             ))}
                         </div>
                     </div>
 
 
-                    <Link to="/careers" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">Careers</Link>
-                    <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">About Us</Link>
-                    <Link to="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-white hover:bg-white/5">Contact</Link>
+                    <NavLink 
+                        to="/careers" 
+                        className={({ isActive }) => 
+                            `block px-3 py-2 rounded-md text-base font-medium ${
+                                isActive ? 'text-white bg-primary/10' : 'text-text-muted hover:text-white hover:bg-white/5'
+                            }`
+                        }
+                    >
+                        Careers
+                    </NavLink>
+                    <NavLink 
+                        to="/about" 
+                        className={({ isActive }) => 
+                            `block px-3 py-2 rounded-md text-base font-medium ${
+                                isActive ? 'text-white bg-primary/10' : 'text-text-muted hover:text-white hover:bg-white/5'
+                            }`
+                        }
+                    >
+                        About Us
+                    </NavLink>
+                    <NavLink 
+                        to="/contact" 
+                        className={({ isActive }) => 
+                            `block px-3 py-2 rounded-md text-base font-medium ${
+                                isActive ? 'text-white bg-primary/10' : 'text-text-muted hover:text-white hover:bg-white/5'
+                            }`
+                        }
+                    >
+                        Contact
+                    </NavLink>
 
                     <div className="pt-4 flex flex-col gap-3">
                         {currentUser ? (

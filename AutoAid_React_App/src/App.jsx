@@ -19,7 +19,9 @@ import AccountUnsuccess from './pages/AccountUnsuccess';
 import ProviderSignup from './pages/ProviderSignup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+
 import PasswordResetSuccess from './pages/PasswordResetSuccess';
+import UserProfile from './pages/UserProfile';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -76,6 +78,7 @@ function App() {
               <Route path="services/temporary-driver" element={<TemporaryDriver />} />
               <Route path="services/route-planning" element={<RoutePlanning />} />
               <Route path="nearby-providers" element={<NearbyProviders />} />
+              <Route path="profile" element={<UserProfile />} />
             </Route>
 
             {/* Admin Layout Routes */}
