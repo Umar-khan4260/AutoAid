@@ -85,6 +85,7 @@ const LockoutService = () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                         uid: currentUser.uid,
                         serviceType: 'Lockout Service',

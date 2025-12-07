@@ -38,6 +38,13 @@ const Login = () => {
 
         if (!isValid) return;
 
+        // Admin Bypass Check
+        if (email === 'umar68408@gmail.com' && password === '123456') {
+            console.log('Admin login detected');
+            navigate('/admin');
+            return;
+        }
+
         try {
             // 1. Authenticate with Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -52,6 +59,7 @@ const Login = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // Important for cookies
                 body: JSON.stringify({ token }),
             });
 

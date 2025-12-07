@@ -10,5 +10,9 @@ router.post('/signup', upload.fields([
 ]), signup);
 router.post('/verify-email', verifyEmail);
 router.post('/login', require('../controllers/authController').login);
+router.post('/logout', require('../controllers/authController').logout);
+router.get('/check', require('../middleware/authMiddleware').protect, (req, res) => {
+    res.status(200).json({ success: true, user: req.user });
+});
 
 module.exports = router;

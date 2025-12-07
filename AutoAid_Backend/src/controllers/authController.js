@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const admin = require('../config/firebase');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
@@ -164,20 +165,45 @@ exports.login = async (req, res) => {
         }
 
         // 4. Return User Details
-        res.status(200).json({
-            success: true,
-            user: {
-                uid: user.uid,
-                email: user.email,
-                fullName: user.fullName,
-                role: user.role,
-                status: user.status,
-                providerDetails: user.providerDetails
-            }
+        // 4. Generate JWT
+        const jwtToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+            expiresIn: '30d'
         });
+
+        // 5. Set Cookie
+        const options = {
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            httpOnly: true,
+            // secure: true, // Enable in production with HTTPS
+        };
+
+        res.status(200)
+            .cookie('token', jwtToken, options)
+            .json({
+                success: true,
+                user: {
+                    uid: user.uid,
+                    email: user.email,
+                    fullName: user.fullName,
+                    role: user.role,
+                    status: user.status,
+                    providerDetails: user.providerDetails
+                }
+            });
 
     } catch (error) {
         console.error('Login Error:', error);
         res.status(401).json({ error: 'Invalid or expired token' });
     }
+};
+
+// @desc    Logout user / clear cookie
+// @route   POST /api/auth/logout
+// @access  Public
+exports.logout = (req, res) => {
+    res.cookie('token', 'none', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true,
+    });
+    res.status(200).json({ success: true, message: 'User logged out' });
 };
