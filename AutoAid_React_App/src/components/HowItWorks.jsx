@@ -23,15 +23,15 @@ const HowItWorks = () => {
   const [activeStep, setActiveStep] = useState(-1);
 
   return (
-    <section className="py-16 sm:py-24 bg-background-dark">
+    <section className="py-16 sm:py-24 bg-background-light dark:bg-background-dark transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight">How AutoAid Works</h2>
-          <p className="text-text-muted mt-4 max-w-2xl mx-auto">Get back on the road in three simple steps. Our platform makes it easy to find and track help in real-time.</p>
+          <h2 className="text-gray-900 dark:text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight">How AutoAid Works</h2>
+          <p className="text-gray-600 dark:text-text-muted mt-4 max-w-2xl mx-auto">Get back on the road in three simple steps. Our platform makes it easy to find and track help in real-time.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start relative">
           {/* Background Line */}
-          <div className="absolute top-12 left-0 w-full h-0.5 hidden md:block bg-gray-800"></div>
+          <div className="absolute top-12 left-0 w-full h-0.5 hidden md:block bg-gray-300 dark:bg-gray-800"></div>
 
           {/* Animated Progress Line */}
           <div
@@ -42,14 +42,14 @@ const HowItWorks = () => {
           {steps.map((step, index) => (
             <div key={index} className="flex flex-col items-center text-center relative z-10">
               <div
-                className={`flex items-center justify-center size-24 bg-card-dark border-2 rounded-full mb-4 transition-all duration-300 cursor-pointer ${index <= activeStep ? 'border-primary shadow-glow-md scale-110' : 'border-gray-700'}`}
+                className={`flex items-center justify-center size-24 bg-white dark:bg-card-dark border-2 rounded-full mb-4 transition-all duration-300 cursor-pointer ${index <= activeStep ? 'border-primary shadow-glow-md scale-110' : 'border-gray-300 dark:border-gray-700'}`}
                 onMouseEnter={() => setActiveStep(index)}
                 onMouseLeave={() => setActiveStep(-1)}
               >
-                <span className={`text-5xl transition-colors duration-300 ${index <= activeStep ? 'text-primary' : 'text-gray-500'}`}>{step.icon}</span>
+                <span className={`text-5xl transition-colors duration-300 ${index <= activeStep ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`}>{step.icon}</span>
               </div>
-              <h3 className="text-white text-xl font-bold mb-2">{step.title}</h3>
-              <p className="text-text-muted text-sm">{step.description}</p>
+              <h3 className="text-gray-900 dark:text-white text-xl font-bold mb-2">{step.title}</h3>
+              <p className="text-gray-600 dark:text-text-muted text-sm">{step.description}</p>
             </div>
           ))}
         </div>

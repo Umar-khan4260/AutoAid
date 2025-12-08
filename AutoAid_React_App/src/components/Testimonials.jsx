@@ -28,11 +28,11 @@ const Testimonials = () => {
     const row2 = [...testimonials, ...testimonials, ...testimonials, ...testimonials];
 
     return (
-        <section className="py-16 sm:py-24 bg-background-dark overflow-hidden">
+        <section className="py-16 sm:py-24 bg-background-light dark:bg-background-dark overflow-hidden transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
                 <div className="text-center">
-                    <h2 className="text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight">Trusted by Drivers Across Pakistan</h2>
-                    <p className="text-text-muted mt-4 max-w-2xl mx-auto">See what our users and providers have to say about their AutoAid experience.</p>
+                    <h2 className="text-gray-900 dark:text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight">Trusted by Drivers Across Pakistan</h2>
+                    <p className="text-gray-600 dark:text-text-muted mt-4 max-w-2xl mx-auto">See what our users and providers have to say about their AutoAid experience.</p>
                 </div>
             </div>
 
@@ -49,7 +49,7 @@ const Testimonials = () => {
                                         src={testimonial.image}
                                     />
                                     <div>
-                                        <p className="font-bold text-white">{testimonial.name}</p>
+                                        <p className="font-bold text-gray-900 dark:text-white">{testimonial.name}</p>
                                         <div className="flex text-yellow-400">
                                             {[...Array(5)].map((_, i) => (
                                                 <span key={i} className="text-base">
@@ -59,7 +59,7 @@ const Testimonials = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-text-muted text-sm italic">{testimonial.text}</p>
+                                <p className="text-gray-600 dark:text-text-muted text-sm italic">{testimonial.text}</p>
                             </div>
                         ))}
                     </div>
@@ -77,7 +77,7 @@ const Testimonials = () => {
                                         src={testimonial.image}
                                     />
                                     <div>
-                                        <p className="font-bold text-white">{testimonial.name}</p>
+                                        <p className="font-bold text-gray-900 dark:text-white">{testimonial.name}</p>
                                         <div className="flex text-yellow-400">
                                             {[...Array(5)].map((_, i) => (
                                                 <span key={i} className="text-base">
@@ -87,7 +87,7 @@ const Testimonials = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-text-muted text-sm italic">{testimonial.text}</p>
+                                <p className="text-gray-600 dark:text-text-muted text-sm italic">{testimonial.text}</p>
                             </div>
                         ))}
                     </div>

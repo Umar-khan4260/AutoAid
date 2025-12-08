@@ -21,7 +21,7 @@ const features = [
 
 const Features = () => {
     return (
-        <section className="py-16 sm:py-24 bg-card-dark/30">
+        <section className="py-16 sm:py-24 bg-gray-50 dark:bg-card-dark/30 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div className="relative">
@@ -33,17 +33,17 @@ const Features = () => {
                         />
                     </div>
                     <div>
-                        <h2 className="text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-6">Powered by <span className="gradient-text">Smart Technology</span></h2>
-                        <p className="text-text-muted mb-8">We use cutting-edge technology to ensure your safety and provide the fastest, most reliable service possible.</p>
+                        <h2 className="text-gray-900 dark:text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-6">Powered by <span className="gradient-text">Smart Technology</span></h2>
+                        <p className="text-gray-600 dark:text-text-muted mb-8">We use cutting-edge technology to ensure your safety and provide the fastest, most reliable service possible.</p>
                         <div className="flex flex-col gap-6">
                             {features.map((feature, index) => (
                                 <div key={index} className="flex items-start gap-4">
-                                    <div className="flex-shrink-0 size-10 flex items-center justify-center bg-card-dark rounded-lg border border-border-dark">
+                                    <div className="flex-shrink-0 size-10 flex items-center justify-center bg-white dark:bg-card-dark rounded-lg border border-gray-200 dark:border-border-dark shadow-sm">
                                         <span className="text-primary text-xl">{feature.icon}</span>
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-white">{feature.title}</h4>
-                                        <p className="text-text-muted text-sm">{feature.description}</p>
+                                        <h4 className="font-bold text-gray-900 dark:text-white">{feature.title}</h4>
+                                        <p className="text-gray-600 dark:text-text-muted text-sm">{feature.description}</p>
                                     </div>
                                 </div>
                             ))}

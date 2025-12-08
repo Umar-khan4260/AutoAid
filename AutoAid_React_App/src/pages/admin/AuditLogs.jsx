@@ -14,21 +14,21 @@ const AuditLogs = () => {
   return (
     <div className="space-y-6">
       <AdminPageHeader title="Audit Logs">
-        <button className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors border border-white/10">Export Logs</button>
+        <button className="px-4 py-2 bg-white dark:bg-card-dark hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-white rounded-lg transition-colors border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none">Export Logs</button>
       </AdminPageHeader>
 
       <AdminTable headers={['Date & Time', 'Admin', 'Action', 'Target', 'Details']}>
         {logs.map((log) => (
-          <tr key={log.id} className="hover:bg-white/5 transition-colors">
-            <td className="p-4 text-gray-400 text-sm whitespace-nowrap">{log.date}</td>
-            <td className="p-4 text-white font-medium">{log.admin}</td>
+          <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-white/5 last:border-0">
+            <td className="p-4 text-gray-500 dark:text-gray-400 text-sm whitespace-nowrap">{log.date}</td>
+            <td className="p-4 text-gray-900 dark:text-white font-medium">{log.admin}</td>
             <td className="p-4">
               <span className="px-2 py-1 rounded text-xs bg-primary/20 text-primary border border-primary/30">
                 {log.action}
               </span>
             </td>
-            <td className="p-4 text-gray-300">{log.target}</td>
-            <td className="p-4 text-gray-400 text-sm">{log.details}</td>
+            <td className="p-4 text-gray-700 dark:text-gray-300">{log.target}</td>
+            <td className="p-4 text-gray-500 dark:text-gray-400 text-sm">{log.details}</td>
           </tr>
         ))}
       </AdminTable>

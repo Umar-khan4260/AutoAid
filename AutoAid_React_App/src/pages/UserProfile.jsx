@@ -49,13 +49,13 @@ const UserProfile = () => {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-background-dark text-white font-display pt-24 px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display pt-24 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
             <div className="max-w-4xl mx-auto w-full">
-                <div className="bg-card-dark border border-border-dark rounded-xl shadow-xl overflow-hidden">
+                <div className="bg-white dark:bg-card-dark border border-gray-200 dark:border-border-dark rounded-xl shadow-xl overflow-hidden">
                     {/* Header with Background */}
                     <div className="h-32 bg-gradient-to-r from-primary to-blue-600 relative">
                         <div className="absolute -bottom-12 left-8">
-                            <div className="rounded-full border-4 border-card-dark bg-gray-800 p-1">
+                            <div className="rounded-full border-4 border-white dark:border-card-dark bg-gray-200 dark:bg-gray-800 p-1">
                                 {currentUser.photoURL ? (
                                     <img 
                                         src={currentUser.photoURL} 
@@ -73,7 +73,7 @@ const UserProfile = () => {
                     <div className="pt-16 pb-8 px-8">
                         <div className="flex justify-between items-start mb-6">
                             <div>
-                                <h1 className="text-3xl font-bold text-white mb-1">
+                                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                                     {userProfile?.fullName || currentUser.displayName || 'User'}
                                 </h1>
                                 <p className="text-text-muted text-sm">
@@ -83,25 +83,25 @@ const UserProfile = () => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                            <div className="p-4 bg-gray-900/50 rounded-lg border border-border-dark hover:border-primary/50 transition-colors">
+                            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-border-dark hover:border-primary/50 transition-colors">
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
                                         <FaEnvelope />
                                     </div>
                                     <span className="text-text-muted text-sm font-medium">Email Address</span>
                                 </div>
-                                <p className="text-white font-medium pl-11">{userProfile?.email || currentUser.email}</p>
+                                <p className="text-gray-900 dark:text-white font-medium pl-11">{userProfile?.email || currentUser.email}</p>
                             </div>
 
                             {userProfile?.contactNumber && (
-                                <div className="p-4 bg-gray-900/50 rounded-lg border border-border-dark hover:border-primary/50 transition-colors">
+                                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-border-dark hover:border-primary/50 transition-colors">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
                                             <FaPhone />
                                         </div>
                                         <span className="text-text-muted text-sm font-medium">Phone Number</span>
                                     </div>
-                                    <p className="text-white font-medium pl-11">{userProfile.contactNumber}</p>
+                                    <p className="text-gray-900 dark:text-white font-medium pl-11">{userProfile.contactNumber}</p>
                                 </div>
                             )}
                         </div>

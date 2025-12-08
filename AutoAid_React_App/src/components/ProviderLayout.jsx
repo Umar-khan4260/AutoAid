@@ -28,7 +28,7 @@ const ProviderLayout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-background-dark text-white font-display">
+    <div className="flex h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display transition-colors duration-300">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
@@ -39,7 +39,7 @@ const ProviderLayout = () => {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-surface-dark border-r border-gray-700 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-surface-dark border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -60,7 +60,7 @@ const ProviderLayout = () => {
                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
                       location.pathname === item.path || (item.path !== '/provider' && location.pathname.startsWith(item.path))
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary dark:hover:text-white'
                     }`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
@@ -84,16 +84,16 @@ const ProviderLayout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header (Mobile only) */}
-        <header className="lg:hidden bg-surface-dark border-b border-gray-700 p-4 flex justify-between items-center">
-          <button onClick={toggleSidebar} className="text-white">
+        <header className="lg:hidden bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center transition-colors duration-300">
+          <button onClick={toggleSidebar} className="text-gray-900 dark:text-white">
             <FaBars size={24} />
           </button>
-          <span className="font-bold text-lg">Provider Portal</span>
+          <span className="font-bold text-lg text-gray-900 dark:text-white">Provider Portal</span>
           <div className="w-6"></div> {/* Spacer for centering */}
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background-dark p-4 lg:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background-light dark:bg-background-dark p-4 lg:p-8 transition-colors duration-300">
           <Outlet />
         </main>
       </div>

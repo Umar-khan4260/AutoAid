@@ -28,7 +28,7 @@ const CustomSelect = ({ label, icon: Icon, options, value, onChange, name, place
 
     return (
         <div className="space-y-2" ref={dropdownRef}>
-            <label htmlFor={name} className="block text-sm font-medium text-text-muted">
+            <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                 {label}
             </label>
             <div className="relative">
@@ -38,11 +38,11 @@ const CustomSelect = ({ label, icon: Icon, options, value, onChange, name, place
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`block w-full pl-10 pr-10 py-3 bg-[#121A2A]/50 border rounded-xl text-left transition-all duration-300 cursor-pointer hover:bg-[#121A2A]/70 ${
+                    className={`block w-full pl-10 pr-10 py-3 bg-white dark:bg-[#121A2A]/50 border rounded-xl text-left transition-all duration-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#121A2A]/70 ${
                         isOpen 
                             ? 'border-primary ring-2 ring-primary/50' 
-                            : 'border-border-dark'
-                    } ${!value ? 'text-text-muted' : 'text-white'}`}
+                            : 'border-gray-300 dark:border-border-dark'
+                    } ${!value ? 'text-gray-500 dark:text-text-muted' : 'text-gray-900 dark:text-white'}`}
                 >
                     {selectedOption ? selectedOption.label : placeholder}
                 </button>
@@ -51,7 +51,7 @@ const CustomSelect = ({ label, icon: Icon, options, value, onChange, name, place
                 </div>
 
                 {/* Custom Dropdown */}
-                <div className={`absolute z-20 w-full mt-2 glassmorphism rounded-xl border border-border-dark overflow-hidden shadow-glow-lg transition-all duration-300 origin-top ${
+                <div className={`absolute z-20 w-full mt-2 glassmorphism bg-surface-light dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-border-dark overflow-hidden shadow-lg dark:shadow-glow-lg transition-all duration-300 origin-top ${
                     isOpen 
                         ? 'opacity-100 visible scale-y-100 translate-y-0' 
                         : 'opacity-0 invisible scale-y-95 -translate-y-2'
@@ -65,8 +65,8 @@ const CustomSelect = ({ label, icon: Icon, options, value, onChange, name, place
                                 disabled={option.disabled}
                                 className={`w-full text-left px-4 py-3 transition-all duration-300 ${
                                     option.disabled 
-                                        ? 'text-text-muted cursor-not-allowed opacity-50' 
-                                        : 'text-white hover:bg-primary/20 hover:text-primary cursor-pointer'
+                                        ? 'text-gray-400 dark:text-text-muted cursor-not-allowed opacity-50' 
+                                        : 'text-gray-900 dark:text-white hover:bg-primary/20 hover:text-primary cursor-pointer'
                                 } ${value === option.value ? 'bg-primary/10 text-primary' : ''}`}
                                 style={{
                                     transitionDelay: isOpen ? `${index * 50}ms` : '0ms',
@@ -207,7 +207,7 @@ const BreakdownRepair = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0B1120] pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
             {/* Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
@@ -219,12 +219,12 @@ const BreakdownRepair = () => {
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
                         <span className="gradient-text">Breakdown Repair</span>
                     </h1>
-                    <p className="text-text-muted text-lg max-w-2xl mx-auto">
+                    <p className="text-gray-600 dark:text-text-muted text-lg max-w-2xl mx-auto">
                         Stranded? Don't worry. Fill out the form below and we'll connect you with the nearest certified mechanic immediately.
                     </p>
                 </div>
 
-                <div className="glassmorphism rounded-2xl p-8 md:p-10 shadow-glow-lg border border-border-dark">
+                <div className="glassmorphism rounded-2xl p-8 md:p-10 shadow-lg dark:shadow-glow-lg border border-gray-200 dark:border-border-dark bg-surface-light dark:bg-surface-dark transition-colors duration-300">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Issue Type - Custom Select */}
@@ -254,7 +254,7 @@ const BreakdownRepair = () => {
                             {/* Other Company Input (conditional) */}
                             {formData.carCompany === 'Other' && (
                                 <div className="space-y-2 md:col-span-2 animate-fadeIn">
-                                    <label htmlFor="otherCompany" className="block text-sm font-medium text-text-muted">
+                                    <label htmlFor="otherCompany" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                         Specify Manufacturer
                                     </label>
                                     <div className="relative">
@@ -269,7 +269,7 @@ const BreakdownRepair = () => {
                                             placeholder="Enter manufacturer name"
                                             value={formData.otherCompany}
                                             onChange={handleChange}
-                                            className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                         />
                                     </div>
                                     {errors.otherCompany && (
@@ -280,7 +280,7 @@ const BreakdownRepair = () => {
 
                             {/* Vehicle Number */}
                             <div className="space-y-2">
-                                <label htmlFor="vehicleNumber" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="vehicleNumber" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Vehicle Number
                                 </label>
                                 <div className="relative">
@@ -295,14 +295,14 @@ const BreakdownRepair = () => {
                                         placeholder="ABC-123"
                                         value={formData.vehicleNumber}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
 
                             {/* Make/Model */}
                             <div className="space-y-2">
-                                <label htmlFor="makeModel" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="makeModel" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Car Model & Year
                                 </label>
                                 <div className="relative">
@@ -317,7 +317,7 @@ const BreakdownRepair = () => {
                                         placeholder="e.g. Corolla 2020"
                                         value={formData.makeModel}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                                 {errors.makeModel && (
@@ -327,7 +327,7 @@ const BreakdownRepair = () => {
 
                             {/* Contact Number */}
                             <div className="space-y-2 md:col-span-2">
-                                <label htmlFor="contactNumber" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Contact Number
                                 </label>
                                 <div className="relative">
@@ -342,7 +342,7 @@ const BreakdownRepair = () => {
                                         placeholder="0300-1234567"
                                         value={formData.contactNumber}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                                 {errors.contactNumber && (
@@ -352,7 +352,7 @@ const BreakdownRepair = () => {
 
                             {/* Description */}
                             <div className="space-y-2 md:col-span-2">
-                                <label htmlFor="description" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Issue Description
                                 </label>
                                 <div className="relative">
@@ -366,7 +366,7 @@ const BreakdownRepair = () => {
                                         placeholder="Please describe the issue in a little more detail..."
                                         value={formData.description}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
                                     ></textarea>
                                 </div>
                             </div>
