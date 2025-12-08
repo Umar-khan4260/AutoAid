@@ -38,12 +38,7 @@ const Login = () => {
 
         if (!isValid) return;
 
-        // Admin Bypass Check
-        if (email === 'umar68408@gmail.com' && password === '123456') {
-            console.log('Admin login detected');
-            navigate('/admin');
-            return;
-        }
+
 
         try {
             // 1. Authenticate with Firebase
@@ -68,9 +63,15 @@ const Login = () => {
             if (response.ok) {
                 // Login Success
                 console.log('Login Successful:', data.user);
-                // Store user info if needed (context/localStorage)
-                // For now, just navigate
-                navigate('/'); 
+                
+                // Redirect based on role
+                if (data.user.role === 'admin') {
+                    navigate('/admin');
+                } else if (data.user.role === 'provider') {
+                    navigate('/provider');
+                } else {
+                    navigate('/');
+                } 
             } else {
                 // Backend Error (e.g., pending approval)
                 alert(data.error);

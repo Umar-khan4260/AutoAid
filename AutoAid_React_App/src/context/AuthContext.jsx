@@ -13,8 +13,26 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setCurrentUser(user);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const response = await fetch('http://localhost:3000/api/auth/check', {
+                        method: 'GET',
+                        credentials: 'include',
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setCurrentUser({ ...user, ...data.user });
+                    } else {
+                        setCurrentUser(user);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch user profile", error);
+                    setCurrentUser(user);
+                }
+            } else {
+                setCurrentUser(null);
+            }
             setLoading(false);
         });
 
