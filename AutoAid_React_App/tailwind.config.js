@@ -9,13 +9,16 @@ export default {
     extend: {
       colors: {
         "primary": "#13c8ec",
-        "background-light": "#f6f8f8",
-        "background-dark": "#0A101C",
-        "surface-dark": "#121A2A", // Added missing color
+        "background-light": "#F9FAFB", // Updated to cleaner light gray
+        "background-dark": "#0B1120", // Updated to match RoutePlanning example
+        "surface-light": "#FFFFFF",
+        "surface-dark": "#121A2A",
         "card-dark": "#121A2A",
+        "border-light": "#E5E7EB",
         "border-dark": "rgba(45, 156, 219, 0.15)",
         "text-muted": "#8899A9",
         "text-dark": "#F9FAFB",
+        "text-light": "#1F2937", // Added dark text for light mode
         "subtle-dark": "#9CA3AF",
       },
       fontFamily: {

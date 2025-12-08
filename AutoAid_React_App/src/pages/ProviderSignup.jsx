@@ -126,14 +126,14 @@ const ProviderSignup = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background-dark text-text-dark font-display">
+        <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display transition-colors duration-300">
             <header className="absolute top-0 left-0 right-0 z-10 p-4 sm:p-6">
                 <div className="container mx-auto max-w-7xl">
                     <Link to="/" className="flex items-center gap-3 group w-fit">
-                        <div className="size-12 text-primary group-hover:text-white transition-colors duration-300 flex items-center justify-center">
+                        <div className="size-12 text-primary group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-300 flex items-center justify-center">
                             <FaCar className="text-4xl" />
                         </div>
-                        <h2 className="text-white text-3xl font-bold tracking-tight group-hover:text-primary transition-colors duration-300">
+                        <h2 className="text-gray-900 dark:text-white text-3xl font-bold tracking-tight group-hover:text-primary transition-colors duration-300">
                             AutoAid
                         </h2>
                     </Link>
@@ -141,28 +141,28 @@ const ProviderSignup = () => {
             </header>
             <main className="flex flex-grow w-full">
                 <div className="flex items-stretch w-full">
-                    <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-900 relative">
+                    <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-100 dark:bg-gray-900 relative">
                         <img
                             alt="Service provider helping a motorist"
                             className="absolute h-full w-full object-cover opacity-30"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDM-rLn82Hbq4z48Rm6B6xzCfVDn3Bd2Cw-0yoebQNSgXqIFfca1aPh3WcIt5iYjEWr5ld_mKVZZNoGxuVEmS_bmj8XLiMtywIl7DKFoiO6Yf10YmM235HnoUeOdmN-7faO_IncRwCPFZ3OeeYvgym6wlhC1TzCQUMTRMAer-skIgQqmiseNpEFQc_b61hu4aehiIbgV2nLxtRLTAmfurmzNe8Fk64BCcqkSQuddZomVPU01Q9XOK5LOMlGNFWTFy4dWkEmJEruAv5q"
                         />
-                        <div className="relative z-10 text-center text-white p-12 max-w-lg">
+                        <div className="relative z-10 text-center text-gray-900 dark:text-white p-12 max-w-lg">
                             <h2 className="text-4xl font-bold mb-4">Become an AutoAid Service Partner.</h2>
-                            <p className="text-lg text-gray-300">
+                            <p className="text-lg text-gray-700 dark:text-gray-300">
                                 Join our network of trusted professionals and help drivers get back on the road. Your skills are needed.
                             </p>
                         </div>
                     </div>
                     <div className="w-full lg:w-1/2 flex items-center justify-center p-4">
-                        <div className="w-full max-w-md p-6 sm:p-8 space-y-4 bg-card-dark rounded-lg shadow-xl border border-border-dark overflow-y-auto max-h-[95vh]">
+                        <div className="w-full max-w-md p-6 sm:p-8 space-y-4 bg-white dark:bg-card-dark rounded-lg shadow-xl border border-gray-200 dark:border-border-dark overflow-y-auto max-h-[95vh]">
                             <div className="text-center">
-                                <h1 className="text-3xl font-bold tracking-tight text-text-dark">Service Provider Registration</h1>
-                                <p className="mt-2 text-subtle-dark">Join our network to provide assistance.</p>
+                                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-text-dark">Service Provider Registration</h1>
+                                <p className="mt-2 text-gray-600 dark:text-subtle-dark">Join our network to provide assistance.</p>
                             </div>
                             <form className="space-y-4" onSubmit={handleSubmit}>
                                 <div>
-                                    <label className="block text-sm font-medium text-subtle-dark mb-2">Service Type</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark mb-2">Service Type</label>
                                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center">
                                         {[
                                             { id: 'breakdown-assistance', icon: FaTools, label: 'Breakdown' },
@@ -174,8 +174,8 @@ const ProviderSignup = () => {
                                             <div
                                                 key={service.id}
                                                 className={`flex flex-col items-center p-2 border rounded-lg cursor-pointer transition-colors ${serviceType === service.id
-                                                    ? 'border-primary bg-gray-700'
-                                                    : 'border-border-dark hover:bg-gray-700'
+                                                    ? 'border-primary bg-primary/10 dark:bg-gray-700'
+                                                    : 'border-gray-200 dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-700'
                                                     }`}
                                                 onClick={() => handleServiceSelect(service.id)}
                                             >
@@ -189,11 +189,11 @@ const ProviderSignup = () => {
                                 {serviceType && (
                                     <div className="space-y-4 animate-fadeIn">
                                         <div>
-                                            <label className="block text-sm font-medium text-subtle-dark" htmlFor="fullName">Full Name</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="fullName">Full Name</label>
                                             <div className="mt-1 relative">
-                                                <MdPerson className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
+                                                <MdPerson className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-subtle-dark pointer-events-none text-xl" />
                                                 <input
-                                                    className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                     id="fullName"
                                                     name="fullName"
                                                     placeholder="John Doe"
@@ -206,9 +206,9 @@ const ProviderSignup = () => {
                                         <div>
                                             <label className="block text-sm font-medium text-subtle-dark" htmlFor="email">Email Address</label>
                                             <div className="mt-1 relative">
-                                                <MdMail className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
+                                                <MdMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-subtle-dark pointer-events-none text-xl" />
                                                 <input
-                                                    className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                     id="email"
                                                     name="email"
                                                     placeholder="you@example.com"
@@ -221,9 +221,9 @@ const ProviderSignup = () => {
                                         <div>
                                             <label className="block text-sm font-medium text-subtle-dark" htmlFor="contactNumber">Contact Number</label>
                                             <div className="mt-1 relative">
-                                                <MdCall className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
+                                                <MdCall className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-subtle-dark pointer-events-none text-xl" />
                                                 <input
-                                                    className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                     id="contactNumber"
                                                     name="contactNumber"
                                                     placeholder="(123) 456-7890"
@@ -235,9 +235,9 @@ const ProviderSignup = () => {
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-subtle-dark" htmlFor="dob">Date of Birth</label>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="dob">Date of Birth</label>
                                                 <input
-                                                    className="mt-1 block w-full py-2 px-3 border border-border-dark rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                    className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                     id="dob"
                                                     name="dob"
                                                     required
@@ -246,9 +246,9 @@ const ProviderSignup = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-subtle-dark" htmlFor="gender">Gender</label>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="gender">Gender</label>
                                                 <select
-                                                    className="mt-1 block w-full py-2 px-3 border border-border-dark rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                    className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                     id="gender"
                                                     name="gender"
                                                     required
@@ -265,20 +265,20 @@ const ProviderSignup = () => {
 
                                         {/* File Uploads */}
                                         <div>
-                                            <label className="block text-sm font-medium text-subtle-dark">Profile Picture</label>
-                                            <div className="mt-1 flex items-center justify-between p-2 border border-border-dark rounded-md bg-gray-700">
-                                                <span className="flex-1 min-w-0 text-sm text-subtle-dark truncate" id="profile-pic-name">No file chosen</span>
-                                                <label className="flex items-center justify-center px-4 py-2 text-sm font-medium text-subtle-dark bg-gray-600 border border-transparent rounded-md cursor-pointer hover:bg-gray-500">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark">Profile Picture</label>
+                                            <div className="mt-1 flex items-center justify-between p-2 border border-gray-300 dark:border-border-dark rounded-md bg-white dark:bg-gray-700">
+                                                <span className="flex-1 min-w-0 text-sm text-gray-600 dark:text-subtle-dark truncate" id="profile-pic-name">No file chosen</span>
+                                                <label className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-subtle-dark bg-gray-200 dark:bg-gray-600 border border-transparent rounded-md cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500">
                                                     <FaUpload className="mr-2" /> Choose File
                                                     <input accept="image/*" className="hidden" type="file" onChange={(e) => handleFileChange(e, 'profile-pic')} />
                                                 </label>
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-subtle-dark">CNIC Picture</label>
-                                            <div className="mt-1 flex items-center justify-between p-2 border border-border-dark rounded-md bg-gray-700">
-                                                <span className="flex-1 min-w-0 text-sm text-subtle-dark truncate" id="cnic-pic-name">No file chosen</span>
-                                                <label className="flex items-center justify-center px-4 py-2 text-sm font-medium text-subtle-dark bg-gray-600 border border-transparent rounded-md cursor-pointer hover:bg-gray-500">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark">CNIC Picture</label>
+                                            <div className="mt-1 flex items-center justify-between p-2 border border-gray-300 dark:border-border-dark rounded-md bg-white dark:bg-gray-700">
+                                                <span className="flex-1 min-w-0 text-sm text-gray-600 dark:text-subtle-dark truncate" id="cnic-pic-name">No file chosen</span>
+                                                <label className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-subtle-dark bg-gray-200 dark:bg-gray-600 border border-transparent rounded-md cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500">
                                                     <FaUpload className="mr-2" /> Choose File
                                                     <input accept="image/*" className="hidden" type="file" onChange={(e) => handleFileChange(e, 'cnic-pic')} />
                                                 </label>
@@ -288,10 +288,10 @@ const ProviderSignup = () => {
                                         {/* Conditional Fields */}
                                         {serviceType === 'temporary-driver' && (
                                             <div>
-                                                <label className="block text-sm font-medium text-subtle-dark">Driving License Picture</label>
-                                                <div className="mt-1 flex items-center justify-between p-2 border border-border-dark rounded-md bg-gray-700">
-                                                    <span className="flex-1 min-w-0 text-sm text-subtle-dark truncate" id="license-pic-name">No file chosen</span>
-                                                    <label className="flex items-center justify-center px-4 py-2 text-sm font-medium text-subtle-dark bg-gray-600 border border-transparent rounded-md cursor-pointer hover:bg-gray-500">
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark">Driving License Picture</label>
+                                                <div className="mt-1 flex items-center justify-between p-2 border border-gray-300 dark:border-border-dark rounded-md bg-white dark:bg-gray-700">
+                                                    <span className="flex-1 min-w-0 text-sm text-gray-600 dark:text-subtle-dark truncate" id="license-pic-name">No file chosen</span>
+                                                    <label className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-subtle-dark bg-gray-200 dark:bg-gray-600 border border-transparent rounded-md cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500">
                                                         <FaUpload className="mr-2" /> Choose File
                                                         <input accept="image/*" className="hidden" type="file" onChange={(e) => handleFileChange(e, 'license-pic')} />
                                                     </label>
@@ -302,9 +302,9 @@ const ProviderSignup = () => {
                                         {serviceType === 'towing-service' && (
                                             <div className="space-y-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-subtle-dark" htmlFor="towingVehicleNumber">Towing Vehicle Number</label>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="towingVehicleNumber">Towing Vehicle Number</label>
                                                     <input
-                                                        className="mt-1 block w-full py-2 px-3 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                        className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                         id="towingVehicleNumber"
                                                         name="towingVehicleNumber"
                                                         placeholder="ABC-123"
@@ -313,9 +313,9 @@ const ProviderSignup = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-subtle-dark" htmlFor="towingMake">Make</label>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="towingMake">Make</label>
                                                     <input
-                                                        className="mt-1 block w-full py-2 px-3 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                        className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                         id="towingMake"
                                                         name="towingMake"
                                                         placeholder="Ford"
@@ -324,9 +324,9 @@ const ProviderSignup = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-subtle-dark" htmlFor="towingModel">Model</label>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="towingModel">Model</label>
                                                     <input
-                                                        className="mt-1 block w-full py-2 px-3 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                        className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                         id="towingModel"
                                                         name="towingModel"
                                                         placeholder="F-150"
@@ -338,11 +338,11 @@ const ProviderSignup = () => {
                                         )}
 
                                         <div>
-                                            <label className="block text-sm font-medium text-subtle-dark" htmlFor="password">Password</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="password">Password</label>
                                             <div className="mt-1 relative">
-                                                <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
+                                                <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-subtle-dark pointer-events-none text-xl" />
                                                 <input
-                                                    className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                     id="password"
                                                     name="password"
                                                     placeholder="••••••••"
@@ -353,11 +353,11 @@ const ProviderSignup = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-subtle-dark" htmlFor="confirmPassword">Confirm Password</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="confirmPassword">Confirm Password</label>
                                             <div className="mt-1 relative">
-                                                <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle-dark pointer-events-none text-xl" />
+                                                <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-subtle-dark pointer-events-none text-xl" />
                                                 <input
-                                                    className="block w-full pl-10 pr-3 py-2 border border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-gray-700 text-text-dark"
+                                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
                                                     id="confirmPassword"
                                                     name="confirmPassword"
                                                     placeholder="••••••••"
@@ -370,7 +370,7 @@ const ProviderSignup = () => {
 
                                         <div className="pt-2">
                                             <button
-                                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-background-dark bg-primary hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card-dark focus:ring-primary transition-colors duration-200"
+                                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-primary hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background-light dark:focus:ring-offset-card-dark focus:ring-primary transition-colors duration-200"
                                                 type="submit"
                                             >
                                                 Sign Up
@@ -383,7 +383,7 @@ const ProviderSignup = () => {
                             {serviceType && (
                                 <div className="animate-fadeIn">
 
-                                    <div className="text-center text-sm text-subtle-dark mt-4">
+                                    <div className="text-center text-sm text-gray-600 dark:text-subtle-dark mt-4">
                                         <p>
                                             Already have an account?{' '}
                                             <Link className="font-medium text-primary hover:underline" to="/login">

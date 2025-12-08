@@ -23,22 +23,22 @@ const UserManagement = () => {
             <input 
                 type="text" 
                 placeholder="Search users..." 
-                className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-primary/50 w-64"
+                className="bg-white dark:bg-card-dark border border-gray-300 dark:border-white/10 rounded-lg px-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-primary/50 w-64 shadow-sm dark:shadow-none transition-colors"
             />
         </div>
       </AdminPageHeader>
 
       <AdminTable headers={['User', 'Role', 'Status', 'Joined', 'Actions']}>
         {users.map((user) => (
-          <tr key={user.id} className="hover:bg-white/5 transition-colors">
+          <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-white/5 last:border-0">
             <td className="p-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
                   {user.name.charAt(0)}
                 </div>
                 <div>
-                  <div className="text-white font-medium">{user.name}</div>
-                  <div className="text-xs text-gray-400">{user.email}</div>
+                  <div className="text-gray-900 dark:text-white font-medium">{user.name}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
                 </div>
               </div>
             </td>
@@ -48,7 +48,7 @@ const UserManagement = () => {
             <td className="p-4">
               <StatusBadge status={user.status} />
             </td>
-            <td className="p-4 text-gray-400 text-sm">{user.joined}</td>
+            <td className="p-4 text-gray-500 dark:text-gray-400 text-sm">{user.joined}</td>
             <td className="p-4 text-right">
               {user.status === 'Active' ? (
                   <button 

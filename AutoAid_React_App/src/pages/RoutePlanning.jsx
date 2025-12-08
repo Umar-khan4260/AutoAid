@@ -109,7 +109,7 @@ const RoutePlanning = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0B1120] pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
             {/* Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse"></div>
@@ -117,7 +117,7 @@ const RoutePlanning = () => {
 
             <div className="max-w-7xl mx-auto relative z-10">
                 <div className="mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
                         NHA Route Announcements
                     </h1>
                     <p className="text-text-muted">
@@ -130,7 +130,7 @@ const RoutePlanning = () => {
                     <div className="lg:col-span-4 space-y-6">
                         {/* Plan Your Route Card */}
                         <div className="glassmorphism rounded-2xl p-6 border border-border-dark">
-                            <h2 className="text-xl font-bold text-white mb-6">Plan Your Route</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Plan Your Route</h2>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-2">
                                     <label htmlFor="startLocation" className="block text-sm font-medium text-text-muted">
@@ -145,7 +145,7 @@ const RoutePlanning = () => {
                                             placeholder="e.g., Islamabad Toll Plaza"
                                             value={formData.startLocation}
                                             onChange={handleChange}
-                                            className="block w-full px-4 py-3 bg-[#121A2A] border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            className="block w-full px-4 py-3 bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                         />
                                     </div>
                                 </div>
@@ -163,7 +163,7 @@ const RoutePlanning = () => {
                                             placeholder="e.g., Lahore"
                                             value={formData.endLocation}
                                             onChange={handleChange}
-                                            className="block w-full px-4 py-3 bg-[#121A2A] border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            className="block w-full px-4 py-3 bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                         />
                                     </div>
                                 </div>
@@ -184,7 +184,7 @@ const RoutePlanning = () => {
                                             min={new Date().toISOString().split('T')[0]}
                                             value={formData.travelDate}
                                             onChange={handleChange}
-                                            className="block w-full pl-10 pr-4 py-3 bg-[#121A2A] border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            className="block w-full pl-10 pr-4 py-3 bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                         />
                                     </div>
                                 </div>
@@ -207,7 +207,7 @@ const RoutePlanning = () => {
                         {/* Real-Time NHA Alerts Card */}
                         <div className="glassmorphism rounded-2xl p-6 border border-border-dark min-h-[400px]">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white">Real-Time NHA Alerts</h2>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Real-Time NHA Alerts</h2>
                                 <button className="text-text-muted hover:text-primary transition-colors">
                                     <FaSyncAlt className="text-sm" />
                                     <span className="sr-only">Refresh</span>
@@ -219,12 +219,12 @@ const RoutePlanning = () => {
                                     mockAnnouncements.map((alert) => (
                                         <div 
                                             key={alert.id} 
-                                            className={`bg-[#121A2A]/50 rounded-xl p-4 border-l-4 ${alert.color} hover:bg-[#121A2A] transition-all cursor-pointer`}
+                                            className={`bg-white/50 dark:bg-[#121A2A]/50 rounded-xl p-4 border-l-4 ${alert.color} hover:bg-white dark:hover:bg-[#121A2A] shadow-sm transition-all cursor-pointer`}
                                         >
                                             <div className="flex items-start gap-3">
                                                 <FaExclamationTriangle className={`${alert.iconColor} mt-1 flex-shrink-0`} />
                                                 <div>
-                                                    <h3 className="text-white font-bold text-sm mb-1">{alert.title}</h3>
+                                                    <h3 className="text-gray-900 dark:text-white font-bold text-sm mb-1">{alert.title}</h3>
                                                     <p className="text-text-muted text-xs leading-relaxed">
                                                         {alert.description}
                                                     </p>
@@ -245,7 +245,7 @@ const RoutePlanning = () => {
                     {/* Right Content */}
                     <div className="lg:col-span-8 space-y-6">
                         {/* Map Container */}
-                        <div className="glassmorphism rounded-2xl overflow-hidden border border-border-dark h-[500px] relative bg-[#121A2A] group">
+                        <div className="glassmorphism rounded-2xl overflow-hidden border border-gray-200 dark:border-border-dark h-[500px] relative bg-surface-light dark:bg-surface-dark group">
                             <iframe 
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d425291.3881526467!2d72.76655610811828!3d33.61606277732232!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38dfbfd07891722f%3A0x6059515c3bdb02b6!2sIslamabad%2C%20Islamabad%20Capital%20Territory%2C%20Pakistan!5e0!3m2!1sen!2s!4v1709765432100!5m2!1sen!2s" 
                                 width="100%" 
@@ -260,21 +260,21 @@ const RoutePlanning = () => {
 
                         {/* Suggested Alternative Routes */}
                         <div className="glassmorphism rounded-2xl p-6 border border-border-dark">
-                            <h2 className="text-xl font-bold text-white mb-6">Suggested Alternative Routes</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Suggested Alternative Routes</h2>
                             
                             <div className="space-y-4">
                                 {showResults ? (
                                     mockAlternativeRoutes.map((route) => (
-                                        <div key={route.id} className="bg-[#121A2A]/50 rounded-xl p-5 border border-border-dark/50 hover:border-primary/30 transition-all">
+                                        <div key={route.id} className="bg-white/50 dark:bg-[#121A2A]/50 rounded-xl p-5 border border-gray-200 dark:border-border-dark/50 hover:border-primary/30 transition-all shadow-sm">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-white mb-1">{route.name}</h3>
+                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{route.name}</h3>
                                                     <p className="text-text-muted text-sm">{route.description}</p>
                                                 </div>
                                                 
                                                 <div className="flex items-center gap-6">
                                                     <div className="text-right">
-                                                        <div className="text-white font-bold text-lg">{route.distance}</div>
+                                                        <div className="text-gray-900 dark:text-white font-bold text-lg">{route.distance}</div>
                                                         <div className="text-text-muted text-xs">Distance</div>
                                                     </div>
                                                     <div className="text-right">

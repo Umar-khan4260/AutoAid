@@ -3,10 +3,7 @@
 @tailwind utilities;
 
 .glassmorphism {
-  background: rgba(18, 26, 42, 0.6);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(45, 156, 219, 0.15);
+  @apply bg-white/70 dark:bg-[#121A2A]/60 border border-gray-200 dark:border-border-dark backdrop-blur-md;
 }
 
 .step-connector {

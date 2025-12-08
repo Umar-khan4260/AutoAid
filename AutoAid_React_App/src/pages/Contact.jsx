@@ -96,11 +96,11 @@ const Contact = () => {
 
     return (
         <div className="pt-0">
-            <section className="py-20 bg-background-dark">
+            <section className="py-20 bg-background-light dark:bg-background-dark transition-colors duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">Get in Touch</h1>
-                        <p className="text-xl text-text-muted max-w-2xl mx-auto">
+                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">Get in Touch</h1>
+                        <p className="text-xl text-gray-600 dark:text-text-muted max-w-2xl mx-auto">
                             Have questions or need support? We're here to help. Reach out to us through any of the channels below.
                         </p>
                     </div>
@@ -108,32 +108,32 @@ const Contact = () => {
                     <div className="grid lg:grid-cols-2 gap-12 items-start">
                         {/* Contact Form */}
                         <div className="glassmorphism p-8 rounded-2xl">
-                            <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Send us a Message</h2>
                             <form className="space-y-6" onSubmit={handleSubmit}>
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-text-muted text-sm font-medium mb-2">Name</label>
+                                        <label className="block text-gray-600 dark:text-text-muted text-sm font-medium mb-2">Name</label>
                                         <input
                                             type="text"
                                             name="name"
                                             value={formData.name}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
-                                            className={`w-full bg-[#121A2A] border ${errors.name ? 'border-red-500' : 'border-border-dark'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors`}
+                                            className={`w-full bg-white dark:bg-[#121A2A] border ${errors.name ? 'border-red-500' : 'border-gray-200 dark:border-border-dark'} rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary transition-colors`}
                                             placeholder="Your Name"
                                             required
                                         />
                                         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-text-muted text-sm font-medium mb-2">Email</label>
+                                        <label className="block text-gray-600 dark:text-text-muted text-sm font-medium mb-2">Email</label>
                                         <input
                                             type="text"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
-                                            className={`w-full bg-[#121A2A] border ${errors.email ? 'border-red-500' : 'border-border-dark'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors`}
+                                            className={`w-full bg-white dark:bg-[#121A2A] border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-border-dark'} rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary transition-colors`}
                                             placeholder="your@email.com"
                                             required
                                         />
@@ -141,25 +141,25 @@ const Contact = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-text-muted text-sm font-medium mb-2">Subject</label>
+                                    <label className="block text-gray-600 dark:text-text-muted text-sm font-medium mb-2">Subject</label>
                                     <input
                                         type="text"
                                         name="subject"
                                         value={formData.subject}
                                         onChange={handleChange}
-                                        className="w-full bg-[#121A2A] border border-border-dark rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                                        className="w-full bg-white dark:bg-[#121A2A] border border-gray-200 dark:border-border-dark rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary transition-colors"
                                         placeholder="How can we help?"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-text-muted text-sm font-medium mb-2">Message</label>
+                                    <label className="block text-gray-600 dark:text-text-muted text-sm font-medium mb-2">Message</label>
                                     <textarea
                                         rows="4"
                                         name="message"
                                         value={formData.message}
                                         onChange={handleChange}
-                                        className="w-full bg-[#121A2A] border border-border-dark rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                                        className="w-full bg-white dark:bg-[#121A2A] border border-gray-200 dark:border-border-dark rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary transition-colors"
                                         placeholder="Your message..."
                                         required
                                     ></textarea>
@@ -177,8 +177,8 @@ const Contact = () => {
                                     <FaMapMarkerAlt />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Visit Us</h3>
-                                    <p className="text-text-muted">123 Innovation Drive, Tech Park<br />Lahore, Pakistan</p>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Visit Us</h3>
+                                    <p className="text-gray-600 dark:text-text-muted">123 Innovation Drive, Tech Park<br />Lahore, Pakistan</p>
                                 </div>
                             </div>
                             <div className="glassmorphism p-8 rounded-2xl flex items-start gap-6">
@@ -186,8 +186,8 @@ const Contact = () => {
                                     <FaPhone />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Call Us</h3>
-                                    <p className="text-text-muted">+92 300 1234567<br />Mon-Fri, 9am - 6pm</p>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Call Us</h3>
+                                    <p className="text-gray-600 dark:text-text-muted">+92 300 1234567<br />Mon-Fri, 9am - 6pm</p>
                                 </div>
                             </div>
                             <div className="glassmorphism p-8 rounded-2xl flex items-start gap-6">
@@ -195,8 +195,8 @@ const Contact = () => {
                                     <FaEnvelope />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Email Us</h3>
-                                    <p className="text-text-muted">support@autoaid.pk<br />info@autoaid.pk</p>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Email Us</h3>
+                                    <p className="text-gray-600 dark:text-text-muted">support@autoaid.pk<br />info@autoaid.pk</p>
                                 </div>
                             </div>
                         </div>

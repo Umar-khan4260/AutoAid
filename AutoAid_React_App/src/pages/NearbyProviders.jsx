@@ -61,25 +61,25 @@ const NearbyProviders = () => {
     ];
 
     return (
-        <div className="flex h-[calc(100vh-80px)] bg-[#0B1120] overflow-hidden">
+        <div className="flex h-[calc(100vh-80px)] bg-background-light dark:bg-background-dark overflow-hidden transition-colors duration-300">
             {/* Sidebar - Provider List */}
-            <div className="w-full md:w-[400px] flex flex-col border-r border-border-dark bg-[#121A2A] z-20">
+            <div className="w-full md:w-[400px] flex flex-col border-r border-gray-200 dark:border-border-dark bg-surface-light dark:bg-surface-dark z-20">
                 {/* Header */}
-                <div className="p-4 border-b border-border-dark flex flex-col gap-3">
-                    <h2 className="text-xl font-bold text-white">Nearby {serviceType} Providers</h2>
+                <div className="p-4 border-b border-gray-200 dark:border-border-dark flex flex-col gap-3">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nearby {serviceType} Providers</h2>
                     
                     {/* Filter Bar */}
                     <div className="flex items-center gap-2">
                         <div className="relative flex-grow">
                             <MdMyLocation className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <select className="w-full bg-[#0B1120] text-sm text-white pl-9 pr-8 py-2.5 rounded-lg border border-border-dark focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+                            <select className="w-full bg-white dark:bg-[#0B1120] text-sm text-gray-700 dark:text-white pl-9 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-border-dark focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
                                 <option>Sort by: Distance</option>
                                 <option>Sort by: Rating</option>
                                 <option>Sort by: ETA</option>
                             </select>
                             <FaChevronLeft className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 rotate-[-90deg] text-xs pointer-events-none" />
                         </div>
-                        <button className="p-2.5 bg-[#0B1120] border border-border-dark rounded-lg text-white hover:bg-white/5 transition-colors">
+                        <button className="p-2.5 bg-white dark:bg-[#0B1120] border border-gray-300 dark:border-border-dark rounded-lg text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                             <FaFilter />
                         </button>
                     </div>
@@ -88,7 +88,7 @@ const NearbyProviders = () => {
                 {/* Provider List */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
                     {providers.map((provider) => (
-                        <div key={provider.id} className="bg-[#0B1120] rounded-xl p-3 border border-border-dark hover:border-primary/50 transition-all duration-300 group cursor-pointer">
+                        <div key={provider.id} className="bg-white dark:bg-[#0B1120] rounded-xl p-3 border border-gray-200 dark:border-border-dark hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer">
                             <div className="flex gap-4">
                                 {/* Image */}
                                 <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-800">
@@ -100,19 +100,19 @@ const NearbyProviders = () => {
                                     <div>
                                         <div className="flex items-center gap-1 mb-1">
                                             <FaStar className="text-yellow-500 text-xs" />
-                                            <span className="text-white text-sm font-bold">{provider.rating}</span>
+                                            <span className="text-gray-900 dark:text-white text-sm font-bold">{provider.rating}</span>
                                         </div>
-                                        <h3 className="text-white font-bold text-base leading-tight mb-1">{provider.name}</h3>
-                                        <p className="text-text-muted text-xs">{provider.service}</p>
+                                        <h3 className="text-gray-900 dark:text-white font-bold text-base leading-tight mb-1">{provider.name}</h3>
+                                        <p className="text-gray-500 dark:text-text-muted text-xs">{provider.service}</p>
                                     </div>
                                     
-                                    <button className="mt-2 w-fit px-4 py-1.5 bg-[#1E293B] hover:bg-primary text-white text-xs font-semibold rounded-md transition-colors duration-300 border border-white/10">
+                                    <button className="mt-2 w-fit px-4 py-1.5 bg-gray-100 dark:bg-[#1E293B] hover:bg-primary hover:text-white text-gray-700 dark:text-white text-xs font-semibold rounded-md transition-colors duration-300 border border-gray-200 dark:border-white/10">
                                         Request
                                     </button>
                                 </div>
                             </div>
                             
-                            <div className="mt-3 flex items-center justify-between text-xs text-text-muted border-t border-white/5 pt-2">
+                            <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-text-muted border-t border-gray-100 dark:border-white/5 pt-2">
                                 <div className="flex items-center gap-1">
                                     <FaLocationArrow className="text-[10px]" />
                                     {provider.distance}
@@ -127,7 +127,7 @@ const NearbyProviders = () => {
                 </div>
 
                 {/* Footer - Search Radius */}
-                <div className="p-4 border-t border-border-dark bg-[#121A2A]">
+                <div className="p-4 border-t border-gray-200 dark:border-border-dark bg-white dark:bg-[#121A2A]">
                     <div className="bg-primary hover:bg-cyan-500 text-white font-bold py-3 rounded-lg text-center cursor-pointer transition-colors shadow-lg shadow-primary/20">
                         Search radius: {searchRadius} miles
                     </div>
@@ -148,11 +148,11 @@ const NearbyProviders = () => {
                 ></iframe>
 
                 {/* Current Content Overlay (Top Left) */}
-                <div className="absolute top-4 left-4 bg-[#121A2A] p-3 rounded-xl border border-border-dark shadow-lg max-w-xs pointer-events-none">
+                <div className="absolute top-4 left-4 bg-white dark:bg-[#121A2A] p-3 rounded-xl border border-gray-200 dark:border-border-dark shadow-lg max-w-xs pointer-events-none">
                     <div className="flex items-start justify-between mb-1">
-                        <h4 className="text-white text-sm font-bold">New York</h4>
+                        <h4 className="text-gray-900 dark:text-white text-sm font-bold">New York</h4>
                     </div>
-                    <p className="text-text-muted text-xs">New York, USA</p>
+                    <p className="text-gray-500 dark:text-text-muted text-xs">New York, USA</p>
                 </div>
             </div>
         </div>

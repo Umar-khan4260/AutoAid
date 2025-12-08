@@ -50,7 +50,7 @@ const ProviderRequests = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-white">Incoming Requests</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Incoming Requests</h1>
         <span className="bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-bold">
           {requests.length} New Requests
         </span>
@@ -58,24 +58,24 @@ const ProviderRequests = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {requests.map((request) => (
-          <div key={request.id} className="bg-surface-dark rounded-xl border border-gray-700 overflow-hidden shadow-lg hover:border-primary/50 transition-all duration-300">
+          <div key={request.id} className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg hover:border-primary/50 transition-all duration-300">
             <div className="p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-xl text-gray-300">
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-xl text-gray-600 dark:text-gray-300">
                     <FaUser />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">{request.user}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{request.user}</h3>
                     <p className="text-primary font-medium">{request.service}</p>
                   </div>
                 </div>
-                <span className="text-sm text-gray-400 flex items-center gap-1">
+                <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                   <FaClock /> {request.time}
                 </span>
               </div>
 
-              <div className="space-y-2 text-gray-300">
+              <div className="space-y-2 text-gray-700 dark:text-gray-300">
                 <div className="flex items-start gap-3">
                   <FaCar className="mt-1 text-gray-500" />
                   <span>{request.vehicle}</span>
@@ -84,12 +84,12 @@ const ProviderRequests = () => {
                   <FaMapMarkerAlt className="mt-1 text-gray-500" />
                   <span>{request.location} <span className="text-primary text-sm ml-2">({request.distance})</span></span>
                 </div>
-                <div className="bg-gray-800/50 p-3 rounded-lg text-sm text-gray-400 mt-2">
-                  <span className="font-semibold text-gray-300">Issue:</span> {request.issue}
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  <span className="font-semibold text-gray-900 dark:text-gray-300">Issue:</span> {request.issue}
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4 border-t border-gray-700">
+              <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button 
                   onClick={() => handleReject(request.id)}
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors font-medium"

@@ -8,48 +8,48 @@ const Careers = () => {
     return (
         <div className="pt-0">
             {/* Hero Section */}
-            <section className="relative py-20 bg-background-dark">
+            <section className="relative py-20 bg-background-light dark:bg-background-dark transition-colors duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">Drive the Future of Roadside Assistance</h1>
-                    <p className="text-xl text-text-muted max-w-3xl mx-auto">
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">Drive the Future of Roadside Assistance</h1>
+                    <p className="text-xl text-gray-600 dark:text-text-muted max-w-3xl mx-auto">
                         Join AutoAid and help us build a safer, stress-free driving experience for everyone. We're connecting drivers with immediate help when they need it most.
                     </p>
                 </div>
             </section>
 
             {/* Benefits */}
-            <section className="py-16 bg-[#121A2A]">
+            <section className="py-16 bg-gray-50 dark:bg-[#121A2A] transition-colors duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid md:grid-cols-3 gap-8">
                         <div className="glassmorphism p-8 rounded-2xl text-center">
                             <div className="size-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 text-primary text-2xl">
                                 <FaHandsHelping />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-3">Real-World Impact</h3>
-                            <p className="text-text-muted">Every line of code you write helps someone stranded on the road get home safely.</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Real-World Impact</h3>
+                            <p className="text-gray-600 dark:text-text-muted">Every line of code you write helps someone stranded on the road get home safely.</p>
                         </div>
                         <div className="glassmorphism p-8 rounded-2xl text-center">
                             <div className="size-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 text-primary text-2xl">
                                 <FaMapMarkedAlt />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-3">Innovation at Core</h3>
-                            <p className="text-text-muted">Work on smart routing, real-time tracking, and seamless service matching algorithms.</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Innovation at Core</h3>
+                            <p className="text-gray-600 dark:text-text-muted">Work on smart routing, real-time tracking, and seamless service matching algorithms.</p>
                         </div>
                         <div className="glassmorphism p-8 rounded-2xl text-center">
                             <div className="size-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 text-primary text-2xl">
                                 <FaMobileAlt />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-3">Mobile First</h3>
-                            <p className="text-text-muted">Build intuitive experiences for drivers and service providers on the go.</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Mobile First</h3>
+                            <p className="text-gray-600 dark:text-text-muted">Build intuitive experiences for drivers and service providers on the go.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Open Positions */}
-            <section className="py-16 bg-background-dark">
+            <section className="py-16 bg-background-light dark:bg-background-dark transition-colors duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-3xl font-bold text-white mb-10 text-center">Open Positions</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-10 text-center">Open Positions</h2>
                     <div className="space-y-4 max-w-4xl mx-auto">
                         {[
                             { title: 'Operations Manager', type: 'Remote / Hybrid • Full Time' },
@@ -59,8 +59,8 @@ const Careers = () => {
                         ].map((job, index) => (
                             <div key={index} className="glassmorphism p-6 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 hover:border-primary/50 transition-colors">
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">{job.title}</h3>
-                                    <p className="text-text-muted text-sm">{job.type}</p>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{job.title}</h3>
+                                    <p className="text-gray-600 dark:text-text-muted text-sm">{job.type}</p>
                                 </div>
                                 <button
                                     onClick={() => setSelectedJob(job.title)}

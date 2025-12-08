@@ -120,7 +120,7 @@ const TemporaryDriver = () => {
     const today = new Date().toISOString().split('T')[0];
 
     return (
-        <div className="min-h-screen bg-[#0B1120] pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
             {/* Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
@@ -132,17 +132,17 @@ const TemporaryDriver = () => {
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
                         <span className="gradient-text">Temporary Driver Service</span>
                     </h1>
-                    <p className="text-text-muted text-lg max-w-2xl mx-auto">
+                    <p className="text-gray-600 dark:text-text-muted text-lg max-w-2xl mx-auto">
                         Need a professional driver? Our AI-powered system will match you with the most suitable and trusted driver based on your preferences and trip details.
                     </p>
                 </div>
 
-                <div className="glassmorphism rounded-2xl p-8 md:p-10 shadow-glow-lg border border-border-dark">
+                <div className="glassmorphism rounded-2xl p-8 md:p-10 shadow-lg dark:shadow-glow-lg border border-gray-200 dark:border-border-dark bg-surface-light dark:bg-surface-dark transition-colors duration-300">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Pickup Location */}
                             <div className="space-y-2">
-                                <label htmlFor="pickupLocation" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="pickupLocation" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Pickup Location
                                 </label>
                                 <div className="relative">
@@ -157,14 +157,14 @@ const TemporaryDriver = () => {
                                         placeholder="Enter pickup address"
                                         value={formData.pickupLocation}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
 
                             {/* Destination */}
                             <div className="space-y-2">
-                                <label htmlFor="destination" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="destination" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Destination
                                 </label>
                                 <div className="relative">
@@ -179,14 +179,14 @@ const TemporaryDriver = () => {
                                         placeholder="Enter destination address"
                                         value={formData.destination}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
 
                             {/* Trip Date */}
                             <div className="space-y-2">
-                                <label htmlFor="tripDate" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="tripDate" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Trip Date
                                 </label>
                                 <div className="relative">
@@ -201,7 +201,7 @@ const TemporaryDriver = () => {
                                         min={today}
                                         value={formData.tripDate}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                                 {errors.tripDate && (
@@ -211,7 +211,7 @@ const TemporaryDriver = () => {
 
                             {/* Trip Time */}
                             <div className="space-y-2">
-                                <label htmlFor="tripTime" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="tripTime" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Trip Time
                                 </label>
                                 <div className="relative">
@@ -225,14 +225,14 @@ const TemporaryDriver = () => {
                                         required
                                         value={formData.tripTime}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
 
                             {/* Driving Duration */}
                             <div className="space-y-2">
-                                <label htmlFor="drivingDuration" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="drivingDuration" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Estimated Duration (Hours)
                                 </label>
                                 <div className="relative">
@@ -250,7 +250,7 @@ const TemporaryDriver = () => {
                                         placeholder="e.g. 2"
                                         value={formData.drivingDuration}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                                 {errors.drivingDuration && (
@@ -284,7 +284,7 @@ const TemporaryDriver = () => {
 
                             {/* Contact Number */}
                             <div className="space-y-2">
-                                <label htmlFor="contactNumber" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Contact Number
                                 </label>
                                 <div className="relative">
@@ -299,7 +299,7 @@ const TemporaryDriver = () => {
                                         placeholder="0300-1234567"
                                         value={formData.contactNumber}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                                 {errors.contactNumber && (
@@ -309,7 +309,7 @@ const TemporaryDriver = () => {
 
                             {/* Special Requirements */}
                             <div className="space-y-2 md:col-span-2">
-                                <label htmlFor="specialRequirements" className="block text-sm font-medium text-text-muted">
+                                <label htmlFor="specialRequirements" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
                                     Special Requirements (Optional)
                                 </label>
                                 <div className="relative">
@@ -320,7 +320,7 @@ const TemporaryDriver = () => {
                                         placeholder="Any specific requirements or preferences for the driver..."
                                         value={formData.specialRequirements}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-3 bg-[#121A2A]/50 border border-border-dark rounded-xl text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
+                                        className="block w-full px-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
                                     ></textarea>
                                 </div>
                             </div>

@@ -26,26 +26,26 @@ const ProviderApprovals = () => {
   return (
     <div className="space-y-6">
       <AdminPageHeader title="Provider Approvals">
-        <button className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors border border-white/10">Filter</button>
-        <button className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors border border-white/10">Export</button>
+        <button className="px-4 py-2 bg-white dark:bg-card-dark hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-white rounded-lg transition-colors border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none">Filter</button>
+        <button className="px-4 py-2 bg-white dark:bg-card-dark hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-white rounded-lg transition-colors border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none">Export</button>
       </AdminPageHeader>
 
       <AdminTable headers={['Provider', 'Type', 'Location', 'Date Applied', 'Documents', 'Actions']}>
         {providers.map((provider) => (
-          <tr key={provider.id} className="hover:bg-white/5 transition-colors">
+          <tr key={provider.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-white/5 last:border-0">
             <td className="p-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
                   {provider.name.charAt(0)}
                 </div>
-                <span className="text-white font-medium">{provider.name}</span>
+                <span className="text-gray-900 dark:text-white font-medium">{provider.name}</span>
               </div>
             </td>
             <td className="p-4">
               <StatusBadge status={provider.type} />
             </td>
-            <td className="p-4 text-gray-300">{provider.location}</td>
-            <td className="p-4 text-gray-400 text-sm">{provider.date}</td>
+            <td className="p-4 text-gray-700 dark:text-gray-300">{provider.location}</td>
+            <td className="p-4 text-gray-500 dark:text-gray-400 text-sm">{provider.date}</td>
             <td className="p-4">
               <div className="flex space-x-2">
                   {provider.documents.map((doc, i) => (
@@ -71,7 +71,7 @@ const ProviderApprovals = () => {
         ))}
         {providers.length === 0 && (
           <tr>
-              <td colSpan="6" className="p-8 text-center text-gray-400">
+              <td colSpan="6" className="p-8 text-center text-gray-500 dark:text-gray-400">
                   No pending approvals found.
               </td>
           </tr>

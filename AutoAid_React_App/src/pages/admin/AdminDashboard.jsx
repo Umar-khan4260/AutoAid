@@ -30,8 +30,8 @@ const AdminDashboard = () => {
             {/* Charts & Activity Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Chart Area (Mock) */}
-                <div className="lg:col-span-2 glassmorphism rounded-xl p-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-white mb-4">Platform Activity</h3>
+                <div className="lg:col-span-2 bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-none transition-colors duration-300">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Platform Activity</h3>
                     <div className="h-64 flex items-end justify-between space-x-2 px-4">
                         {/* Simple CSS Bar Chart Mock */}
                         {[40, 65, 45, 80, 55, 70, 90, 60, 75, 50, 85, 95].map((height, i) => (
@@ -42,22 +42,22 @@ const AdminDashboard = () => {
                             </div>
                         ))}
                     </div>
-                    <div className="flex justify-between mt-2 text-xs text-gray-400">
+                    <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
                         <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
                         <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
                     </div>
                 </div>
 
                 {/* Recent Activity Feed */}
-                <div className="glassmorphism rounded-xl p-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+                <div className="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-none transition-colors duration-300">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
                     <div className="space-y-4">
                         {recentActivity.map((item) => (
-                            <div key={item.id} className="flex items-start space-x-3 pb-3 border-b border-white/5 last:border-0">
+                            <div key={item.id} className="flex items-start space-x-3 pb-3 border-b border-gray-100 dark:border-white/5 last:border-0">
                                 <div className="w-2 h-2 mt-2 rounded-full bg-primary"></div>
                                 <div>
-                                    <p className="text-sm text-white font-medium">{item.user}</p>
-                                    <p className="text-xs text-gray-400">{item.action}</p>
+                                    <p className="text-sm text-gray-900 dark:text-white font-medium">{item.user}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.action}</p>
                                     <div className="flex items-center mt-1 space-x-2">
                                         <span className="text-[10px] text-gray-500">{item.time}</span>
                                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${item.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-400' :
