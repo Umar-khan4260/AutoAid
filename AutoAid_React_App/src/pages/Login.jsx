@@ -5,9 +5,11 @@ import { MdMail, MdLock } from 'react-icons/md';
 
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { fetchUserProfile } = useAuth();
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const [password, setPassword] = useState('');
@@ -64,6 +66,9 @@ const Login = () => {
                 // Login Success
                 console.log('Login Successful:', data.user);
                 
+                // Refresh context to ensure latest user data (including role)
+                await fetchUserProfile(user);
+
                 // Redirect based on role
                 if (data.user.role === 'admin') {
                     navigate('/admin');
