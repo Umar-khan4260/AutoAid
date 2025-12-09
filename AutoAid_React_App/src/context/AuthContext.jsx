@@ -12,27 +12,31 @@ export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                try {
-                    const response = await fetch('http://localhost:3000/api/auth/check', {
-                        method: 'GET',
-                        credentials: 'include',
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        setCurrentUser({ ...user, ...data.user });
-                    } else {
-                        setCurrentUser(user);
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch user profile", error);
+    const fetchUserProfile = async (user) => {
+        if (user) {
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setCurrentUser({ ...user, ...data.user });
+                } else {
                     setCurrentUser(user);
                 }
-            } else {
-                setCurrentUser(null);
+            } catch (error) {
+                console.error("Failed to fetch user profile", error);
+                setCurrentUser(user);
             }
+        } else {
+            setCurrentUser(null);
+        }
+    };
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            await fetchUserProfile(user);
             setLoading(false);
         });
 
@@ -46,6 +50,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         currentUser,
         logout,
+        fetchUserProfile
     };
 
     return (
