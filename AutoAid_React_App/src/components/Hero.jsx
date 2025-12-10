@@ -1,24 +1,33 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 const Hero = () => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 0.5;
+    }
+  }, []);
+
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden bg-background-dark">
       <div className="absolute inset-0 z-0">
         <video
+          ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover opacity-50"
         >
-          <source src="https://videos.pexels.com/video-files/4489760/4489760-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+          <source src="/AutoAid_video.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-        <div className="absolute inset-0 bg-background-dark/80"></div>
+
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent z-10"></div>
+
 
       <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center text-center p-4 relative z-20">
         <div className="max-w-4xl mx-auto flex flex-col gap-6">
