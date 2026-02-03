@@ -20,9 +20,13 @@ app.use(cors({
     credentials: true
 }));
 
+// Serve static files
+app.use('/uploads', express.static('uploads'));
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 app.get('/', (req, res) => {
   res.send('AutoAid Backend is running');

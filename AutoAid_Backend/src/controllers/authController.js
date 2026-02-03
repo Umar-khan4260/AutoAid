@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const admin = require('../config/firebase');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
-const sendOtpEmail = require('../config/email');
+const { sendOtpEmail } = require('../config/email');
 
 // @desc    Register a new user
 // @route   POST /api/auth/signup
