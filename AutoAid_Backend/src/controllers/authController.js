@@ -160,9 +160,10 @@ exports.login = async (req, res) => {
             return res.status(403).json({ error: 'Account suspended. Please contact support.' });
         }
 
-        if (user.role === 'provider' && user.status === 'pending') {
-            return res.status(403).json({ error: 'Account pending approval. Please wait for admin verification.' });
-        }
+        // Removed pending check to allow redirection to PendingApproval page on frontend
+        // if (user.role === 'provider' && user.status === 'pending') {
+        //     return res.status(403).json({ error: 'Account pending approval. Please wait for admin verification.' });
+        // }
 
         // 4. Return User Details
         // 4. Generate JWT
@@ -206,4 +207,47 @@ exports.logout = (req, res) => {
         httpOnly: true,
     });
     res.status(200).json({ success: true, message: 'User logged out' });
+};
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+    try {
+        const { fullName, contactNumber, location, services, bio } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Update fields if provided
+        if (fullName) user.fullName = fullName;
+        if (contactNumber) user.contactNumber = contactNumber;
+        if (location) user.location = location;
+        
+        // Update provider specific details
+        if (user.role === 'provider') {
+            if (services) {
+                // If services is array, take first or join? Schema has one string for serviceType.
+                // Let's assume it replaces the serviceType.
+                if (Array.isArray(services) && services.length >= 0) {
+                     user.providerDetails.serviceType = services.join(', '); // Store as comma separated if multiple
+                } else {
+                    user.providerDetails.serviceType = services;
+                }
+            }
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            user: user
+        });
+
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
 };

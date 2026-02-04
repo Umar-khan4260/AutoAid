@@ -19,6 +19,7 @@ import VerifyAccount from './pages/VerifyAccount';
 import AccountSuccess from './pages/AccountSuccess';
 import AccountUnsuccess from './pages/AccountUnsuccess';
 import ProviderSignup from './pages/ProviderSignup';
+import PendingApproval from './pages/PendingApproval';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import PasswordResetSuccess from './pages/PasswordResetSuccess';
@@ -62,6 +63,7 @@ function App() {
               <Route path="/account-success" element={<AccountSuccess />} />
               <Route path="/account-unsuccess" element={<AccountUnsuccess />} />
               <Route path="/provider-signup" element={<ProviderSignup />} />
+              <Route path="/pending-approval" element={<PendingApproval />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
@@ -96,7 +98,11 @@ function App() {
               </Route>
 
               {/* Provider Routes */}
-              <Route path="/provider" element={<ProviderLayout />}>
+              <Route path="/provider" element={
+                <ProtectedRoute role="provider">
+                  <ProviderLayout />
+                </ProtectedRoute>
+              }>
                 <Route index element={<ProviderDashboard />} />
                 <Route path="requests" element={<ProviderRequests />} />
                 <Route path="active-job" element={<ProviderActiveJob />} />
