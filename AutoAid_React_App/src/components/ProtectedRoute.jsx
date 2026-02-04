@@ -17,6 +17,10 @@ const ProtectedRoute = ({ children, role }) => {
         return <Navigate to="/" replace />; // Redirect to home if unauthorized
     }
 
+    if (role === 'provider' && currentUser.status === 'pending') {
+        return <Navigate to="/pending-approval" replace />;
+    }
+
     return children;
 };
 
