@@ -22,6 +22,10 @@ const ServiceRequestSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    userLocation: {
+        lat: Number,
+        lng: Number
+    },
     status: {
         type: String,
         enum: ['Pending', 'Accepted', 'In Progress', 'Completed', 'Cancelled'],

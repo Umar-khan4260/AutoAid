@@ -72,32 +72,48 @@ const TowingService = () => {
                 carCompany: formData.carCompany === 'Other' ? formData.otherCompany : formData.carCompany
             };
 
-            try {
-                const response = await fetch('http://localhost:3000/api/services/request', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        uid: currentUser.uid,
-                        serviceType: 'Towing Service',
-                        contactNumber: formData.contactNumber,
-                        details: submissionData
-                    }),
-                });
-
-                if (response.ok) {
-                    console.log('Towing Service Request submitted:', submissionData);
-                    navigate('/nearby-providers', { state: { serviceType: 'Towing Service' } });
-                } else {
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.error || 'Failed to submit request'}`);
-                }
-            } catch (error) {
-                console.error('Network error:', error);
-                alert('Network error. Please try again.');
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
             }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/services/request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            uid: currentUser.uid,
+                            serviceType: 'Towing Service',
+                            contactNumber: formData.contactNumber,
+                            details: submissionData,
+                            userLocation: userLocation
+                        }),
+                    });
+
+                    if (response.ok) {
+                        console.log('Towing Service Request submitted:', submissionData);
+                        navigate('/nearby-providers', { state: { serviceType: 'Towing Service', userLocation: userLocation } });
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Error: ${errorData.error || 'Failed to submit request'}`);
+                    }
+                } catch (error) {
+                    console.error('Network error:', error);
+                    alert('Network error. Please try again.');
+                }
+            }, (error) => {
+                console.error("Error getting location:", error);
+                alert("Unable to get your location. Please allow location access and try again.");
+            });
         }
     };
 

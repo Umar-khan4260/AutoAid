@@ -6,5 +6,6 @@ const { protect } = require('../middleware/authMiddleware');
 
 // POST /api/services/request
 router.post('/request', protect, serviceController.createServiceRequest);
+router.post('/nearby', protect, serviceController.getNearbyProviders);
 
 module.exports = router;

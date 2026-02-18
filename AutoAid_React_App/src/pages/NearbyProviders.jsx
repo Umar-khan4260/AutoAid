@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FaStar, FaMapMarkerAlt, FaFilter, FaSearch, FaChevronLeft, FaClock, FaPhone, FaLocationArrow, FaTools } from 'react-icons/fa';
 import { MdMyLocation } from 'react-icons/md';
@@ -6,59 +6,48 @@ import { MdMyLocation } from 'react-icons/md';
 const NearbyProviders = () => {
     const location = useLocation();
     const serviceType = location.state?.serviceType || 'Service';
-    const [searchRadius, setSearchRadius] = useState(5);
+    const userLocation = location.state?.userLocation;
+    const [searchRadius, setSearchRadius] = useState(50); // Default 50 miles/km
+    const [providers, setProviders] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock Data for Providers
-    const providers = [
-        {
-            id: 1,
-            name: 'Pro Towing',
-            service: 'Towing Service',
-            rating: 4.5,
-            reviews: 120,
-            distance: '2.3 miles',
-            eta: '~15 min',
-            image: 'https://images.unsplash.com/photo-1626847037657-fd3622613ce3?w=150&h=150&fit=crop',
-            lat: 40.7128,
-            lng: -74.0060,
-        },
-        {
-            id: 2,
-            name: 'QuickFix Mechanics',
-            service: 'Mechanic',
-            rating: 4.8,
-            reviews: 85,
-            distance: '3.1 miles',
-            eta: '~20 min',
-            image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=150&h=150&fit=crop',
-            lat: 40.7150,
-            lng: -74.0020,
-        },
-        {
-            id: 3,
-            name: 'Citywide Tow & Go',
-            service: 'Towing Service',
-            rating: 4.2,
-            reviews: 45,
-            distance: '4.5 miles',
-            eta: '~25 min',
-            image: 'https://images.unsplash.com/photo-1562920616-0b60b74c5d8a?w=150&h=150&fit=crop',
-            lat: 40.7100,
-            lng: -74.0090,
-        },
-        {
-            id: 4,
-            name: '24/7 Roadside Heroes',
-            service: 'Towing Service',
-            rating: 4.9,
-            reviews: 210,
-            distance: '5.0 miles',
-            eta: '~28 min',
-            image: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=150&h=150&fit=crop',
-            lat: 40.7200,
-            lng: -74.0100,
-        }
-    ];
+    useEffect(() => {
+        const fetchProviders = async () => {
+            if (!userLocation) {
+                // If accessed directly without location, maybe try to get it or show empty
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/services/nearby', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        serviceType,
+                        userLocation,
+                        searchRadius
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    setProviders(data.providers);
+                } else {
+                    console.error("Failed to fetch providers:", data.error);
+                }
+            } catch (error) {
+                console.error("Error fetching providers:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProviders();
+    }, [userLocation, serviceType, searchRadius]);
 
     return (
         <div className="flex h-[calc(100vh-80px)] bg-background-light dark:bg-background-dark overflow-hidden transition-colors duration-300">
@@ -87,7 +76,12 @@ const NearbyProviders = () => {
 
                 {/* Provider List */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-                    {providers.map((provider) => (
+                    {loading ? (
+                         <div className="text-center text-gray-500 py-10">Finding nearby providers...</div>
+                    ) : providers.length === 0 ? (
+                        <div className="text-center text-gray-500 py-10">No providers found nearby for {serviceType}.</div>
+                    ) : (
+                        providers.map((provider) => (
                         <div key={provider.id} className="bg-white dark:bg-[#0B1120] rounded-xl p-3 border border-gray-200 dark:border-border-dark hover:border-primary/50 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer">
                             <div className="flex gap-4">
                                 {/* Image */}
@@ -123,7 +117,8 @@ const NearbyProviders = () => {
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        ))
+                    )}
                 </div>
 
                 {/* Footer - Search Radius */}
