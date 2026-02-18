@@ -1,8 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { FaWallet, FaCheckCircle, FaStar, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 
 const ProviderDashboard = () => {
-  const [isAvailable, setIsAvailable] = useState(true);
+    const { currentUser, fetchUserProfile } = useAuth();
+    const [isAvailable, setIsAvailable] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (currentUser) {
+            setIsAvailable(currentUser.isAvailable || false);
+        }
+    }, [currentUser]);
+
+    const updateStatus = async (status, location = null) => {
+        setIsLoading(true);
+        try {
+            const body = { isAvailable: status };
+            if (location) {
+                body.location = location;
+            }
+
+            const response = await fetch('http://localhost:3000/api/auth/status', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setIsAvailable(data.user.isAvailable);
+                // Optionally update context if needed, but local state is fine for toggle
+                // fetchUserProfile(currentUser); 
+            } else {
+                alert('Failed to update status: ' + data.error);
+                // Revert state if failed
+                setIsAvailable(!status); 
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('An error occurred while updating status');
+            setIsAvailable(!status);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleToggle = () => {
+        const newStatus = !isAvailable;
+        
+        if (newStatus) {
+            // Turning ON -> Get Location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        updateStatus(true, { lat: latitude, lng: longitude });
+                    },
+                    (error) => {
+                        console.error("Error getting location:", error);
+                        alert("We need your location to set you Online. Please enable location access.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        } else {
+            // Turning OFF
+            updateStatus(false);
+        }
+    };
 
   const stats = [
     { label: 'Total Earnings', value: 'PKR 45,200', icon: <FaWallet />, color: 'text-green-400', bg: 'bg-green-400/10' },
@@ -22,16 +92,17 @@ const ProviderDashboard = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400">Welcome back, Ali Mechanic</p>
+          <p className="text-gray-600 dark:text-gray-400">Welcome back, {currentUser?.fullName || 'Provider'}</p>
         </div>
         
         <div className="flex items-center gap-4 bg-white dark:bg-surface-dark p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-300">
           <span className={`text-sm font-medium ${isAvailable ? 'text-green-500' : 'text-gray-500'}`}>
-            {isAvailable ? 'You are Online' : 'You are Offline'}
+            {isLoading ? 'Updating...' : (isAvailable ? 'You are Online' : 'You are Offline')}
           </span>
           <button 
-            onClick={() => setIsAvailable(!isAvailable)}
-            className={`text-3xl transition-colors duration-300 ${isAvailable ? 'text-green-500' : 'text-gray-400 dark:text-gray-500'}`}
+            onClick={handleToggle}
+            disabled={isLoading}
+            className={`text-3xl transition-colors duration-300 ${isAvailable ? 'text-green-500' : 'text-gray-400 dark:text-gray-500'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isAvailable ? <FaToggleOn /> : <FaToggleOff />}
           </button>

@@ -15,5 +15,6 @@ router.get('/check', require('../middleware/authMiddleware').protect, (req, res)
     res.status(200).json({ success: true, user: req.user });
 });
 router.put('/profile', require('../middleware/authMiddleware').protect, require('../controllers/authController').updateProfile);
+router.put('/status', require('../middleware/authMiddleware').protect, require('../controllers/authController').updateStatus);
 
 module.exports = router;
