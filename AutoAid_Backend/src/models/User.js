@@ -36,6 +36,14 @@ const UserSchema = new mongoose.Schema({
     enum: ['active', 'pending', 'suspended'],
     default: 'active'
   },
+  isAvailable: {
+    type: Boolean,
+    default: false
+  },
+  currentLocation: {
+    lat: Number,
+    lng: Number
+  },
   isAdminApproved: {
     type: Boolean,
     default: false

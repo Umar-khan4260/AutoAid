@@ -128,7 +128,8 @@ exports.verifyEmail = async (req, res) => {
                 fullName: user.fullName,
                 isVerified: user.isVerified,
                 role: user.role,
-                status: user.status
+                status: user.status,
+                isAvailable: user.isAvailable
             }
         });
 
@@ -188,6 +189,8 @@ exports.login = async (req, res) => {
                     fullName: user.fullName,
                     role: user.role,
                     status: user.status,
+                    isAvailable: user.isAvailable,
+                    currentLocation: user.currentLocation,
                     providerDetails: user.providerDetails
                 }
             });
@@ -229,8 +232,6 @@ exports.updateProfile = async (req, res) => {
         // Update provider specific details
         if (user.role === 'provider') {
             if (services) {
-                // If services is array, take first or join? Schema has one string for serviceType.
-                // Let's assume it replaces the serviceType.
                 if (Array.isArray(services) && services.length >= 0) {
                      user.providerDetails.serviceType = services.join(', '); // Store as comma separated if multiple
                 } else {
@@ -248,6 +249,46 @@ exports.updateProfile = async (req, res) => {
 
     } catch (error) {
         console.error('Update profile error:', error);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+// @desc    Update provider status and location
+// @route   PUT /api/auth/status
+// @access  Private
+exports.updateStatus = async (req, res) => {
+    try {
+        const { isAvailable, location } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        if (typeof isAvailable !== 'undefined') {
+            user.isAvailable = isAvailable;
+        }
+
+        if (location) {
+            user.currentLocation = {
+                lat: location.lat,
+                lng: location.lng
+            };
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            user: {
+                id: user._id, 
+                isAvailable: user.isAvailable,
+                currentLocation: user.currentLocation
+            }
+        });
+
+    } catch (error) {
+        console.error('Update status error:', error);
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 };
