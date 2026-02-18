@@ -167,7 +167,6 @@ const BreakdownRepair = () => {
         
         if (!currentUser) {
             alert('Please login to request a service.');
-            // navigate('/login'); // Optional: redirect to login
             return;
         }
 
@@ -177,32 +176,49 @@ const BreakdownRepair = () => {
                 carCompany: formData.carCompany === 'Other' ? formData.otherCompany : formData.carCompany
             };
 
-            try {
-                const response = await fetch('http://localhost:3000/api/services/request', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        uid: currentUser.uid,
-                        serviceType: 'Breakdown Repair',
-                        contactNumber: formData.contactNumber,
-                        details: submissionData
-                    }),
-                });
-
-                if (response.ok) {
-                    console.log('Breakdown Repair Request submitted:', submissionData);
-                    navigate('/nearby-providers', { state: { serviceType: 'Breakdown Repair' } });
-                } else {
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.error || 'Failed to submit request'}`);
-                }
-            } catch (error) {
-                console.error('Network error:', error);
-                alert('Network error. Please try again.');
+            // Get user location first
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
             }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/services/request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            uid: currentUser.uid,
+                            serviceType: 'Breakdown Repair',
+                            contactNumber: formData.contactNumber,
+                            details: submissionData,
+                            userLocation: userLocation
+                        }),
+                    });
+
+                    if (response.ok) {
+                        console.log('Breakdown Repair Request submitted:', submissionData);
+                        navigate('/nearby-providers', { state: { serviceType: 'Breakdown Repair', userLocation: userLocation } });
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Error: ${errorData.error || 'Failed to submit request'}`);
+                    }
+                } catch (error) {
+                    console.error('Network error:', error);
+                    alert('Network error. Please try again.');
+                }
+            }, (error) => {
+                console.error("Error getting location:", error);
+                alert("Unable to get your location. Please allow location access and try again.");
+            });
         }
     };
 

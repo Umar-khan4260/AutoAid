@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaMapMarkerAlt, FaSearch, FaExclamationTriangle, FaRoad, FaClock, FaSyncAlt, FaMap, FaDirections, FaCalendarAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const RoutePlanning = () => {
+    const navigate = useNavigate();
     const { currentUser } = useAuth();
     const [formData, setFormData] = useState({
         startLocation: '',
@@ -80,6 +82,21 @@ const RoutePlanning = () => {
         }
 
         setIsSearching(true);
+
+        // Try to get location, but don't block if it fails
+        const getLocation = () => new Promise((resolve) => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => resolve({ lat: position.coords.latitude, lng: position.coords.longitude }),
+                    () => resolve(null)
+                );
+            } else {
+                resolve(null);
+            }
+        });
+
+        const userLocation = await getLocation();
+
         try {
             const response = await fetch('http://localhost:3000/api/services/request', {
                 method: 'POST',
@@ -90,7 +107,9 @@ const RoutePlanning = () => {
                 body: JSON.stringify({
                     uid: currentUser.uid,
                     serviceType: 'Route Planning',
-                    details: formData
+                    contactNumber: currentUser.contactNumber || '',
+                    details: formData,
+                    userLocation: userLocation
                 }),
             });
             if (!response.ok) {
@@ -98,10 +117,9 @@ const RoutePlanning = () => {
             }
         } catch (error) {
             console.error('Error saving route request:', error);
-            // We continue even if save fails, as the main feature is showing the alerts
         }
 
-        // Simulate API call for results
+        // Show results on the same page
         setTimeout(() => {
             setIsSearching(false);
             setShowResults(true);
