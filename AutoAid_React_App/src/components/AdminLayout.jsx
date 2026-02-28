@@ -1,11 +1,26 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const AdminLayout = () => {
     const location = useLocation();
+    const { currentUser } = useAuth();
+    const isSuperAdmin = currentUser?.role === 'superadmin';
 
     const isActive = (path) => {
         return location.pathname === path ? 'bg-primary/20 text-primary border-r-2 border-primary' : 'text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5';
+    };
+
+    const getPageTitle = () => {
+        const titles = {
+            '/admin': 'Dashboard Overview',
+            '/admin/providers': 'Provider Approvals',
+            '/admin/users': 'User Management',
+            '/admin/disputes': 'Dispute Resolution',
+            '/admin/audit-logs': 'Audit Logs',
+            '/admin/manage-admins': 'Admin Management',
+        };
+        return titles[location.pathname] || 'Admin Panel';
     };
 
     return (
@@ -48,6 +63,14 @@ const AdminLayout = () => {
                                 Audit Logs
                             </Link>
                         </li>
+                        {isSuperAdmin && (
+                            <li>
+                                <Link to="/admin/manage-admins" className={`flex items-center px-6 py-3 transition-colors ${isActive('/admin/manage-admins')}`}>
+                                    <span className="mr-3">🛡️</span>
+                                    Admin Management
+                                </Link>
+                            </li>
+                        )}
                     </ul>
                 </nav>
 
@@ -64,17 +87,13 @@ const AdminLayout = () => {
                 {/* Topbar */}
                 <header className="h-16 bg-white dark:bg-card-dark border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-6 transition-colors duration-300">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        {location.pathname === '/admin' && 'Dashboard Overview'}
-                        {location.pathname === '/admin/providers' && 'Provider Approvals'}
-                        {location.pathname === '/admin/users' && 'User Management'}
-                        {location.pathname === '/admin/disputes' && 'Dispute Resolution'}
-                        {location.pathname === '/admin/audit-logs' && 'Audit Logs'}
+                        {getPageTitle()}
                     </h2>
                     <div className="flex items-center space-x-4">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary border border-primary/50">
-                            A
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm border ${isSuperAdmin ? 'bg-gradient-to-br from-amber-500 to-orange-600 border-amber-400/50' : 'bg-primary/20 text-primary border-primary/50'}`}>
+                            {isSuperAdmin ? 'S' : 'A'}
                         </div>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">Admin User</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">{isSuperAdmin ? 'Super Admin' : 'Admin User'}</span>
                     </div>
                 </header>
 

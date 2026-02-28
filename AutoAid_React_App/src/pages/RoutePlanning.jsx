@@ -14,37 +14,9 @@ const RoutePlanning = () => {
 
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
-
-    // Mock NHA announcements
-    const mockAnnouncements = [
-        {
-            id: 1,
-            type: 'Roadblock',
-            severity: 'high',
-            title: 'Roadblock: M-2 North',
-            description: 'Major accident near Chakri Interchange. All lanes blocked. Reported 15 mins ago.',
-            color: 'border-red-500',
-            iconColor: 'text-red-500'
-        },
-        {
-            id: 2,
-            type: 'Construction',
-            severity: 'medium',
-            title: 'Construction: Lahore Ring Road',
-            description: 'Lane closures for repair work between Gaju Matta and DHA. Expect delays.',
-            color: 'border-yellow-500',
-            iconColor: 'text-yellow-500'
-        },
-        {
-            id: 3,
-            type: 'Protest',
-            severity: 'low',
-            title: 'Protest: Faizabad Interchange',
-            description: 'Political rally causing slow traffic on Islamabad Expressway.',
-            color: 'border-blue-500',
-            iconColor: 'text-blue-500'
-        }
-    ];
+    const [advisories, setAdvisories] = useState([]);
+    const [advisoryError, setAdvisoryError] = useState('');
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const mockAlternativeRoutes = [
         {
@@ -65,6 +37,37 @@ const RoutePlanning = () => {
         }
     ];
 
+    // Color assignment based on index for visual variety
+    const alertColors = [
+        { color: 'border-red-500', iconColor: 'text-red-500' },
+        { color: 'border-yellow-500', iconColor: 'text-yellow-500' },
+        { color: 'border-blue-500', iconColor: 'text-blue-500' },
+        { color: 'border-orange-500', iconColor: 'text-orange-500' },
+        { color: 'border-purple-500', iconColor: 'text-purple-500' },
+        { color: 'border-teal-500', iconColor: 'text-teal-500' },
+    ];
+
+    const fetchAdvisories = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/api/services/nha-advisories', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                setAdvisories(data.data);
+                setAdvisoryError('');
+            } else {
+                setAdvisoryError(data.error || 'Failed to fetch advisories');
+                setAdvisories([]);
+            }
+        } catch (error) {
+            console.error('Error fetching NHA advisories:', error);
+            setAdvisoryError('Failed to connect to advisory service. Please try again.');
+            setAdvisories([]);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevState => ({
@@ -82,6 +85,7 @@ const RoutePlanning = () => {
         }
 
         setIsSearching(true);
+        setAdvisoryError('');
 
         // Try to get location, but don't block if it fails
         const getLocation = () => new Promise((resolve) => {
@@ -119,11 +123,17 @@ const RoutePlanning = () => {
             console.error('Error saving route request:', error);
         }
 
-        // Show results on the same page
-        setTimeout(() => {
-            setIsSearching(false);
-            setShowResults(true);
-        }, 1500);
+        // Fetch real NHA advisories
+        await fetchAdvisories();
+
+        setIsSearching(false);
+        setShowResults(true);
+    };
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await fetchAdvisories();
+        setIsRefreshing(false);
     };
 
     return (
@@ -217,7 +227,7 @@ const RoutePlanning = () => {
                                     ) : (
                                         <FaSearch />
                                     )}
-                                    {isSearching ? 'Searching...' : 'Find Announcements'}
+                                    {isSearching ? 'Fetching Advisories...' : 'Find Announcements'}
                                 </button>
                             </form>
                         </div>
@@ -226,30 +236,73 @@ const RoutePlanning = () => {
                         <div className="glassmorphism rounded-2xl p-6 border border-border-dark min-h-[400px]">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">Real-Time NHA Alerts</h2>
-                                <button className="text-text-muted hover:text-primary transition-colors">
-                                    <FaSyncAlt className="text-sm" />
-                                    <span className="sr-only">Refresh</span>
-                                </button>
+                                {showResults && (
+                                    <button
+                                        onClick={handleRefresh}
+                                        disabled={isRefreshing}
+                                        className="text-text-muted hover:text-primary transition-colors"
+                                        title="Refresh advisories"
+                                    >
+                                        <FaSyncAlt className={`text-sm ${isRefreshing ? 'animate-spin' : ''}`} />
+                                        <span className="sr-only">Refresh</span>
+                                    </button>
+                                )}
                             </div>
 
                             <div className="space-y-4">
-                                {showResults ? (
-                                    mockAnnouncements.map((alert) => (
-                                        <div 
-                                            key={alert.id} 
-                                            className={`bg-white/50 dark:bg-[#121A2A]/50 rounded-xl p-4 border-l-4 ${alert.color} hover:bg-white dark:hover:bg-[#121A2A] shadow-sm transition-all cursor-pointer`}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <FaExclamationTriangle className={`${alert.iconColor} mt-1 flex-shrink-0`} />
-                                                <div>
-                                                    <h3 className="text-gray-900 dark:text-white font-bold text-sm mb-1">{alert.title}</h3>
-                                                    <p className="text-text-muted text-xs leading-relaxed">
-                                                        {alert.description}
-                                                    </p>
-                                                </div>
+                                {isSearching ? (
+                                    <div className="text-center py-10">
+                                        <FaSyncAlt className="text-3xl mx-auto mb-3 text-primary animate-spin" />
+                                        <p className="text-text-muted">Scraping NHA website for latest advisories...</p>
+                                        <p className="text-text-muted/50 text-xs mt-2">This may take up to 15 seconds</p>
+                                    </div>
+                                ) : showResults ? (
+                                    <>
+                                        {advisoryError && (
+                                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">
+                                                <p className="font-medium">⚠️ {advisoryError}</p>
+                                                <button
+                                                    onClick={handleRefresh}
+                                                    className="text-xs mt-2 underline hover:text-red-300"
+                                                >
+                                                    Try again
+                                                </button>
                                             </div>
-                                        </div>
-                                    ))
+                                        )}
+                                        {advisories.length > 0 ? (
+                                            advisories.map((advisory, index) => {
+                                                const colorSet = alertColors[index % alertColors.length];
+                                                return (
+                                                    <div
+                                                        key={advisory.id}
+                                                        className={`bg-white/50 dark:bg-[#121A2A]/50 rounded-xl p-4 border-l-4 ${colorSet.color} hover:bg-white dark:hover:bg-[#121A2A] shadow-sm transition-all cursor-pointer`}
+                                                    >
+                                                        <div className="flex items-start gap-3">
+                                                            <FaExclamationTriangle className={`${colorSet.iconColor} mt-1 flex-shrink-0`} />
+                                                            <div>
+                                                                <h3 className="text-gray-900 dark:text-white font-bold text-sm mb-1">{advisory.title}</h3>
+                                                                <p className="text-text-muted text-xs leading-relaxed whitespace-pre-line">
+                                                                    {advisory.description}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            !advisoryError && (
+                                                <div className="text-center py-10 text-text-muted/50">
+                                                    <FaRoad className="text-4xl mx-auto mb-3 opacity-30" />
+                                                    <p>No active advisories found</p>
+                                                </div>
+                                            )
+                                        )}
+                                        {advisories.length > 0 && (
+                                            <p className="text-[10px] text-text-muted/40 text-center mt-2">
+                                                Source: NHMP Travel Advisory Portal
+                                            </p>
+                                        )}
+                                    </>
                                 ) : (
                                     <div className="text-center py-10 text-text-muted/50">
                                         <FaRoad className="text-4xl mx-auto mb-3 opacity-30" />

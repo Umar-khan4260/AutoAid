@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children, role }) => {
         return <Navigate to="/login" replace />;
     }
 
-    if (role && currentUser.role !== role) {
+    if (role && currentUser.role !== role && !(role === 'admin' && currentUser.role === 'superadmin')) {
         return <Navigate to="/" replace />; // Redirect to home if unauthorized
     }
 

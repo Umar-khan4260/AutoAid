@@ -8,4 +8,7 @@ const { protect } = require('../middleware/authMiddleware');
 router.post('/request', protect, serviceController.createServiceRequest);
 router.post('/nearby', protect, serviceController.getNearbyProviders);
 
+// GET /api/services/nha-advisories
+router.get('/nha-advisories', protect, serviceController.getNhaAdvisories);
+
 module.exports = router;

@@ -1,5 +1,7 @@
 const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
+const { spawn } = require('child_process');
+const path = require('path');
 
 exports.createServiceRequest = async (req, res) => {
     try {
@@ -129,5 +131,63 @@ exports.getNearbyProviders = async (req, res) => {
     } catch (error) {
         console.error('Error fetching nearby providers:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// @desc    Get NHA Travel Advisories via Python scraper
+// @route   GET /api/services/nha-advisories
+// @access  Private
+exports.getNhaAdvisories = async (req, res) => {
+    const scraperPath = path.join(__dirname, '..', '..', 'scraper', 'nha_scraper.py');
+
+    try {
+        const result = await new Promise((resolve, reject) => {
+            const pythonProcess = spawn('python', [scraperPath]);
+            let stdout = '';
+            let stderr = '';
+
+            // 30 second timeout
+            const timeout = setTimeout(() => {
+                pythonProcess.kill();
+                reject(new Error('Scraper timed out after 30 seconds'));
+            }, 30000);
+
+            pythonProcess.stdout.on('data', (data) => {
+                stdout += data.toString();
+            });
+
+            pythonProcess.stderr.on('data', (data) => {
+                stderr += data.toString();
+            });
+
+            pythonProcess.on('close', (code) => {
+                clearTimeout(timeout);
+                if (code !== 0) {
+                    reject(new Error(`Scraper exited with code ${code}: ${stderr}`));
+                } else {
+                    try {
+                        const parsed = JSON.parse(stdout);
+                        resolve(parsed);
+                    } catch (parseErr) {
+                        reject(new Error('Failed to parse scraper output: ' + stdout));
+                    }
+                }
+            });
+
+            pythonProcess.on('error', (err) => {
+                clearTimeout(timeout);
+                reject(new Error('Failed to start scraper: ' + err.message));
+            });
+        });
+
+        if (result.success) {
+            res.status(200).json({ success: true, data: result.data });
+        } else {
+            res.status(500).json({ success: false, error: result.error || 'Scraper failed' });
+        }
+
+    } catch (error) {
+        console.error('NHA Scraper Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
     }
 };
