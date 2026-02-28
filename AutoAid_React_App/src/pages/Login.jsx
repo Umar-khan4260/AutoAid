@@ -70,7 +70,7 @@ const Login = () => {
                 await fetchUserProfile(user);
 
                 // Redirect based on role
-                if (data.user.role === 'admin') {
+                if (data.user.role === 'admin' || data.user.role === 'superadmin') {
                     navigate('/admin');
                 } else if (data.user.role === 'provider') {
                     navigate('/provider');

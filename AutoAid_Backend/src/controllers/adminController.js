@@ -133,3 +133,86 @@ exports.updateUserStatus = async (req, res) => {
         res.status(500).json({ error: 'Server Error' });
     }
 };
+
+// @desc    Get all admins
+// @route   GET /api/admin/admins
+// @access  Private/SuperAdmin
+exports.getAllAdmins = async (req, res) => {
+    try {
+        const admins = await User.find({ role: 'admin' }).sort({ createdAt: -1 }).select('-password');
+        res.status(200).json({ success: true, count: admins.length, data: admins });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+
+// @desc    Add (promote) user to admin
+// @route   POST /api/admin/admins
+// @access  Private/SuperAdmin
+exports.addAdmin = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found with that email' });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(400).json({ error: 'User is already an admin' });
+        }
+
+        if (user.role === 'superadmin') {
+            return res.status(400).json({ error: 'Cannot modify a super admin' });
+        }
+
+        user.role = 'admin';
+        user.status = 'active';
+        await user.save();
+
+        res.status(200).json({ success: true, data: user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+
+// @desc    Remove (demote) admin back to user
+// @route   DELETE /api/admin/admins/:id
+// @access  Private/SuperAdmin
+exports.removeAdmin = async (req, res) => {
+    try {
+        const admin = await User.findById(req.params.id);
+
+        if (!admin) {
+            return res.status(404).json({ error: 'Admin not found' });
+        }
+
+        if (admin.role !== 'admin') {
+            return res.status(400).json({ error: 'User is not an admin' });
+        }
+
+        if (admin.role === 'superadmin') {
+            return res.status(400).json({ error: 'Cannot demote a super admin' });
+        }
+
+        // Prevent demoting self
+        if (req.user && admin._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ error: 'Cannot demote yourself' });
+        }
+
+        admin.role = 'user';
+        await admin.save();
+
+        res.status(200).json({ success: true, message: 'Admin removed successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
