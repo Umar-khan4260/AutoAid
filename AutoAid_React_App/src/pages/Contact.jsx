@@ -14,6 +14,9 @@ const Contact = () => {
         email: ''
     });
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+
     const validateName = (name) => {
         if (/\d/.test(name)) {
             return 'Name cannot contain numbers';
@@ -52,6 +55,9 @@ const Contact = () => {
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
+
+        // Clear success message when user starts typing again
+        if (successMessage) setSuccessMessage('');
     };
 
 
@@ -67,7 +73,7 @@ const Contact = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Validate all fields
@@ -82,16 +88,29 @@ const Contact = () => {
             return;
         }
 
-        // If validation passes, show success message
-        alert('Message sent successfully!');
+        setIsSubmitting(true);
 
-        // Reset form
-        setFormData({
-            name: '',
-            email: '',
-            subject: '',
-            message: ''
-        });
+        try {
+            const response = await fetch('http://localhost:3000/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setSuccessMessage('Message sent successfully! We will get back to you soon.');
+                setFormData({ name: '', email: '', subject: '', message: '' });
+            } else {
+                alert(data.error || 'Failed to send message. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error submitting contact form:', error);
+            alert('Network error. Please try again later.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -109,6 +128,11 @@ const Contact = () => {
                         {/* Contact Form */}
                         <div className="glassmorphism p-8 rounded-2xl">
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Send us a Message</h2>
+                            {successMessage && (
+                                <div className="mb-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-500 text-sm font-medium">
+                                    ✅ {successMessage}
+                                </div>
+                            )}
                             <form className="space-y-6" onSubmit={handleSubmit}>
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
@@ -164,8 +188,8 @@ const Contact = () => {
                                         required
                                     ></textarea>
                                 </div>
-                                <button type="submit" className="w-full bg-gradient-to-r from-primary to-blue-500 text-background-dark font-bold py-3 rounded-lg hover:shadow-button-glow transition-all">
-                                    Send Message
+                                <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-primary to-blue-500 text-background-dark font-bold py-3 rounded-lg hover:shadow-button-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {isSubmitting ? 'Sending...' : 'Send Message'}
                                 </button>
                             </form>
                         </div>
