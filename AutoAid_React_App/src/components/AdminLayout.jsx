@@ -18,6 +18,7 @@ const AdminLayout = () => {
             '/admin/users': 'User Management',
             '/admin/disputes': 'Dispute Resolution',
             '/admin/audit-logs': 'Audit Logs',
+            '/admin/contact-messages': 'Contact Messages',
             '/admin/manage-admins': 'Admin Management',
         };
         return titles[location.pathname] || 'Admin Panel';
@@ -61,6 +62,12 @@ const AdminLayout = () => {
                             <Link to="/admin/audit-logs" className={`flex items-center px-6 py-3 transition-colors ${isActive('/admin/audit-logs')}`}>
                                 <span className="mr-3">📝</span>
                                 Audit Logs
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/admin/contact-messages" className={`flex items-center px-6 py-3 transition-colors ${isActive('/admin/contact-messages')}`}>
+                                <span className="mr-3">💬</span>
+                                Contact Messages
                             </Link>
                         </li>
                         {isSuperAdmin && (

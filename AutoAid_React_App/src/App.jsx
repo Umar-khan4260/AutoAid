@@ -32,6 +32,7 @@ import UserManagement from './pages/admin/UserManagement';
 import DisputeResolution from './pages/admin/DisputeResolution';
 import AuditLogs from './pages/admin/AuditLogs';
 import AdminManagement from './pages/admin/AdminManagement';
+import ContactMessages from './pages/admin/ContactMessages';
 
 // Service Pages
 import BreakdownRepair from './pages/BreakdownRepair';
@@ -97,6 +98,7 @@ function App() {
                 <Route path="disputes" element={<DisputeResolution />} />
                 <Route path="audit-logs" element={<AuditLogs />} />
                 <Route path="manage-admins" element={<AdminManagement />} />
+                <Route path="contact-messages" element={<ContactMessages />} />
               </Route>
 
               {/* Provider Routes */}
