@@ -7,6 +7,7 @@ const NearbyProviders = () => {
     const location = useLocation();
     const serviceType = location.state?.serviceType || 'Service';
     const userLocation = location.state?.userLocation;
+    const requestId = location.state?.requestId;
     const [searchRadius, setSearchRadius] = useState(50);
     const [providers, setProviders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -121,6 +122,38 @@ const NearbyProviders = () => {
 
     }, [userLocation]);
 
+    // Handle requesting a specific provider
+    const handleRequest = useCallback(async (provider) => {
+        if (!requestId) {
+            alert("No active request found. Please go back and request again.");
+            return;
+        }
+        
+        try {
+            const response = await fetch('http://localhost:3000/api/services/assign', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    requestId,
+                    providerId: provider.id
+                }),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(`Request sent to ${provider.name}!\nProvider has been notified.`);
+            } else {
+                alert(`Error: ${data.error || 'Failed to send request'}`);
+            }
+        } catch (error) {
+            console.error('Network error during provider assignment:', error);
+            alert('Network error. Please try again.');
+        }
+    }, [requestId]);
+
     // Add provider markers to map
     const addProviderMarkers = useCallback(() => {
         if (!mapInstanceRef.current || !window.google) return;
@@ -167,6 +200,9 @@ const NearbyProviders = () => {
                         <span>⏱ ${provider.eta}</span>
                     </div>
                     <div style="margin-top: 4px; font-size: 12px; color: #f59e0b;">⭐ ${provider.rating}</div>
+                    <button id="iw-request-btn-${provider.id}" style="margin-top: 12px; width: 100%; padding: 6px 12px; background-color: #00BCD4; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">
+                        Request Service
+                    </button>
                 </div>
             `;
 
@@ -174,6 +210,16 @@ const NearbyProviders = () => {
                 infoWindowRef.current.setContent(infoContent);
                 infoWindowRef.current.open(mapInstanceRef.current, marker);
                 setSelectedProvider(provider.id);
+
+                // Add event listener to the button once the InfoWindow is rendered in the DOM
+                window.google.maps.event.addListenerOnce(infoWindowRef.current, 'domready', () => {
+                    const btn = document.getElementById(`iw-request-btn-${provider.id}`);
+                    if (btn) {
+                        btn.addEventListener('click', () => {
+                            handleRequest(provider);
+                        });
+                    }
+                });
             });
 
             markersRef.current.push(marker);
@@ -190,7 +236,7 @@ const NearbyProviders = () => {
                 window.google.maps.event.removeListener(listener);
             });
         }
-    }, [providers, userLocation]);
+    }, [providers, userLocation, handleRequest]);
 
     // Wait for Google Maps to load, then initialize
     useEffect(() => {
@@ -290,7 +336,10 @@ const NearbyProviders = () => {
                                         <p className="text-gray-500 dark:text-text-muted text-xs">{provider.service}</p>
                                     </div>
                                     
-                                    <button className="mt-2 w-fit px-4 py-1.5 bg-gray-100 dark:bg-[#1E293B] hover:bg-primary hover:text-white text-gray-700 dark:text-white text-xs font-semibold rounded-md transition-colors duration-300 border border-gray-200 dark:border-white/10">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleRequest(provider); }}
+                                        className="mt-2 w-fit px-4 py-1.5 bg-gray-100 dark:bg-[#1E293B] hover:bg-primary hover:text-white text-gray-700 dark:text-white text-xs font-semibold rounded-md transition-colors duration-300 border border-gray-200 dark:border-white/10"
+                                    >
                                         Request
                                     </button>
                                 </div>

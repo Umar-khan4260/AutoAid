@@ -107,8 +107,15 @@ const LockoutService = () => {
                     });
 
                     if (response.ok) {
+                        const data = await response.json();
                         console.log('Lockout Service Request submitted:', submissionData);
-                        navigate('/nearby-providers', { state: { serviceType: 'Lockout Service', userLocation: userLocation } });
+                        navigate('/nearby-providers', { 
+                            state: { 
+                                serviceType: 'Lockout Service', 
+                                userLocation: userLocation,
+                                requestId: data.requestId
+                            } 
+                        });
                     } else {
                         const errorData = await response.json();
                         alert(`Error: ${errorData.error || 'Failed to submit request'}`);

@@ -90,8 +90,15 @@ const FuelDelivery = () => {
                     });
 
                     if (response.ok) {
+                        const data = await response.json();
                         console.log('Fuel Delivery Request submitted:', formData);
-                        navigate('/nearby-providers', { state: { serviceType: 'Fuel Delivery', userLocation: userLocation } });
+                        navigate('/nearby-providers', { 
+                            state: { 
+                                serviceType: 'Fuel Delivery', 
+                                userLocation: userLocation,
+                                requestId: data.requestId
+                            } 
+                        });
                     } else {
                         const errorData = await response.json();
                         alert(`Error: ${errorData.error || 'Failed to submit request'}`);
