@@ -6,6 +6,10 @@ const ServiceRequestSchema = new mongoose.Schema({
         required: true,
         ref: 'User' 
     },
+    providerId: {
+        type: String, // Provider's Firebase UID
+        ref: 'User'
+    },
     serviceType: {
         type: String,
         required: true,

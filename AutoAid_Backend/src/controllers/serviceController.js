@@ -39,6 +39,76 @@ exports.createServiceRequest = async (req, res) => {
     }
 };
 
+exports.assignProvider = async (req, res) => {
+    try {
+        const { requestId, providerId } = req.body;
+        
+        if (!requestId || !providerId) {
+            return res.status(400).json({ error: 'Request ID and Provider ID are required' });
+        }
+
+        const request = await ServiceRequest.findByIdAndUpdate(
+            requestId, 
+            { providerId }, 
+            { new: true }
+        );
+
+        if (!request) {
+            return res.status(404).json({ error: 'Service request not found' });
+        }
+
+        // Fetch user info to send to provider
+        const user = await User.findOne({ uid: request.userId });
+
+        // Emit socket event to the provider
+        const io = req.app.get('io');
+        const connectedProviders = req.app.get('connectedProviders');
+        
+        if (io && connectedProviders) {
+            // Find provider's UID since our connectedProviders map uses uid, not _id
+            const provider = await User.findById(providerId);
+            if (provider) {
+                const socketId = connectedProviders.get(provider.uid);
+                if (socketId) {
+                    io.to(socketId).emit('new_service_request', {
+                        request,
+                        user: user ? { name: user.fullName, contact: user.contactNumber } : null
+                    });
+                }
+            }
+        }
+
+        res.status(200).json({ success: true, message: 'Provider assigned successfully', request });
+    } catch (error) {
+        console.error('Error assigning provider:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.getProviderRequests = async (req, res) => {
+    try {
+        const providerId = req.user._id; 
+        
+        // Fetch requests assigned to this provider, maybe only active ones
+        const requests = await ServiceRequest.find({ providerId })
+            .sort({ createdAt: -1 });
+
+        // Populate user details for each request
+        const populatedRequests = await Promise.all(requests.map(async (reqItem) => {
+            const user = await User.findOne({ uid: reqItem.userId });
+            return {
+                ...reqItem._doc,
+                user: user ? { name: user.fullName, contact: user.contactNumber } : null
+            };
+        }));
+
+        res.status(200).json({ success: true, requests: populatedRequests });
+    } catch (error) {
+        console.error('Error fetching provider requests:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Helper function to calculate distance using Haversine formula
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   var R = 6371; // Radius of the earth in km

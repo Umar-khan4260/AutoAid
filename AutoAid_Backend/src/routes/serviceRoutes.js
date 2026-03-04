@@ -7,6 +7,8 @@ const { protect } = require('../middleware/authMiddleware');
 // POST /api/services/request
 router.post('/request', protect, serviceController.createServiceRequest);
 router.post('/nearby', protect, serviceController.getNearbyProviders);
+router.post('/assign', protect, serviceController.assignProvider);
+router.get('/provider', protect, serviceController.getProviderRequests);
 
 // GET /api/services/nha-advisories
 router.get('/nha-advisories', protect, serviceController.getNhaAdvisories);

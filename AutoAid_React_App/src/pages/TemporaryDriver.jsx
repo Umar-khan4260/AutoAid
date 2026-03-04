@@ -115,8 +115,15 @@ const TemporaryDriver = () => {
                     });
 
                     if (response.ok) {
+                        const data = await response.json();
                         console.log('Temporary Driver Request submitted:', formData);
-                        navigate('/nearby-providers', { state: { serviceType: 'Temporary Driver', userLocation: userLocation } });
+                        navigate('/nearby-providers', { 
+                            state: { 
+                                serviceType: 'Temporary Driver', 
+                                userLocation: userLocation,
+                                requestId: data.requestId
+                            } 
+                        });
                     } else {
                         const errorData = await response.json();
                         alert(`Error: ${errorData.error || 'Failed to submit request'}`);
