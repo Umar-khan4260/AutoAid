@@ -204,6 +204,40 @@ exports.getNearbyProviders = async (req, res) => {
     }
 };
 
+// @desc    Update Service Request status (Accept/Reject)
+// @route   PUT /api/services/request/:id/status
+// @access  Provider
+exports.updateRequestStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body; // 'Accepted', 'Rejected', 'Completed'
+        const providerId = req.user._id;
+
+        if (!['Accepted', 'Rejected', 'Completed'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+
+        const request = await ServiceRequest.findById(id);
+
+        if (!request) {
+            return res.status(404).json({ error: 'Service request not found' });
+        }
+
+        // Verify that this request belongs to this provider
+        if (request.providerId.toString() !== providerId.toString()) {
+            return res.status(403).json({ error: 'Not authorized to update this request' });
+        }
+
+        request.status = status;
+        await request.save();
+
+        res.status(200).json({ success: true, message: `Request ${status.toLowerCase()}`, request });
+    } catch (error) {
+        console.error('Error updating request status:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // @desc    Get NHA Travel Advisories via Python scraper
 // @route   GET /api/services/nha-advisories
 // @access  Private

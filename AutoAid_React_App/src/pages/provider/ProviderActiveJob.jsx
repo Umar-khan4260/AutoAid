@@ -1,19 +1,39 @@
 import React, { useState } from 'react';
-import { FaPhoneAlt, FaCommentAlt, FaMapMarkerAlt, FaCheckCircle, FaLocationArrow } from 'react-icons/fa';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FaPhoneAlt, FaCommentAlt, FaMapMarkerAlt, FaCheckCircle, FaLocationArrow, FaArrowLeft } from 'react-icons/fa';
 
 const ProviderActiveJob = () => {
-  // Mock active job data - in real app this would come from state/context/API
+  const location = useLocation();
+  const navigate = useNavigate();
+  const job = location.state?.job;
+
   const [jobStatus, setJobStatus] = useState('accepted'); // accepted, on_way, arrived, working, completed
 
-  const job = {
-    id: 'JOB-12345',
-    user: 'Ahmed Khan',
-    phone: '+92 300 1234567',
-    service: 'Breakdown Repair',
-    vehicle: 'Honda Civic 2019',
-    location: 'Main Boulevard, Gulberg III, Lahore',
-    issue: 'Engine overheating, smoke coming from hood.',
-    amount: 'PKR 1,500 (Est.)'
+  if (!job) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-10 mt-20">
+        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-4">No Active Job Found</h2>
+        <button 
+          onClick={() => navigate('/provider/requests')}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+        >
+          <FaArrowLeft /> View New Requests
+        </button>
+      </div>
+    );
+  }
+
+  // Map the real request data to our UI
+  const displayJob = {
+    id: job.requestId || job._id?.slice(-6).toUpperCase(),
+    user: job.userInfo?.name || 'Customer',
+    phone: job.contactNumber || job.userInfo?.contactNumber || 'Not provided',
+    service: job.serviceType,
+    vehicle: job.details?.vehicleMake || job.details?.vehicleModel ? 
+             `${job.details.vehicleMake || ''} ${job.details.vehicleModel || ''}` : 'Vehicle Unspecified',
+    location: job.userLocation ? `Lat: ${job.userLocation.lat.toFixed(4)}, Lng: ${job.userLocation.lng.toFixed(4)}` : 'Location not provided',
+    issue: job.details?.issueDescription || 'No details provided',
+    amount: 'TBD upon inspection'
   };
 
   const steps = [
@@ -37,7 +57,7 @@ const ProviderActiveJob = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Active Job</h1>
         <span className="bg-green-500/20 text-green-600 dark:text-green-400 px-4 py-2 rounded-full text-sm font-bold">
-          ID: {job.id}
+          ID: {displayJob.id}
         </span>
       </div>
 
@@ -49,11 +69,12 @@ const ProviderActiveJob = () => {
             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-4">Customer Details</h3>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{job.user}</h2>
-                <p className="text-primary">{job.vehicle}</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{displayJob.user}</h2>
+                <p className="text-primary">{displayJob.vehicle}</p>
+                <p className="text-sm text-gray-500 mt-1">{displayJob.phone}</p>
               </div>
               <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-xl text-gray-600 dark:text-white">
-                {job.user.charAt(0)}
+                {displayJob.user.charAt(0)}
               </div>
             </div>
             
@@ -73,24 +94,24 @@ const ProviderActiveJob = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-xs text-gray-500">Service Type</label>
-                <p className="text-gray-900 dark:text-white font-medium">{job.service}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{displayJob.service}</p>
               </div>
               <div>
                 <label className="text-xs text-gray-500">Location</label>
                 <p className="text-gray-900 dark:text-white font-medium flex items-start gap-2">
                   <FaMapMarkerAlt className="mt-1 text-primary" />
-                  {job.location}
+                  {displayJob.location}
                 </p>
               </div>
               <div>
-                <label className="text-xs text-gray-500">Reported Issue</label>
+                <label className="text-xs text-gray-500">Reported Issue / Details</label>
                 <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg mt-1 text-sm">
-                  {job.issue}
+                  {displayJob.issue}
                 </p>
               </div>
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <label className="text-xs text-gray-500">Estimated Earnings</label>
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">{job.amount}</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">{displayJob.amount}</p>
               </div>
             </div>
           </div>
