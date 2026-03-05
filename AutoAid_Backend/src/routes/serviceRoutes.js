@@ -10,6 +10,9 @@ router.post('/nearby', protect, serviceController.getNearbyProviders);
 router.post('/assign', protect, serviceController.assignProvider);
 router.get('/provider', protect, serviceController.getProviderRequests);
 
+// PUT /api/services/request/:id/status
+router.put('/request/:id/status', protect, serviceController.updateRequestStatus);
+
 // GET /api/services/nha-advisories
 router.get('/nha-advisories', protect, serviceController.getNhaAdvisories);
 

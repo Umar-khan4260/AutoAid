@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaMapMarkerAlt, FaUser, FaCar, FaClock, FaCheck, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { io } from 'socket.io-client';
 
 const ProviderRequests = () => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,15 +79,48 @@ const ProviderRequests = () => {
       }
   }, []);
 
-  const handleAccept = async (id) => {
-    // Basic optimistic UI update + call API in future to really accept. 
-    // Here we just remove it from "Pending" view.
-    setRequests(requests.filter(req => req._id !== id));
-    alert(`Accepted request! (Backend update pending)`);
+  const handleAccept = async (request) => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/services/request/${request._id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'Accepted' })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Request Accepted!');
+            setRequests(requests.filter(req => req._id !== request._id));
+            navigate('/provider/active-job', { state: { job: request } });
+        } else {
+            alert(`Failed to accept: ${data.error}`);
+        }
+    } catch (error) {
+        console.error("Error accepting request:", error);
+        alert('Network error. Failed to accept request.');
+    }
   };
 
-  const handleReject = (id) => {
-    setRequests(requests.filter(req => req._id !== id));
+  const handleReject = async (requestId) => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/services/request/${requestId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'Rejected' })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            setRequests(requests.filter(req => req._id !== requestId));
+        } else {
+            alert(`Failed to reject: ${data.error}`);
+        }
+    } catch (error) {
+        console.error("Error rejecting request:", error);
+        alert('Network error. Failed to reject request.');
+    }
   };
 
   const calculateDistanceStr = (req) => {
@@ -104,6 +139,67 @@ const ProviderRequests = () => {
       if (minsAgo < 60) return `${minsAgo} min${minsAgo > 1 ? 's' : ''} ago`;
       const hoursAgo = Math.floor(minsAgo / 60);
       return `${hoursAgo} hr${hoursAgo > 1 ? 's' : ''} ago`;
+  };
+
+  const renderServiceDetails = (request) => {
+    const details = request.details || {};
+    const type = request.serviceType;
+
+    switch (type) {
+        case 'Breakdown Repair':
+            return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    <span className="font-semibold text-gray-900 dark:text-gray-300">Issue: </span>
+                    {details.issueDescription || 'No description provided.'}
+                </div>
+            );
+        case 'Fuel Delivery':
+            return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Fuel Type: </span> {details.fuelType || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Quantity: </span> {details.fuelQuantity || 'Unknown'}</div>
+                </div>
+            );
+        case 'Lockout Service':
+            return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Keys in Ignition: </span> {details.keysInIgnition ? 'Yes' : 'No'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Damage Exists: </span> {details.damageExists ? 'Yes' : 'No'}</div>
+                    {details.damageDescription && <div><span className="font-semibold text-gray-900 dark:text-gray-300">Damage Details: </span> {details.damageDescription}</div>}
+                </div>
+            );
+        case 'Towing Service':
+            return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Destination: </span> {details.destinationAddress || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle Driveable: </span> {details.isDriveable ? 'Yes' : 'No'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Issue: </span> {details.issueDescription || 'None'}</div>
+                </div>
+            );
+        case 'Temporary Driver':
+            return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Destination: </span> {details.destination || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Transmission: </span> {details.transmissionType || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Duration: </span> {details.durationHours || '?'} hours</div>
+                </div>
+            );
+        case 'Route Planning':
+            return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">From: </span> {details.origin || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">To: </span> {details.destination || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle Type: </span> {details.vehicleType || 'Unknown'}</div>
+                </div>
+            );
+        default:
+            return (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    <span className="font-semibold text-gray-900 dark:text-gray-300">Details: </span> 
+                    {JSON.stringify(details)}
+                </div>
+            );
+    }
   };
 
   if (loading) {
@@ -156,10 +252,9 @@ const ProviderRequests = () => {
                   <FaMapMarkerAlt className="mt-1 text-gray-500" />
                   <span className="text-sm">{calculateDistanceStr(request)}</span>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  <span className="font-semibold text-gray-900 dark:text-gray-300">Issue/Details: </span> 
-                  {request.details?.issueDescription || 'No detailed issue provided.'}
-                </div>
+                
+                {/* Dynamically Rendered Details */}
+                {renderServiceDetails(request)}
               </div>
 
               <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -170,7 +265,7 @@ const ProviderRequests = () => {
                   <FaTimes /> Reject
                 </button>
                 <button 
-                  onClick={() => handleAccept(request._id)}
+                  onClick={() => handleAccept(request)}
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-primary hover:bg-primary-dark text-white transition-colors font-bold shadow-lg shadow-primary/20"
                 >
                   <FaCheck /> Accept Job
