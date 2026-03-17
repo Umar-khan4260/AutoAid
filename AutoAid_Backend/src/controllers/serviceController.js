@@ -109,6 +109,38 @@ exports.getProviderRequests = async (req, res) => {
     }
 };
 
+// @desc    Get Provider's Current Active Job
+// @route   GET /api/services/active-job
+// @access  Provider
+exports.getActiveJob = async (req, res) => {
+    try {
+        const providerId = req.user._id; 
+        
+        // Find a job assigned to this provider that is 'Accepted' or 'In Progress'
+        const activeRequest = await ServiceRequest.findOne({ 
+            providerId,
+            status: { $in: ['Accepted', 'In Progress'] }
+        }).sort({ createdAt: -1 });
+
+        if (!activeRequest) {
+            return res.status(200).json({ success: true, request: null });
+        }
+
+        // Populate user details for the active request
+        const user = await User.findOne({ uid: activeRequest.userId });
+        const populatedRequest = {
+            ...activeRequest._doc,
+            user: user ? { name: user.fullName, contact: user.contactNumber } : null,
+            userInfo: user ? { name: user.fullName, contactNumber: user.contactNumber } : null
+        };
+
+        res.status(200).json({ success: true, request: populatedRequest });
+    } catch (error) {
+        console.error('Error fetching active job:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Helper function to calculate distance using Haversine formula
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   var R = 6371; // Radius of the earth in km

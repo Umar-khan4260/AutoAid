@@ -148,48 +148,48 @@ const ProviderRequests = () => {
     switch (type) {
         case 'Breakdown Repair':
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    <span className="font-semibold text-gray-900 dark:text-gray-300">Issue: </span>
-                    {details.issueDescription || 'No description provided.'}
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle: </span> {details.carCompany || 'N/A'} {details.makeModel || ''}</div>
+                    {details.vehicleNumber && <div><span className="font-semibold text-gray-900 dark:text-gray-300">Number Plate: </span> {details.vehicleNumber}</div>}
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Issue: </span> {details.issueDescription || 'No description provided.'}</div>
                 </div>
             );
         case 'Fuel Delivery':
             return (
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
                     <div><span className="font-semibold text-gray-900 dark:text-gray-300">Fuel Type: </span> {details.fuelType || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Quantity: </span> {details.fuelQuantity || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Quantity: </span> {details.quantity ? `${details.quantity} Liters` : 'Unknown'}</div>
                 </div>
             );
         case 'Lockout Service':
             return (
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Keys in Ignition: </span> {details.keysInIgnition ? 'Yes' : 'No'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Damage Exists: </span> {details.damageExists ? 'Yes' : 'No'}</div>
-                    {details.damageDescription && <div><span className="font-semibold text-gray-900 dark:text-gray-300">Damage Details: </span> {details.damageDescription}</div>}
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle: </span> {details.carCompany || 'N/A'} {details.makeModel || ''}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Lockout Type: </span> {details.lockoutType || 'Unknown'}</div>
                 </div>
             );
         case 'Towing Service':
             return (
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Destination: </span> {details.destinationAddress || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle Driveable: </span> {details.isDriveable ? 'Yes' : 'No'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Issue: </span> {details.issueDescription || 'None'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle: </span> {details.carCompany || 'N/A'} {details.makeModel || ''}</div>
+                    {details.vehicleNumber && <div><span className="font-semibold text-gray-900 dark:text-gray-300">Number Plate: </span> {details.vehicleNumber}</div>}
                 </div>
             );
         case 'Temporary Driver':
             return (
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Destination: </span> {details.destination || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Transmission: </span> {details.transmissionType || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Duration: </span> {details.durationHours || '?'} hours</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">From: </span> {details.pickupLocation || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">To: </span> {details.destination || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Date/Time: </span> {details.tripDate} {details.tripTime}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Duration/Type: </span> {details.drivingDuration || 'N/A'} - {details.tripType || 'N/A'}</div>
                 </div>
             );
         case 'Route Planning':
             return (
                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">From: </span> {details.origin || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">To: </span> {details.destination || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle Type: </span> {details.vehicleType || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">From: </span> {details.startLocation || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">To: </span> {details.endLocation || 'Unknown'}</div>
+                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Date: </span> {details.travelDate || 'Unknown'}</div>
                 </div>
             );
         default:
@@ -242,10 +242,9 @@ const ProviderRequests = () => {
                 <div className="flex items-start gap-3">
                   <FaCar className="mt-1 text-gray-500" />
                   <span>
-                    {request.details?.vehicleMake || request.details?.vehicleModel ? 
-                      `${request.details?.vehicleMake || ''} ${request.details?.vehicleModel || ''}` 
-                      : 'Vehicle unspecified'
-                    }
+                    {request.details?.carCompany || request.details?.makeModel ? 
+                      `${request.details?.carCompany || ''} ${request.details?.makeModel || ''}` 
+                      : 'Vehicle not specified'}
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
