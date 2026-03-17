@@ -13,6 +13,9 @@ router.get('/provider', protect, serviceController.getProviderRequests);
 // PUT /api/services/request/:id/status
 router.put('/request/:id/status', protect, serviceController.updateRequestStatus);
 
+// GET /api/services/active-job
+router.get('/active-job', protect, serviceController.getActiveJob);
+
 // GET /api/services/nha-advisories
 router.get('/nha-advisories', protect, serviceController.getNhaAdvisories);
 

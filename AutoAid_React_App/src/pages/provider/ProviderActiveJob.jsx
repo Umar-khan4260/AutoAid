@@ -1,13 +1,197 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaPhoneAlt, FaCommentAlt, FaMapMarkerAlt, FaCheckCircle, FaLocationArrow, FaArrowLeft } from 'react-icons/fa';
+
+const defaultCenter = { lat: 31.5204, lng: 74.3587 }; // Lahore default
 
 const ProviderActiveJob = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const job = location.state?.job;
+  
+  const [job, setJob] = useState(location.state?.job || null);
+  const [loading, setLoading] = useState(!job);
+  const [jobStatus, setJobStatus] = useState(job?.status || 'Accepted'); 
+  
+  // Map states
+  const [providerLocation, setProviderLocation] = useState(null);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const directionsRendererRef = useRef(null);
 
-  const [jobStatus, setJobStatus] = useState('accepted'); // accepted, on_way, arrived, working, completed
+  // Fetch active job consistently
+  useEffect(() => {
+    const fetchActiveJob = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/services/active-job', {
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (data.success && data.request) {
+            setJob(data.request);
+            setJobStatus(data.request.status);
+        } else if (!location.state?.job) {
+            setJob(null);
+        }
+      } catch (error) {
+        console.error("Error fetching active job:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActiveJob();
+  }, [location.state?.job]);
+
+  // Initialize Map and Draw Directions
+  const initMap = useCallback(() => {
+    if (!mapRef.current || !job || !job.userLocation || !window.google) return;
+
+    // Initialize Map
+    const map = new window.google.maps.Map(mapRef.current, {
+        center: job.userLocation || defaultCenter,
+        zoom: 14,
+        disableDefaultUI: true,
+        zoomControl: true,
+        styles: [
+            { featureType: "poi", stylers: [{ visibility: "off" }] }
+        ]
+    });
+
+    mapInstanceRef.current = map;
+
+    // Initialize DirectionsRenderer
+    const directionsRenderer = new window.google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: false,
+        polylineOptions: {
+            strokeColor: "#db2b39",
+            strokeWeight: 5
+        }
+    });
+
+    directionsRendererRef.current = directionsRenderer;
+
+    // Get Provider Location & Fetch Route
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const currentLoc = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                setProviderLocation(currentLoc);
+
+                const directionsService = new window.google.maps.DirectionsService();
+                directionsService.route(
+                    {
+                        origin: currentLoc,
+                        destination: job.userLocation,
+                        travelMode: window.google.maps.TravelMode.DRIVING
+                    },
+                    (result, status) => {
+                        if (status === window.google.maps.DirectionsStatus.OK) {
+                            directionsRenderer.setDirections(result);
+                        } else {
+                            console.error(`Error fetching directions: ${status}`);
+                            // Fallback to just marking the user location if routing fails
+                            new window.google.maps.Marker({
+                                position: job.userLocation,
+                                map: map,
+                                title: 'User Location'
+                            });
+                        }
+                    }
+                );
+            },
+            () => {
+                console.error("Error getting provider location for directions");
+                // Just place a marker on user if provider loc fails
+                new window.google.maps.Marker({
+                    position: job.userLocation,
+                    map: map,
+                    title: 'User Location'
+                });
+            },
+            { enableHighAccuracy: true }
+        );
+    } else {
+        // Just place marker if no geolocation support
+        new window.google.maps.Marker({
+            position: job.userLocation,
+            map: map,
+            title: 'User Location'
+        });
+    }
+
+  }, [job]);
+
+  useEffect(() => {
+      // Small timeout to ensure DOM is ready
+      if (job && !loading) {
+          setTimeout(() => {
+              if (window.google && mapRef.current) {
+                  initMap();
+              } else {
+                  // If google maps is not yet loaded, try setting up an interval
+                  const checkGoogle = setInterval(() => {
+                      if (window.google && mapRef.current) {
+                          initMap();
+                          clearInterval(checkGoogle);
+                      }
+                  }, 500);
+                  setTimeout(() => clearInterval(checkGoogle), 10000); // 10s timeout
+              }
+          }, 300);
+      }
+  }, [job, loading, initMap]);
+
+
+  const steps = [
+    { id: 'Accepted', label: 'Job Accepted' },
+    { id: 'In Progress', label: 'In Progress' },
+    { id: 'Completed', label: 'Completed' }
+  ];
+
+  const currentStepIndex = steps.findIndex(step => step.id === jobStatus);
+
+  const handleStatusUpdate = async () => {
+    if (currentStepIndex < steps.length - 1) {
+      const nextStatus = steps[currentStepIndex + 1].id;
+      
+      try {
+        const response = await fetch(`http://localhost:3000/api/services/request/${job._id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: nextStatus })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            setJobStatus(nextStatus);
+            if (nextStatus === 'Completed') {
+                alert('Job marked as completed successfully!');
+                navigate('/provider/history');
+            }
+        } else {
+            alert(`Failed to update status: ${data.error}`);
+        }
+      } catch (error) {
+          console.error("Error updating status:", error);
+          alert('Network error while updating status.');
+      }
+    }
+  };
+
+  if (loading) {
+      return (
+          <div className="flex justify-center items-center h-full">
+              <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+          </div>
+      );
+  }
 
   if (!job) {
     return (
@@ -17,7 +201,7 @@ const ProviderActiveJob = () => {
           onClick={() => navigate('/provider/requests')}
           className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
         >
-          <FaArrowLeft /> View New Requests
+          <FaArrowLeft /> View Incoming Requests
         </button>
       </div>
     );
@@ -26,30 +210,14 @@ const ProviderActiveJob = () => {
   // Map the real request data to our UI
   const displayJob = {
     id: job.requestId || job._id?.slice(-6).toUpperCase(),
-    user: job.userInfo?.name || 'Customer',
-    phone: job.contactNumber || job.userInfo?.contactNumber || 'Not provided',
+    user: job.userInfo?.name || job.user?.name || 'Customer',
+    phone: job.contactNumber || job.userInfo?.contactNumber || job.user?.contact || 'Not provided',
     service: job.serviceType,
-    vehicle: job.details?.vehicleMake || job.details?.vehicleModel ? 
-             `${job.details.vehicleMake || ''} ${job.details.vehicleModel || ''}` : 'Vehicle Unspecified',
-    location: job.userLocation ? `Lat: ${job.userLocation.lat.toFixed(4)}, Lng: ${job.userLocation.lng.toFixed(4)}` : 'Location not provided',
-    issue: job.details?.issueDescription || 'No details provided',
+    vehicle: job.details?.carCompany || job.details?.makeModel ? 
+             `${job.details?.carCompany || ''} ${job.details?.makeModel || ''}` : 'Vehicle Unspecified',
+    location: job.userLocation ? `${job.userLocation.lat.toFixed(4)}, ${job.userLocation.lng.toFixed(4)}` : 'Location not provided',
+    issue: job.details?.issueDescription || job.details?.lockoutType || job.details?.destination || job.details?.fuelType || 'No additional details',
     amount: 'TBD upon inspection'
-  };
-
-  const steps = [
-    { id: 'accepted', label: 'Job Accepted' },
-    { id: 'on_way', label: 'On the Way' },
-    { id: 'arrived', label: 'Arrived' },
-    { id: 'working', label: 'Work in Progress' },
-    { id: 'completed', label: 'Completed' }
-  ];
-
-  const currentStepIndex = steps.findIndex(step => step.id === jobStatus);
-
-  const handleStatusUpdate = () => {
-    if (currentStepIndex < steps.length - 1) {
-      setJobStatus(steps[currentStepIndex + 1].id);
-    }
   };
 
   return (
@@ -79,10 +247,10 @@ const ProviderActiveJob = () => {
             </div>
             
             <div className="flex gap-3">
-              <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors font-medium">
+              <a href={`tel:${displayJob.phone}`} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors font-medium">
                 <FaPhoneAlt /> Call
-              </button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium">
+              </a>
+              <button disabled className="opacity-50 cursor-not-allowed flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium">
                 <FaCommentAlt /> Chat
               </button>
             </div>
@@ -97,7 +265,7 @@ const ProviderActiveJob = () => {
                 <p className="text-gray-900 dark:text-white font-medium">{displayJob.service}</p>
               </div>
               <div>
-                <label className="text-xs text-gray-500">Location</label>
+                <label className="text-xs text-gray-500">Location Coordinate</label>
                 <p className="text-gray-900 dark:text-white font-medium flex items-start gap-2">
                   <FaMapMarkerAlt className="mt-1 text-primary" />
                   {displayJob.location}
@@ -119,7 +287,7 @@ const ProviderActiveJob = () => {
           {/* Status Control */}
           <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg transition-colors duration-300">
             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-4">Update Status</h3>
-            {jobStatus !== 'completed' ? (
+            {jobStatus !== 'Completed' ? (
               <button 
                 onClick={handleStatusUpdate}
                 className="w-full py-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-lg shadow-lg shadow-primary/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
@@ -136,21 +304,24 @@ const ProviderActiveJob = () => {
 
         {/* Right Column: Map & Timeline */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Map Placeholder */}
+          {/* Map */}
           <div className="bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex-1 min-h-[400px] relative overflow-hidden group transition-colors duration-300">
-            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
-              <div className="text-center">
-                <FaLocationArrow className="text-6xl text-gray-400 dark:text-gray-700 mx-auto mb-4" />
-                <p className="text-gray-500">Map Integration Placeholder</p>
-                <p className="text-sm text-gray-600">Real-time tracking would be displayed here</p>
-              </div>
-            </div>
+            
+            <div ref={mapRef} className="w-full h-full rounded-xl"></div>
+            
             {/* Overlay Controls */}
-            <div className="absolute bottom-4 right-4 flex gap-2">
-              <button className="bg-white dark:bg-surface-dark p-3 rounded-lg text-gray-700 dark:text-white shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <FaLocationArrow />
-              </button>
-            </div>
+            {providerLocation && (
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                  <button 
+                    onClick={() => {
+                        window.open(`https://www.google.com/maps/dir/?api=1&origin=${providerLocation.lat},${providerLocation.lng}&destination=${job.userLocation.lat},${job.userLocation.lng}`, '_blank');
+                    }}
+                    className="bg-primary p-3 rounded-lg text-white shadow-lg flex items-center gap-2 hover:bg-primary-dark transition-colors z-10"
+                  >
+                    <FaLocationArrow /> Navigate Externally
+                  </button>
+                </div>
+            )}
           </div>
 
           {/* Timeline */}
