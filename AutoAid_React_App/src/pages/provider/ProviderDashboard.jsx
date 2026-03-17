@@ -33,8 +33,10 @@ const ProviderDashboard = () => {
             const data = await response.json();
             if (data.success) {
                 setIsAvailable(data.user.isAvailable);
-                // Optionally update context if needed, but local state is fine for toggle
-                // fetchUserProfile(currentUser); 
+                // Update context so the new status persists across page navigation
+                if (currentUser) {
+                    fetchUserProfile(currentUser); 
+                }
             } else {
                 alert('Failed to update status: ' + data.error);
                 // Revert state if failed

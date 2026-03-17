@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaPhoneAlt, FaCommentAlt, FaMapMarkerAlt, FaCheckCircle, FaLocationArrow, FaArrowLeft } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 const defaultCenter = { lat: 31.5204, lng: 74.3587 }; // Lahore default
 
 const ProviderActiveJob = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser, fetchUserProfile } = useAuth();
   
   const [job, setJob] = useState(location.state?.job || null);
   const [loading, setLoading] = useState(!job);
@@ -147,6 +149,38 @@ const ProviderActiveJob = () => {
       }
   }, [job, loading, initMap]);
 
+  // LIVE TRACKING: 10-second interval to send location to backend
+  useEffect(() => {
+      if (!job || jobStatus === 'Completed') return;
+
+      const trackingInterval = setInterval(() => {
+          if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                  async (position) => {
+                      const lat = position.coords.latitude;
+                      const lng = position.coords.longitude;
+                      setProviderLocation({ lat, lng });
+
+                      try {
+                          await fetch('http://localhost:3000/api/services/provider/location', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              credentials: 'include',
+                              body: JSON.stringify({ lat, lng })
+                          });
+                      } catch (error) {
+                          console.error("Failed to send live location update:", error);
+                      }
+                  },
+                  (error) => console.error("Live tracking error:", error),
+                  { enableHighAccuracy: true }
+              );
+          }
+      }, 10000); // 10 seconds
+
+      return () => clearInterval(trackingInterval);
+  }, [job, jobStatus]);
+
 
   const steps = [
     { id: 'Accepted', label: 'Job Accepted' },
@@ -156,10 +190,8 @@ const ProviderActiveJob = () => {
 
   const currentStepIndex = steps.findIndex(step => step.id === jobStatus);
 
-  const handleStatusUpdate = async () => {
-    if (currentStepIndex < steps.length - 1) {
-      const nextStatus = steps[currentStepIndex + 1].id;
-      
+  const handleStatusUpdate = async (nextStatus) => {
+      console.log(`Updating status to: ${nextStatus} for job ${job?._id}`);
       try {
         const response = await fetch(`http://localhost:3000/api/services/request/${job._id}/status`, {
             method: 'PUT',
@@ -168,12 +200,18 @@ const ProviderActiveJob = () => {
             body: JSON.stringify({ status: nextStatus })
         });
         const data = await response.json();
+        console.log("Status update response:", data);
         
         if (response.ok) {
             setJobStatus(nextStatus);
             if (nextStatus === 'Completed') {
+                console.log("Job completed successfully, clearing local state and refreshing profile.");
+                // Refresh context so the frontend knows we are now 'available' again
+                if (currentUser) {
+                    await fetchUserProfile(currentUser);
+                }
                 alert('Job marked as completed successfully!');
-                navigate('/provider/history');
+                setJob(null); // Empties the active job page
             }
         } else {
             alert(`Failed to update status: ${data.error}`);
@@ -182,7 +220,6 @@ const ProviderActiveJob = () => {
           console.error("Error updating status:", error);
           alert('Network error while updating status.');
       }
-    }
   };
 
   if (loading) {
@@ -288,12 +325,22 @@ const ProviderActiveJob = () => {
           <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg transition-colors duration-300">
             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-4">Update Status</h3>
             {jobStatus !== 'Completed' ? (
-              <button 
-                onClick={handleStatusUpdate}
-                className="w-full py-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-lg shadow-lg shadow-primary/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Mark as {steps[currentStepIndex + 1]?.label}
-              </button>
+              <div className="space-y-3">
+                {jobStatus === 'Accepted' && (
+                  <button 
+                    onClick={() => handleStatusUpdate('In Progress')}
+                    className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg transition-all"
+                  >
+                    Mark as In Progress
+                  </button>
+                )}
+                <button 
+                  onClick={() => handleStatusUpdate('Completed')}
+                  className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow-lg shadow-green-600/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <FaCheckCircle className="inline mr-2" /> Complete Job
+                </button>
+              </div>
             ) : (
               <div className="text-center py-4 text-green-500 dark:text-green-400 font-bold text-lg flex items-center justify-center gap-2">
                 <FaCheckCircle /> Job Completed

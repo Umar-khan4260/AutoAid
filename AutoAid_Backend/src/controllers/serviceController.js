@@ -141,6 +141,47 @@ exports.getActiveJob = async (req, res) => {
     }
 };
 
+// @desc    Update Provider Location (used for 10-second real-time tracking)
+// @route   PUT /api/services/provider/location
+// @access  Provider
+exports.updateProviderLocation = async (req, res) => {
+    try {
+        const { lat, lng } = req.body;
+        
+        if (!lat || !lng) {
+            return res.status(400).json({ error: 'Latitude and longitude are required' });
+        }
+
+        const providerId = req.user._id;
+
+        // Update provider in User model
+        const updatedProvider = await User.findByIdAndUpdate(
+            providerId,
+            { 'currentLocation.lat': lat, 'currentLocation.lng': lng },
+            { new: true }
+        );
+
+        if (!updatedProvider) {
+            return res.status(404).json({ error: 'Provider not found' });
+        }
+
+        // Emit through Socket.IO globally so users see markers move instantly
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('provider_location_updated', {
+                providerId: providerId,
+                lat: lat,
+                lng: lng
+            });
+        }
+
+        res.status(200).json({ success: true, message: 'Location updated locally and broadcasted' });
+    } catch (error) {
+        console.error('Error updating provider location:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Helper function to calculate distance using Haversine formula
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   var R = 6371; // Radius of the earth in km
@@ -263,9 +304,75 @@ exports.updateRequestStatus = async (req, res) => {
         request.status = status;
         await request.save();
 
+        // Update provider availability based on the new status
+        if (status === 'Accepted') {
+            await User.findByIdAndUpdate(providerId, { isAvailable: false });
+        } else if (status === 'Completed' || status === 'Rejected' || status === 'Cancelled') {
+            await User.findByIdAndUpdate(providerId, { isAvailable: true });
+        }
+
+        // Notify user via Socket.IO when job is Completed so they can rate the provider
+        if (status === 'Completed') {
+            const io = req.app.get('io');
+            const connectedUsers = req.app.get('connectedUsers');
+            const targetUID = request.userId.toString();
+            
+            console.log(`Attempting to notify user ${targetUID} of job completion. Found users:`, [...connectedUsers.keys()]);
+            
+            if (io && connectedUsers) {
+                const userSocketId = connectedUsers.get(targetUID);
+                if (userSocketId) {
+                    console.log(`Emitting job_completed to socket ID: ${userSocketId}`);
+                    const provider = await User.findById(providerId);
+                    io.to(userSocketId).emit('job_completed', {
+                        requestId: request._id,
+                        providerId: providerId,
+                        providerName: provider?.fullName || 'Service Provider',
+                        serviceType: request.serviceType
+                    });
+                } else {
+                    console.log(`Socket ID NOT FOUND for user UID: ${targetUID}`);
+                }
+            }
+        }
+
         res.status(200).json({ success: true, message: `Request ${status.toLowerCase()}`, request });
     } catch (error) {
         console.error('Error updating request status:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// @desc    Submit Rating and Issue Report for a completed job
+// @route   POST /api/services/request/:id/rate
+// @access  User
+exports.submitRating = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { score, comment, issueReport } = req.body;
+
+        const request = await ServiceRequest.findById(id);
+
+        if (!request) {
+            return res.status(404).json({ error: 'Service request not found' });
+        }
+
+        if (request.status !== 'Completed') {
+            return res.status(400).json({ error: 'Can only rate completed jobs' });
+        }
+
+        // Save rating and issue report to the service request
+        if (score) {
+            request.rating = { score, comment };
+        }
+        if (issueReport) {
+            request.issueReport = issueReport;
+        }
+        await request.save();
+
+        res.status(200).json({ success: true, message: 'Rating submitted successfully' });
+    } catch (error) {
+        console.error('Error submitting rating:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

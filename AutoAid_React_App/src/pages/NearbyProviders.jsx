@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaStar, FaFilter, FaChevronLeft, FaClock, FaLocationArrow } from 'react-icons/fa';
+import { FaStar, FaFilter, FaChevronLeft, FaClock, FaLocationArrow, FaCheckCircle, FaTimes } from 'react-icons/fa';
 import { MdMyLocation } from 'react-icons/md';
+import { io } from 'socket.io-client';
+import { useAuth } from '../context/AuthContext';
 
 const NearbyProviders = () => {
     const location = useLocation();
+    const { currentUser } = useAuth();
     const serviceType = location.state?.serviceType || 'Service';
     const userLocation = location.state?.userLocation;
     const requestId = location.state?.requestId;
@@ -16,6 +19,103 @@ const NearbyProviders = () => {
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
     const infoWindowRef = useRef(null);
+    const socketRef = useRef(null);
+    const selectedProviderRef = useRef(null);
+
+    // Sync selectedProviderRef with state
+    useEffect(() => {
+        selectedProviderRef.current = selectedProvider;
+    }, [selectedProvider]);
+
+    // Rating popup state
+    const [ratingPopup, setRatingPopup] = useState(null); // { requestId, providerName, serviceType }
+    const [ratingScore, setRatingScore] = useState(0);
+    const [ratingComment, setRatingComment] = useState('');
+    const [hoveredStar, setHoveredStar] = useState(0);
+    const [showIssueReport, setShowIssueReport] = useState(false);
+    const [issueReport, setIssueReport] = useState('');
+    const [ratingSubmitting, setRatingSubmitting] = useState(false);
+    const [ratingDone, setRatingDone] = useState(false);
+
+    // Initialize Socket.IO connection and listeners
+    useEffect(() => {
+        console.log("Initializing socket connection...");
+        socketRef.current = io('http://localhost:3000', {
+            withCredentials: true
+        });
+
+        const socket = socketRef.current;
+
+        const registerUser = () => {
+            if (currentUser?.uid) {
+                console.log("Registering user socket with UID:", currentUser.uid);
+                socket.emit('register_user', currentUser.uid);
+            } else {
+                console.log("Cannot register user: currentUser.uid is missing", currentUser);
+            }
+        };
+
+        socket.on('connect', () => {
+            console.log("Socket connected:", socket.id);
+            registerUser();
+        });
+
+        // If already connected when this effect runs
+        if (socket.connected) {
+            console.log("Socket already connected, registering immediately:", socket.id);
+            registerUser();
+        }
+
+        // Listen for real-time location updates from any provider
+        socket.on('provider_location_updated', (data) => {
+            // console.log("Provider location update received:", data); // Spammy
+            if (!data.providerId || !data.lat || !data.lng) return;
+
+            setProviders(prevProviders => prevProviders.map(p => 
+                p.id === data.providerId ? { ...p, lat: data.lat, lng: data.lng } : p
+            ));
+
+            const markerToUpdate = markersRef.current.find(m => m._providerId === data.providerId);
+            if (markerToUpdate && window.google) {
+                const newPos = new window.google.maps.LatLng(data.lat, data.lng);
+                
+                if (selectedProviderRef.current === data.providerId && mapInstanceRef.current) {
+                    mapInstanceRef.current.panTo(newPos);
+                }
+                
+                markerToUpdate.setPosition(newPos);
+            }
+        });
+
+        // Listen for job completion to show rating popup
+        socket.on('job_completed', (data) => {
+            console.log("JOB COMPLETED EVENT RECEIVED:", data);
+            // window.alert("Job Completed! Opening rating popup..."); // Optional: extreme debug
+            setRatingPopup({
+                requestId: data.requestId,
+                providerName: data.providerName,
+                serviceType: data.serviceType
+            });
+            setRatingScore(0);
+            setRatingComment('');
+            setShowIssueReport(false);
+            setIssueReport('');
+            setRatingDone(false);
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.log("Socket disconnected:", reason);
+        });
+
+        socket.on('error', (err) => {
+            console.error("Socket error:", err);
+        });
+
+        return () => {
+            console.log("Cleaning up socket...");
+            socket.disconnect();
+        };
+    }, [currentUser]);
 
     // Fetch providers from backend
     useEffect(() => {
@@ -191,6 +291,9 @@ const NearbyProviders = () => {
                 animation: window.google.maps.Animation.DROP,
             });
 
+            // Tag marker for real-time tracking updates via socket
+            marker._providerId = provider.id;
+
             const infoContent = `
                 <div style="padding: 8px; min-width: 180px; font-family: 'Inter', sans-serif;">
                     <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #1a1a2e;">${provider.name}</h3>
@@ -275,6 +378,7 @@ const NearbyProviders = () => {
     };
 
     return (
+        <>
         <div className="flex h-[calc(100vh-80px)] bg-background-light dark:bg-background-dark overflow-hidden transition-colors duration-300">
             {/* Sidebar - Provider List */}
             <div className="w-full md:w-[400px] flex flex-col border-r border-gray-200 dark:border-border-dark bg-surface-light dark:bg-surface-dark z-20">
@@ -394,6 +498,142 @@ const NearbyProviders = () => {
                 )}
             </div>
         </div>
+
+        {/* ---- Job Completed Rating Popup ---- */}
+        {ratingPopup && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+                <div className="bg-white dark:bg-[#1a2438] rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    {ratingDone ? (
+                        <div className="flex flex-col items-center justify-center p-10 text-center">
+                            <FaCheckCircle className="text-green-500 text-6xl mb-4" />
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Thank You!</h2>
+                            <p className="text-gray-500 dark:text-gray-400 mb-6">Your feedback has been submitted.</p>
+                            <button
+                                onClick={() => setRatingPopup(null)}
+                                className="px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-primary to-cyan-500 p-6 text-white relative">
+                                <button
+                                    onClick={() => setRatingPopup(null)}
+                                    className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+                                >
+                                    <FaTimes size={20} />
+                                </button>
+                                <h2 className="text-xl font-bold mb-1">Job Completed! 🎉</h2>
+                                <p className="text-white/80 text-sm">
+                                    {ratingPopup.providerName} has completed your <strong>{ratingPopup.serviceType}</strong> request.
+                                </p>
+                            </div>
+
+                            <div className="p-6 space-y-5">
+                                {/* Star Rating */}
+                                <div>
+                                    <p className="text-gray-700 dark:text-gray-300 font-semibold mb-3">Rate your experience</p>
+                                    <div className="flex justify-center gap-3">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                onClick={() => setRatingScore(star)}
+                                                onMouseEnter={() => setHoveredStar(star)}
+                                                onMouseLeave={() => setHoveredStar(0)}
+                                                className="transition-transform hover:scale-125"
+                                            >
+                                                <FaStar
+                                                    size={36}
+                                                    className={`transition-colors ${
+                                                        star <= (hoveredStar || ratingScore)
+                                                            ? 'text-yellow-400'
+                                                            : 'text-gray-300 dark:text-gray-600'
+                                                    }`}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {ratingScore > 0 && (
+                                        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent!'][ratingScore]}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Comment */}
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                        Leave a comment (optional)
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={ratingComment}
+                                        onChange={(e) => setRatingComment(e.target.value)}
+                                        placeholder="Tell us about your experience..."
+                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white resize-none focus:outline-none focus:border-primary transition-colors"
+                                    />
+                                </div>
+
+                                {/* Issue Report toggle */}
+                                <div>
+                                    <button
+                                        onClick={() => setShowIssueReport(!showIssueReport)}
+                                        className="text-sm text-red-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
+                                    >
+                                        {showIssueReport ? '▲' : '▼'} Report an Issue
+                                    </button>
+                                    {showIssueReport && (
+                                        <textarea
+                                            rows={3}
+                                            value={issueReport}
+                                            onChange={(e) => setIssueReport(e.target.value)}
+                                            placeholder="Describe the issue you experienced..."
+                                            className="mt-2 w-full bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-xl p-3 text-gray-900 dark:text-white resize-none focus:outline-none focus:border-red-500 transition-colors"
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Submit Button */}
+                                <button
+                                    disabled={ratingScore === 0 || ratingSubmitting}
+                                    onClick={async () => {
+                                        if (ratingScore === 0) return;
+                                        setRatingSubmitting(true);
+                                        try {
+                                            await fetch(`http://localhost:3000/api/services/request/${ratingPopup.requestId}/rate`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                credentials: 'include',
+                                                body: JSON.stringify({
+                                                    score: ratingScore,
+                                                    comment: ratingComment,
+                                                    issueReport: issueReport || undefined
+                                                })
+                                            });
+                                            setRatingDone(true);
+                                        } catch (err) {
+                                            console.error('Failed to submit rating:', err);
+                                        } finally {
+                                            setRatingSubmitting(false);
+                                        }
+                                    }}
+                                    className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
+                                        ratingScore === 0
+                                            ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                                            : 'bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]'
+                                    }`}
+                                >
+                                    {ratingSubmitting ? 'Submitting...' : 'Submit Rating'}
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 
