@@ -43,6 +43,13 @@ const ServiceRequestSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    rating: {
+        score: { type: Number, min: 1, max: 5 },
+        comment: { type: String }
+    },
+    issueReport: {
+        type: String
     }
 });
 

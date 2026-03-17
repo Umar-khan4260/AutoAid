@@ -25,6 +25,8 @@ const io = new Server(server, {
 
 // Map to store connected providers: { [uid]: socketId }
 const connectedProviders = new Map();
+// Map to store connected users: { [uid]: socketId }
+const connectedUsers = new Map();
 
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
@@ -37,13 +39,29 @@ io.on('connection', (socket) => {
         }
     });
 
+    // User registers with their UID
+    socket.on('register_user', (uid) => {
+        if (uid) {
+            connectedUsers.set(uid, socket.id);
+            console.log(`User ${uid} registered with socket ${socket.id}. Total connected users: ${connectedUsers.size}`);
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
-        // Remove from map if provider disconnects
+        // Remove from provider map if applicable
         for (let [uid, socketId] of connectedProviders.entries()) {
             if (socketId === socket.id) {
                 connectedProviders.delete(uid);
                 console.log(`Provider ${uid} unregistered`);
+                break;
+            }
+        }
+        // Remove from user map if applicable
+        for (let [uid, socketId] of connectedUsers.entries()) {
+            if (socketId === socket.id) {
+                connectedUsers.delete(uid);
+                console.log(`User ${uid} unregistered`);
                 break;
             }
         }
@@ -53,6 +71,7 @@ io.on('connection', (socket) => {
 // Make io and connectedProviders available to routes
 app.set('io', io);
 app.set('connectedProviders', connectedProviders);
+app.set('connectedUsers', connectedUsers);
 
 // Middleware
 app.use(express.json());
