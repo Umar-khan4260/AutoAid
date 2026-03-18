@@ -60,6 +60,14 @@ const UserSchema = new mongoose.Schema({
         number: String,
         make: String,
         model: String
+    },
+    averageRating: {
+        type: Number,
+        default: 0
+    },
+    totalRatings: {
+        type: Number,
+        default: 0
     }
   },
   createdAt: {

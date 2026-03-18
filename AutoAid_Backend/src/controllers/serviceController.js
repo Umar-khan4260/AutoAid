@@ -370,6 +370,22 @@ exports.submitRating = async (req, res) => {
         }
         await request.save();
 
+        // Update the provider's overall rating stats
+        if (score) {
+            const provider = await User.findById(request.providerId);
+            if (provider) {
+                const currentTotalScore = (provider.providerDetails.averageRating || 0) * (provider.providerDetails.totalRatings || 0);
+                const newTotalRatings = (provider.providerDetails.totalRatings || 0) + 1;
+                const newAverageRating = (currentTotalScore + score) / newTotalRatings;
+
+                provider.providerDetails.totalRatings = newTotalRatings;
+                provider.providerDetails.averageRating = Number(newAverageRating.toFixed(2)); // Store with 2 decimal places
+
+                await provider.save();
+                console.log(`Updated Provider ${provider.fullName}'s overall rating: ${provider.providerDetails.averageRating} (${provider.providerDetails.totalRatings} reviews)`);
+            }
+        }
+
         res.status(200).json({ success: true, message: 'Rating submitted successfully' });
     } catch (error) {
         console.error('Error submitting rating:', error);
