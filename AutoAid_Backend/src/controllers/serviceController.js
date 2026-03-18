@@ -307,7 +307,12 @@ exports.updateRequestStatus = async (req, res) => {
         // Update provider availability based on the new status
         if (status === 'Accepted') {
             await User.findByIdAndUpdate(providerId, { isAvailable: false });
-        } else if (status === 'Completed' || status === 'Rejected' || status === 'Cancelled') {
+        } else if (status === 'Completed') {
+            await User.findByIdAndUpdate(providerId, { 
+                isAvailable: true,
+                $inc: { 'providerDetails.completedJobsCount': 1 }
+            });
+        } else if (status === 'Rejected' || status === 'Cancelled') {
             await User.findByIdAndUpdate(providerId, { isAvailable: true });
         }
 

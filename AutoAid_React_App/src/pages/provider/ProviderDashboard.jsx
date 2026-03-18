@@ -77,9 +77,27 @@ const ProviderDashboard = () => {
     };
 
   const stats = [
-    { label: 'Total Earnings', value: 'PKR 45,200', icon: <FaWallet />, color: 'text-green-400', bg: 'bg-green-400/10' },
-    { label: 'Jobs Completed', value: '28', icon: <FaCheckCircle />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-    { label: 'Average Rating', value: '4.8', icon: <FaStar />, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+    { 
+        label: 'Total Earnings', 
+        value: 'PKR 0', 
+        icon: <FaWallet />, 
+        color: 'text-green-400', 
+        bg: 'bg-green-400/10' 
+    },
+    { 
+        label: 'Jobs Completed', 
+        value: currentUser?.providerDetails?.completedJobsCount || '0', 
+        icon: <FaCheckCircle />, 
+        color: 'text-blue-400', 
+        bg: 'bg-blue-400/10' 
+    },
+    { 
+        label: 'Average Rating', 
+        value: currentUser?.providerDetails?.averageRating?.toFixed(1) || '0.0', 
+        icon: <FaStar />, 
+        color: 'text-yellow-400', 
+        bg: 'bg-yellow-400/10' 
+    },
   ];
 
   const recentActivity = [

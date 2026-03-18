@@ -68,6 +68,10 @@ const UserSchema = new mongoose.Schema({
     totalRatings: {
         type: Number,
         default: 0
+    },
+    completedJobsCount: {
+        type: Number,
+        default: 0
     }
   },
   createdAt: {
