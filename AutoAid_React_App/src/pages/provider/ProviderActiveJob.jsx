@@ -19,6 +19,9 @@ const ProviderActiveJob = () => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const directionsRendererRef = useRef(null);
+  const providerMarkerRef = useRef(null);
+  const watchIdRef = useRef(null);
+  const providerLocationRef = useRef(null);
 
   // Fetch active job consistently
   useEffect(() => {
@@ -46,11 +49,31 @@ const ProviderActiveJob = () => {
     fetchActiveJob();
   }, [location.state?.job]);
 
-  // Initialize Map and Draw Directions
+  // Function to calculate and display route
+  const calculateAndDisplayRoute = useCallback((origin, destination) => {
+    if (!window.google || !directionsRendererRef.current) return;
+
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsService.route(
+        {
+            origin: origin,
+            destination: destination,
+            travelMode: window.google.maps.TravelMode.DRIVING
+        },
+        (result, status) => {
+            if (status === window.google.maps.DirectionsStatus.OK) {
+                directionsRendererRef.current.setDirections(result);
+            } else {
+                console.error(`Error fetching directions: ${status}`);
+            }
+        }
+    );
+  }, []);
+
+  // Initialize Map
   const initMap = useCallback(() => {
     if (!mapRef.current || !job || !job.userLocation || !window.google) return;
 
-    // Initialize Map
     const map = new window.google.maps.Map(mapRef.current, {
         center: job.userLocation || defaultCenter,
         zoom: 14,
@@ -63,71 +86,45 @@ const ProviderActiveJob = () => {
 
     mapInstanceRef.current = map;
 
+    // User Marker
+    new window.google.maps.Marker({
+        position: job.userLocation,
+        map: map,
+        title: 'Customer Location',
+        icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+        }
+    });
+
+    // Provider Marker (initially at user or specific location if known)
+    providerMarkerRef.current = new window.google.maps.Marker({
+        position: providerLocation || defaultCenter,
+        map: map,
+        title: 'Your Location',
+        icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        }
+    });
+
     // Initialize DirectionsRenderer
     const directionsRenderer = new window.google.maps.DirectionsRenderer({
         map: map,
-        suppressMarkers: false,
+        suppressMarkers: true, // We draw our own markers
         polylineOptions: {
-            strokeColor: "#db2b39",
-            strokeWeight: 5
+            strokeColor: "#3b82f6",
+            strokeWeight: 6,
+            strokeOpacity: 0.8
         }
     });
 
     directionsRendererRef.current = directionsRenderer;
 
-    // Get Provider Location & Fetch Route
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const currentLoc = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                setProviderLocation(currentLoc);
-
-                const directionsService = new window.google.maps.DirectionsService();
-                directionsService.route(
-                    {
-                        origin: currentLoc,
-                        destination: job.userLocation,
-                        travelMode: window.google.maps.TravelMode.DRIVING
-                    },
-                    (result, status) => {
-                        if (status === window.google.maps.DirectionsStatus.OK) {
-                            directionsRenderer.setDirections(result);
-                        } else {
-                            console.error(`Error fetching directions: ${status}`);
-                            // Fallback to just marking the user location if routing fails
-                            new window.google.maps.Marker({
-                                position: job.userLocation,
-                                map: map,
-                                title: 'User Location'
-                            });
-                        }
-                    }
-                );
-            },
-            () => {
-                console.error("Error getting provider location for directions");
-                // Just place a marker on user if provider loc fails
-                new window.google.maps.Marker({
-                    position: job.userLocation,
-                    map: map,
-                    title: 'User Location'
-                });
-            },
-            { enableHighAccuracy: true }
-        );
-    } else {
-        // Just place marker if no geolocation support
-        new window.google.maps.Marker({
-            position: job.userLocation,
-            map: map,
-            title: 'User Location'
-        });
+    // If we already have provider location, draw route
+    if (providerLocation) {
+        calculateAndDisplayRoute(providerLocation, job.userLocation);
     }
 
-  }, [job]);
+  }, [job, calculateAndDisplayRoute]); // Removed providerLocation from deps to avoid map re-init
 
   useEffect(() => {
       // Small timeout to ensure DOM is ready
@@ -149,37 +146,58 @@ const ProviderActiveJob = () => {
       }
   }, [job, loading, initMap]);
 
-  // LIVE TRACKING: 10-second interval to send location to backend
+  // LIVE TRACKING & UI UPDATES
   useEffect(() => {
       if (!job || jobStatus === 'Completed') return;
 
-      const trackingInterval = setInterval(() => {
-          if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(
-                  async (position) => {
-                      const lat = position.coords.latitude;
-                      const lng = position.coords.longitude;
-                      setProviderLocation({ lat, lng });
+      if (navigator.geolocation) {
+          // Watch position for smooth UI updates
+          watchIdRef.current = navigator.geolocation.watchPosition(
+              (position) => {
+                  const lat = position.coords.latitude;
+                  const lng = position.coords.longitude;
+                  const newLoc = { lat, lng };
+                  
+                  setProviderLocation(newLoc);
+                  providerLocationRef.current = newLoc;
 
-                      try {
-                          await fetch('http://localhost:3000/api/services/provider/location', {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              credentials: 'include',
-                              body: JSON.stringify({ lat, lng })
-                          });
-                      } catch (error) {
-                          console.error("Failed to send live location update:", error);
-                      }
-                  },
-                  (error) => console.error("Live tracking error:", error),
-                  { enableHighAccuracy: true }
-              );
-          }
-      }, 10000); // 10 seconds
+                  // Update provider marker on map
+                  if (providerMarkerRef.current) {
+                      providerMarkerRef.current.setPosition(newLoc);
+                  }
 
-      return () => clearInterval(trackingInterval);
-  }, [job, jobStatus]);
+                  // Recalculate route whenever location updates (or can throttle this)
+                  if (job.userLocation) {
+                      calculateAndDisplayRoute(newLoc, job.userLocation);
+                  }
+              },
+              (err) => console.error("Watch position error:", err),
+              { enableHighAccuracy: true }
+          );
+
+          // Still use interval for backend updates to avoid overwhelming server
+          const backendInterval = setInterval(async () => {
+              const currentLoc = providerLocationRef.current;
+              if (currentLoc) {
+                  try {
+                      await fetch('http://localhost:3000/api/services/provider/location', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({ lat: currentLoc.lat, lng: currentLoc.lng })
+                      });
+                  } catch (error) {
+                      console.error("Failed to send live location update:", error);
+                  }
+              }
+          }, 10000);
+
+          return () => {
+              if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+              clearInterval(backendInterval);
+          };
+      }
+  }, [job, jobStatus, calculateAndDisplayRoute]); // providerLocation intentionally omitted from deps to avoid infinite loops, we use the state inside watchPosition callback or interval
 
 
   const steps = [

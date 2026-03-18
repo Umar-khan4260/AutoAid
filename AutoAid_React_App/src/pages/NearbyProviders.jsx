@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FaStar, FaFilter, FaChevronLeft, FaClock, FaLocationArrow, FaCheckCircle, FaTimes } from 'react-icons/fa';
 import { MdMyLocation } from 'react-icons/md';
 import { io } from 'socket.io-client';
@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 const NearbyProviders = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { currentUser } = useAuth();
     const serviceType = location.state?.serviceType || 'Service';
     const userLocation = location.state?.userLocation;
@@ -509,10 +510,13 @@ const NearbyProviders = () => {
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Thank You!</h2>
                             <p className="text-gray-500 dark:text-gray-400 mb-6">Your feedback has been submitted.</p>
                             <button
-                                onClick={() => setRatingPopup(null)}
+                                onClick={() => {
+                                    setRatingPopup(null);
+                                    navigate('/');
+                                }}
                                 className="px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-colors"
                             >
-                                Close
+                                Back to Home
                             </button>
                         </div>
                     ) : (
