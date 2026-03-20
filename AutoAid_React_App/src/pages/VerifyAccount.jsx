@@ -1,0 +1,160 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FaCar } from 'react-icons/fa';
+import { MdArrowBack } from 'react-icons/md';
+
+const VerifyAccount = () => {
+    const navigate = useNavigate();
+    const [otp, setOtp] = useState(new Array(6).fill(''));
+    const inputRefs = useRef([]);
+
+    useEffect(() => {
+        if (inputRefs.current[0]) {
+            inputRefs.current[0].focus();
+        }
+    }, []);
+
+    const handleChange = (index, e) => {
+        const value = e.target.value;
+        if (isNaN(value)) return;
+
+        const newOtp = [...otp];
+        // Allow only one digit
+        newOtp[index] = value.substring(value.length - 1);
+        setOtp(newOtp);
+
+        // Move to next input if value is entered
+        if (value && index < 5 && inputRefs.current[index + 1]) {
+            inputRefs.current[index + 1].focus();
+        }
+    };
+
+    const handleKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0 && inputRefs.current[index - 1]) {
+            inputRefs.current[index - 1].focus();
+        }
+    };
+
+    const location = useLocation();
+    const email = location.state?.email;
+    const [error, setError] = useState('');
+
+    const handleVerify = async () => {
+        const otpValue = otp.join('');
+        console.log('Verifying OTP:', otpValue);
+        
+        if (!email) {
+            setError('Email not found. Please signup again.');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/api/auth/verify-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, otp: otpValue }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Navigate to success page with dynamic message based on role
+                const userRole = data.user.role;
+                if (userRole === 'provider') {
+                    navigate('/account-success', {
+                        state: {
+                            title: "Account Verified!",
+                            message: "Your account is verified. Please wait for Admin approval before you can start providing services."
+                        }
+                    });
+                } else {
+                    navigate('/account-success', {
+                        state: {
+                            title: "Account Created Successfully!",
+                            message: "Your account is ready. Proceed to the Home to get started."
+                        }
+                    });
+                }
+            } else {
+                setError(data.error || 'Verification failed');
+            }
+        } catch (error) {
+            console.error('Verification error:', error);
+            setError('Network error. Please try again.');
+        }
+    };
+
+    return (
+        <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display items-center justify-center p-4 transition-colors duration-300">
+            <main className="flex w-full max-w-md flex-col items-center gap-8">
+                {/* Header Section */}
+                <header className="flex flex-col items-center gap-4 text-center">
+                    <div className="flex items-center gap-3 text-white">
+                        <div className="size-12 text-primary flex items-center justify-center">
+                            <FaCar className="text-4xl" />
+                        </div>
+                        <h2 className="text-gray-900 dark:text-white text-3xl font-bold tracking-tight">AutoAid</h2>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <p className="text-gray-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+                            Verify Your Account
+                        </p>
+                        <p className="text-gray-600 dark:text-subtle-dark text-base font-normal leading-normal">
+                            We've sent a 6-digit code to your email. The code expires in 1 minute.
+                        </p>
+                    </div>
+                </header>
+
+                {/* Input Form */}
+                <div className="flex w-full flex-col items-center gap-6">
+                    {/* OTP Input Field */}
+                    <fieldset className="relative flex justify-center gap-2 sm:gap-4">
+                        {otp.map((value, index) => (
+                            <input
+                                key={index}
+                                ref={(el) => (inputRefs.current[index] = el)}
+                                className="flex h-14 w-12 text-center text-xl font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-border-dark rounded-lg focus:border-primary focus:ring-primary focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                maxLength="1"
+                                type="text"
+                                value={value}
+                                onChange={(e) => handleChange(index, e)}
+                                onKeyDown={(e) => handleKeyDown(index, e)}
+                            />
+                        ))}
+                    </fieldset>
+
+                    {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+                    {/* Primary Button (CTA) */}
+                    <button
+                        onClick={handleVerify}
+                        className="flex w-full min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-cyan-500 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background-light dark:focus:ring-offset-background-dark"
+                    >
+                        <span className="truncate">Verify</span>
+                    </button>
+                </div>
+
+                {/* Secondary Links */}
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <p className="text-gray-600 dark:text-subtle-dark text-sm font-normal leading-normal">
+                        Didn't receive the code?{' '}
+                        <button className="font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer">
+                            Resend OTP
+                        </button>{' '}
+                        (0:30)
+                    </p>
+                    <Link
+                        to="/signup"
+                        className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-subtle-dark hover:text-primary transition-colors"
+                    >
+                        <MdArrowBack className="text-base" />
+                        Go Back
+                    </Link>
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default VerifyAccount;
