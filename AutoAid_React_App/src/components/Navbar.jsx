@@ -22,6 +22,7 @@ const Navbar = () => {
                     {/* Desktop Navigation */}
                     <nav className="hidden lg:flex items-center gap-8">
                         <Link to="/" className="text-white text-base font-medium leading-normal transition-colors nav-link-underline active">Home</Link>
+                        <Link to="/search" className="text-primary text-base font-medium leading-normal hover:text-white transition-colors nav-link-underline">Hire Driver</Link>
 
                         {/* Services Dropdown */}
                         <div className="relative group">

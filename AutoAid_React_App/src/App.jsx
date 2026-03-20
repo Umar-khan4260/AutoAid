@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Careers from './pages/Careers';
 import Contact from './pages/Contact';
+import DriverSearch from './pages/DriverSearch';
 import AdminLayout from './components/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProviderApprovals from './pages/admin/ProviderApprovals';
@@ -24,6 +25,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/search" element={<DriverSearch />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
