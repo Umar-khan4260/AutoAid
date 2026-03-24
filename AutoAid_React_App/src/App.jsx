@@ -80,7 +80,7 @@ function App() {
                 <Route path="services/lockout-service" element={<LockoutService />} />
                 <Route path="services/towing-service" element={<TowingService />} />
                 <Route path="services/fuel-delivery" element={<FuelDelivery />} />
-                <Route path="services/temporary-driver" element={<TemporaryDriver />} />
+                <Route path="services/temporary-driver" element={<NearbyProviders overrideServiceType="Temporary Driver" />} />
                 <Route path="services/route-planning" element={<RoutePlanning />} />
                 <Route path="nearby-providers" element={<NearbyProviders />} />
                 <Route path="profile" element={<UserProfile />} />

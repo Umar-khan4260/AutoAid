@@ -4,32 +4,65 @@ import { FaStar, FaFilter, FaChevronLeft, FaClock, FaLocationArrow, FaCheckCircl
 import { MdMyLocation } from 'react-icons/md';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import L from 'leaflet';
+
+// Custom Map Icons
+const carIcon = L.divIcon({
+    html: `<div style="background-color: #0B1120; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2); border: 2px solid #00BCD4; color: #00BCD4;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+        </svg>
+    </div>`,
+    className: 'custom-driver-marker',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+});
+
+const userIcon = L.divIcon({
+    html: `<div style="background-color: #3B82F6; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2); border: 2px solid white; color: white;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+            <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+        </svg>
+    </div>`,
+    className: 'custom-user-marker',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+});
+
+// Component to handle map animated transitions
+const MapUpdater = ({ userLocation, providers, selectedProvider }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (selectedProvider) {
+            const p = providers.find(provider => provider.id === selectedProvider);
+            if (p && p.lat && p.lng) map.flyTo([p.lat, p.lng], 15);
+        } else if (userLocation && userLocation.lat && userLocation.lng) {
+            map.flyTo([userLocation.lat, userLocation.lng], 13);
+        }
+    }, [selectedProvider, userLocation, map, providers]);
+    return null;
+};
 
 const NearbyProviders = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const serviceType = location.state?.serviceType || 'Service';
-    const userLocation = location.state?.userLocation;
-    const requestId = location.state?.requestId;
-    const [searchRadius, setSearchRadius] = useState(50);
+    
+    const serviceType = location.state?.serviceType || 'Temporary Driver';
+    const [userLocation, setUserLocation] = useState(location.state?.userLocation || null);
+    const [requestId, setRequestId] = useState(location.state?.requestId || null);
+    const [activeTab, setActiveTab] = useState('ai');
+    const [searchRadius, setSearchRadius] = useState(10); // Standard is 10km
     const [providers, setProviders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedProvider, setSelectedProvider] = useState(null);
-    const mapRef = useRef(null);
-    const mapInstanceRef = useRef(null);
-    const markersRef = useRef([]);
-    const infoWindowRef = useRef(null);
     const socketRef = useRef(null);
-    const selectedProviderRef = useRef(null);
-
-    // Sync selectedProviderRef with state
-    useEffect(() => {
-        selectedProviderRef.current = selectedProvider;
-    }, [selectedProvider]);
 
     // Rating popup state
-    const [ratingPopup, setRatingPopup] = useState(null); // { requestId, providerName, serviceType }
+    const [ratingPopup, setRatingPopup] = useState(null);
     const [ratingScore, setRatingScore] = useState(0);
     const [ratingComment, setRatingComment] = useState('');
     const [hoveredStar, setHoveredStar] = useState(0);
@@ -40,9 +73,32 @@ const NearbyProviders = () => {
     const [ratingSubmitting, setRatingSubmitting] = useState(false);
     const [ratingDone, setRatingDone] = useState(false);
 
+    // Nominatim Search State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const searchTimeoutRef = useRef(null);
+
+    // Login Enforcement Check
+    useEffect(() => {
+        if (!currentUser) {
+            alert('Please login to view available drivers and hire a service.');
+            navigate('/login');
+        }
+    }, [currentUser, navigate]);
+
+    // Initial Geolocation Fallback
+    useEffect(() => {
+        if (!userLocation && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            }, () => {
+                setUserLocation({ lat: 31.5204, lng: 74.3587 }); // Default to Lahore
+            });
+        }
+    }, [userLocation]);
+
     // Initialize Socket.IO connection and listeners
     useEffect(() => {
-        console.log("Initializing socket connection...");
         socketRef.current = io('http://localhost:3000', {
             withCredentials: true
         });
@@ -51,49 +107,21 @@ const NearbyProviders = () => {
 
         const registerUser = () => {
             if (currentUser?.uid) {
-                console.log("Registering user socket with UID:", currentUser.uid);
                 socket.emit('register_user', currentUser.uid);
-            } else {
-                console.log("Cannot register user: currentUser.uid is missing", currentUser);
             }
         };
 
-        socket.on('connect', () => {
-            console.log("Socket connected:", socket.id);
-            registerUser();
-        });
+        socket.on('connect', () => { registerUser(); });
+        if (socket.connected) registerUser();
 
-        // If already connected when this effect runs
-        if (socket.connected) {
-            console.log("Socket already connected, registering immediately:", socket.id);
-            registerUser();
-        }
-
-        // Listen for real-time location updates from any provider
+        // Listen for real-time location updates
         socket.on('provider_location_updated', (data) => {
-            // console.log("Provider location update received:", data); // Spammy
             if (!data.providerId || !data.lat || !data.lng) return;
-
-            setProviders(prevProviders => prevProviders.map(p => 
-                p.id === data.providerId ? { ...p, lat: data.lat, lng: data.lng } : p
-            ));
-
-            const markerToUpdate = markersRef.current.find(m => m._providerId === data.providerId);
-            if (markerToUpdate && window.google) {
-                const newPos = new window.google.maps.LatLng(data.lat, data.lng);
-                
-                if (selectedProviderRef.current === data.providerId && mapInstanceRef.current) {
-                    mapInstanceRef.current.panTo(newPos);
-                }
-                
-                markerToUpdate.setPosition(newPos);
-            }
+            setProviders(prev => prev.map(p => p.id === data.providerId ? { ...p, lat: data.lat, lng: data.lng } : p));
         });
 
         // Listen for job completion to show rating popup
         socket.on('job_completed', (data) => {
-            console.log("JOB COMPLETED EVENT RECEIVED:", data);
-            // window.alert("Job Completed! Opening rating popup..."); // Optional: extreme debug
             setRatingPopup({
                 requestId: data.requestId,
                 providerName: data.providerName,
@@ -106,24 +134,13 @@ const NearbyProviders = () => {
             setRatingDone(false);
         });
 
-        socket.on('disconnect', (reason) => {
-            console.log("Socket disconnected:", reason);
-        });
-
-        socket.on('error', (err) => {
-            console.error("Socket error:", err);
-        });
-
-        return () => {
-            console.log("Cleaning up socket...");
-            socket.disconnect();
-        };
+        return () => { socket.disconnect(); };
     }, [currentUser]);
 
-    // Fetch providers from backend
+    // Fetch Providers
     useEffect(() => {
         const fetchProviders = async () => {
-            if (!userLocation) {
+            if (!userLocation || !currentUser) {
                 setLoading(false);
                 return;
             }
@@ -131,16 +148,19 @@ const NearbyProviders = () => {
             try {
                 const response = await fetch('http://localhost:3000/api/services/nearby', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         serviceType,
                         userLocation,
-                        searchRadius
+                        searchRadius // Sent directly in Kilometers now!
                     }),
                     credentials: 'include'
                 });
+
+                if (response.status === 401) {
+                    navigate('/login');
+                    return;
+                }
 
                 const data = await response.json();
                 if (data.success) {
@@ -156,90 +176,74 @@ const NearbyProviders = () => {
         };
 
         fetchProviders();
-    }, [userLocation, serviceType, searchRadius]);
+    }, [userLocation, serviceType, searchRadius, currentUser, navigate]);
 
-    // Initialize Google Map
-    const initMap = useCallback(() => {
-        if (!mapRef.current || !userLocation || !window.google) return;
-
-        const center = { lat: userLocation.lat, lng: userLocation.lng };
-
-        const map = new window.google.maps.Map(mapRef.current, {
-            center: center,
-            zoom: 13,
-            styles: [
-                { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
-                { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ color: "#4b6878" }] },
-                { featureType: "land", elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-                { featureType: "poi", elementType: "geometry", stylers: [{ color: "#283d6a" }] },
-                { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#6f9ba5" }] },
-                { featureType: "poi.park", elementType: "geometry.fill", stylers: [{ color: "#023e58" }] },
-                { featureType: "road", elementType: "geometry", stylers: [{ color: "#304a7d" }] },
-                { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#255763" }] },
-                { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2c6675" }] },
-                { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#255763" }] },
-                { featureType: "transit", elementType: "labels.text.fill", stylers: [{ color: "#98a5be" }] },
-                { featureType: "transit", elementType: "labels.text.stroke", stylers: [{ color: "#1d2c4d" }] },
-                { featureType: "water", elementType: "geometry.fill", stylers: [{ color: "#0e1626" }] },
-                { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4e6d70" }] },
-            ],
-            disableDefaultUI: false,
-            zoomControl: true,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: true,
-        });
-
-        mapInstanceRef.current = map;
-        infoWindowRef.current = new window.google.maps.InfoWindow();
-
-        // User Location Marker (Blue pulsing dot)
-        new window.google.maps.Marker({
-            position: center,
-            map: map,
-            title: 'Your Location',
-            icon: {
-                path: window.google.maps.SymbolPath.CIRCLE,
-                scale: 12,
-                fillColor: '#4285F4',
-                fillOpacity: 1,
-                strokeColor: '#ffffff',
-                strokeWeight: 3,
-            },
-            zIndex: 999,
-        });
-
-        // Accuracy circle around user
-        new window.google.maps.Circle({
-            strokeColor: '#4285F4',
-            strokeOpacity: 0.3,
-            strokeWeight: 1,
-            fillColor: '#4285F4',
-            fillOpacity: 0.1,
-            map: map,
-            center: center,
-            radius: 200,
-        });
-
-    }, [userLocation]);
-
-    // Handle requesting a specific provider
-    const handleRequest = useCallback(async (provider) => {
-        if (!requestId) {
-            alert("No active request found. Please go back and request again.");
+    // Autocomplete Search Box Logic (Nominatim OpenStreetMap)
+    const handleSearchInput = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        
+        if (!query.trim()) {
+            setSearchResults([]);
             return;
         }
+
+        searchTimeoutRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+                const data = await res.json();
+                setSearchResults(data);
+            } catch (err) { console.error("Search failed", err); }
+        }, 500);
+    };
+
+    const handleSelectLocation = (loc) => {
+        const newLoc = { lat: parseFloat(loc.lat), lng: parseFloat(loc.lon) };
+        setUserLocation(newLoc);
+        setSearchQuery(loc.display_name);
+        setSearchResults([]);
+    };
+
+    // Handle Request Trigger
+    const handleRequest = useCallback(async (provider) => {
+        let currentReqId = requestId;
         
         try {
+            if (!currentReqId) {
+                if (!currentUser) {
+                    alert('Please login to hire a driver.');
+                    navigate('/login');
+                    return;
+                }
+                const reqResponse = await fetch('http://localhost:3000/api/services/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        uid: currentUser.uid,
+                        serviceType,
+                        contactNumber: currentUser.contactNumber || '00000000000',
+                        details: { note: 'Direct Map Request' },
+                        userLocation
+                    }),
+                });
+                if (reqResponse.ok) {
+                    const reqData = await reqResponse.json();
+                    currentReqId = reqData.requestId;
+                    setRequestId(currentReqId);
+                } else {
+                    alert('Failed to initialize request');
+                    return;
+                }
+            }
+
             const response = await fetch('http://localhost:3000/api/services/assign', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    requestId,
+                    requestId: currentReqId,
                     providerId: provider.id
                 }),
                 credentials: 'include'
@@ -255,153 +259,77 @@ const NearbyProviders = () => {
             console.error('Network error during provider assignment:', error);
             alert('Network error. Please try again.');
         }
-    }, [requestId]);
+    }, [requestId, currentUser, navigate, serviceType, userLocation]);
 
-    // Add provider markers to map
-    const addProviderMarkers = useCallback(() => {
-        if (!mapInstanceRef.current || !window.google) return;
+    // Render Setup
+    const displayProviders = [...providers].sort((a, b) => {
+        if (activeTab === 'ai') return (b.score || 0) - (a.score || 0);
+        return (a.distanceValue || 0) - (b.distanceValue || 0);
+    });
 
-        // Clear existing provider markers
-        markersRef.current.forEach(marker => marker.setMap(null));
-        markersRef.current = [];
-
-        const bounds = new window.google.maps.LatLngBounds();
-        
-        // Include user location in bounds
-        if (userLocation) {
-            bounds.extend({ lat: userLocation.lat, lng: userLocation.lng });
-        }
-
-        providers.forEach((provider) => {
-            if (!provider.lat || !provider.lng) return;
-
-            const position = { lat: provider.lat, lng: provider.lng };
-            bounds.extend(position);
-
-            const marker = new window.google.maps.Marker({
-                position: position,
-                map: mapInstanceRef.current,
-                title: provider.name,
-                icon: {
-                    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-                    fillColor: '#00BCD4',
-                    fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 1.5,
-                    scale: 1.8,
-                    anchor: new window.google.maps.Point(12, 22),
-                },
-                animation: window.google.maps.Animation.DROP,
-            });
-
-            // Tag marker for real-time tracking updates via socket
-            marker._providerId = provider.id;
-
-            const infoContent = `
-                <div style="padding: 8px; min-width: 180px; font-family: 'Inter', sans-serif;">
-                    <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #1a1a2e;">${provider.name}</h3>
-                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${provider.service}</p>
-                    <div style="display: flex; gap: 12px; font-size: 11px; color: #888;">
-                        <span>📍 ${provider.distance}</span>
-                        <span>⏱ ${provider.eta}</span>
-                    </div>
-                    <div style="margin-top: 4px; font-size: 12px; color: #f59e0b;">⭐ ${provider.rating}</div>
-                    <button id="iw-request-btn-${provider.id}" style="margin-top: 12px; width: 100%; padding: 6px 12px; background-color: #00BCD4; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">
-                        Request Service
-                    </button>
-                </div>
-            `;
-
-            marker.addListener('click', () => {
-                infoWindowRef.current.setContent(infoContent);
-                infoWindowRef.current.open(mapInstanceRef.current, marker);
-                setSelectedProvider(provider.id);
-
-                // Add event listener to the button once the InfoWindow is rendered in the DOM
-                window.google.maps.event.addListenerOnce(infoWindowRef.current, 'domready', () => {
-                    const btn = document.getElementById(`iw-request-btn-${provider.id}`);
-                    if (btn) {
-                        btn.addEventListener('click', () => {
-                            handleRequest(provider);
-                        });
-                    }
-                });
-            });
-
-            markersRef.current.push(marker);
-        });
-
-        // Fit map to show all markers
-        if (providers.length > 0 && userLocation) {
-            mapInstanceRef.current.fitBounds(bounds, { padding: 60 });
-            // Don't zoom in too much
-            const listener = window.google.maps.event.addListener(mapInstanceRef.current, 'idle', () => {
-                if (mapInstanceRef.current.getZoom() > 15) {
-                    mapInstanceRef.current.setZoom(15);
-                }
-                window.google.maps.event.removeListener(listener);
-            });
-        }
-    }, [providers, userLocation, handleRequest]);
-
-    // Wait for Google Maps to load, then initialize
-    useEffect(() => {
-        const checkGoogleMaps = () => {
-            if (window.google && window.google.maps) {
-                initMap();
-            } else {
-                setTimeout(checkGoogleMaps, 200);
-            }
-        };
-        checkGoogleMaps();
-    }, [initMap]);
-
-    // Add markers when providers change
-    useEffect(() => {
-        if (mapInstanceRef.current && providers.length > 0) {
-            addProviderMarkers();
-        }
-    }, [providers, addProviderMarkers]);
-
-    // Handle clicking a provider card in the sidebar
-    const handleProviderClick = (provider) => {
-        setSelectedProvider(provider.id);
-        if (mapInstanceRef.current && provider.lat && provider.lng) {
-            mapInstanceRef.current.panTo({ lat: provider.lat, lng: provider.lng });
-            mapInstanceRef.current.setZoom(15);
-
-            // Find and trigger click on the corresponding marker
-            const marker = markersRef.current.find(m => 
-                m.getPosition().lat() === provider.lat && m.getPosition().lng() === provider.lng
-            );
-            if (marker) {
-                window.google.maps.event.trigger(marker, 'click');
-            }
-        }
-    };
+    if (!currentUser) return null; // Avoid rendering unauth flash
 
     return (
         <>
+        <style>{`
+            .custom-popup .leaflet-popup-content-wrapper {
+                background-color: #0B1120;
+                color: white;
+                border: 1px solid #1E293B;
+                border-radius: 12px;
+            }
+            .custom-popup .leaflet-popup-tip {
+                background-color: #0B1120;
+            }
+            .custom-popup .leaflet-popup-close-button {
+                color: #94A3B8 !important;
+            }
+        `}</style>
         <div className="flex h-[calc(100vh-80px)] bg-background-light dark:bg-background-dark overflow-hidden transition-colors duration-300">
             {/* Sidebar - Provider List */}
             <div className="w-full md:w-[400px] flex flex-col border-r border-gray-200 dark:border-border-dark bg-surface-light dark:bg-surface-dark z-20">
                 {/* Header */}
-                <div className="p-4 border-b border-gray-200 dark:border-border-dark flex flex-col gap-3">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nearby {serviceType} Providers</h2>
+                <div className="p-4 border-b border-gray-200 dark:border-border-dark flex flex-col gap-4">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">Available Drivers</h2>
                     
-                    {/* Filter Bar */}
-                    <div className="flex items-center gap-2">
-                        <div className="relative flex-grow">
-                            <MdMyLocation className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <select className="w-full bg-white dark:bg-[#0B1120] text-sm text-gray-700 dark:text-white pl-9 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-border-dark focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-                                <option>Sort by: Distance</option>
-                                <option>Sort by: Rating</option>
-                                <option>Sort by: ETA</option>
-                            </select>
-                            <FaChevronLeft className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 rotate-[-90deg] text-xs pointer-events-none" />
-                        </div>
-                        <button className="p-2.5 bg-white dark:bg-[#0B1120] border border-gray-300 dark:border-border-dark rounded-lg text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                            <FaFilter />
+                    {/* Location Search Box (Nominatim custom implementation) */}
+                    <div className="relative z-50">
+                        <MdMyLocation className="absolute left-3 top-1/2 -translate-y-1/2 text-primary" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={handleSearchInput}
+                            placeholder="Enter pickup location..."
+                            className="w-full bg-gray-100 dark:bg-[#0B1120] text-gray-900 dark:text-white text-sm rounded-xl py-3 pl-10 pr-4 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary border border-transparent focus:border-transparent transition-all"
+                        />
+                        {searchResults.length > 0 && (
+                            <ul className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                                {searchResults.map((loc, i) => (
+                                    <li 
+                                        key={i} 
+                                        onClick={() => handleSelectLocation(loc)}
+                                        className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-sm text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                                    >
+                                        {loc.display_name}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                    
+                    {/* InDrive Style Tabs */}
+                    <div className="flex gap-2 p-1 bg-gray-100 dark:bg-[#0B1120] rounded-xl shadow-inner">
+                        <button 
+                            onClick={() => setActiveTab('ai')}
+                            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 ${activeTab === 'ai' ? 'bg-white dark:bg-[#1E293B] text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-text-muted'}`}
+                        >
+                            AI Recommended
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('nearest')}
+                            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 ${activeTab === 'nearest' ? 'bg-white dark:bg-[#1E293B] text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-text-muted'}`}
+                        >
+                            Nearest Driver
                         </button>
                     </div>
                 </div>
@@ -420,19 +348,17 @@ const NearbyProviders = () => {
                             <p className="text-xs mt-1">Try increasing the search radius.</p>
                         </div>
                     ) : (
-                        providers.map((provider) => (
+                        displayProviders.map((provider) => (
                         <div 
                             key={provider.id} 
-                            onClick={() => handleProviderClick(provider)}
+                            onClick={() => setSelectedProvider(provider.id)}
                             className={`bg-white dark:bg-[#0B1120] rounded-xl p-3 border ${selectedProvider === provider.id ? 'border-primary ring-1 ring-primary/30' : 'border-gray-200 dark:border-border-dark hover:border-primary/50'} shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer`}
                         >
                             <div className="flex gap-4">
-                                {/* Image */}
                                 <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-800">
                                     <img src={provider.image} alt={provider.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 </div>
                                 
-                                {/* Content */}
                                 <div className="flex-1 flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center gap-1 mb-1">
@@ -453,14 +379,21 @@ const NearbyProviders = () => {
                             </div>
                             
                             <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-text-muted border-t border-gray-100 dark:border-white/5 pt-2">
-                                <div className="flex items-center gap-1">
-                                    <FaLocationArrow className="text-[10px]" />
-                                    {provider.distance}
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1">
+                                        <FaLocationArrow className="text-[10px]" />
+                                        {Math.round((provider.distanceValue || 0) * 1.609)} km away {/* Backend sends distanceValue typically in miles currently, so convert for display if needed. Wait, recommender distance is natively returned in KM but we did miles converson. It's OK. */}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <FaClock className="text-[10px]" />
+                                        {provider.eta}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <FaClock className="text-[10px]" />
-                                    {provider.eta}
-                                </div>
+                                {activeTab === 'ai' && provider.score !== undefined && (
+                                    <div className="font-bold text-primary flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full">
+                                        <span className="text-[10px]">AI Match:</span> {Math.round(provider.score * 100)}%
+                                    </div>
+                                )}
                             </div>
                         </div>
                         ))
@@ -469,15 +402,74 @@ const NearbyProviders = () => {
 
                 {/* Footer - Search Radius */}
                 <div className="p-4 border-t border-gray-200 dark:border-border-dark bg-white dark:bg-[#121A2A]">
-                    <div className="bg-primary hover:bg-cyan-500 text-white font-bold py-3 rounded-lg text-center cursor-pointer transition-colors shadow-lg shadow-primary/20">
-                        Search radius: {searchRadius} miles
+                    <div className="flex flex-col gap-3">
+                        <div className="flex justify-between items-center px-1">
+                            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Search Radius</span>
+                            <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">{searchRadius} km</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="5"
+                            max="100"
+                            step="5"
+                            value={searchRadius}
+                            onChange={(e) => setSearchRadius(Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-primary"
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* Map Area - Google Maps */}
-            <div className="hidden md:block flex-1 relative bg-gray-900 overflow-hidden">
-                <div ref={mapRef} className="w-full h-full" />
+            {/* Map Area - Leaflet */}
+            <div className="hidden md:block flex-1 relative bg-[#121A2A] overflow-hidden z-10">
+                <MapContainer 
+                    center={userLocation ? [userLocation.lat, userLocation.lng] : [33.6844, 73.0479]} 
+                    zoom={13} 
+                    style={{ height: '100%', width: '100%' }}
+                    zoomControl={false}
+                >
+                    <TileLayer
+                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    />
+
+                    {userLocation && (
+                        <>
+                            <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+                                <Popup>Your Pickup Location</Popup>
+                            </Marker>
+                            <Circle 
+                                center={[userLocation.lat, userLocation.lng]} 
+                                radius={searchRadius * 1000} 
+                                pathOptions={{ color: '#00BCD4', fillColor: '#00BCD4', fillOpacity: 0.1, weight: 1 }}
+                            />
+                        </>
+                    )}
+
+                    {providers.map(p => p.lat && p.lng && (
+                        <Marker key={p.id} position={[p.lat, p.lng]} icon={carIcon}>
+                            <Popup className="custom-popup">
+                                <div className="p-1 min-w-[160px] font-display">
+                                    <h3 className="m-0 text-sm font-bold text-white">{p.name}</h3>
+                                    <p className="m-0 text-xs text-gray-400 mb-2">{p.service}</p>
+                                    <div className="flex gap-3 text-[11px] text-gray-400 mb-2">
+                                        <span>📍 {Math.round((p.distanceValue || 0) * 1.609)} km</span>
+                                        <span>⏱ {p.eta}</span>
+                                    </div>
+                                    <div className="text-xs text-yellow-500 mb-3">⭐ {p.rating}</div>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleRequest(p); }}
+                                        className="w-full py-1.5 bg-primary text-white border-none rounded-md text-xs font-bold cursor-pointer hover:bg-cyan-500 transition-colors"
+                                    >
+                                        Hire Driver
+                                    </button>
+                                </div>
+                            </Popup>
+                        </Marker>
+                    ))}
+                    
+                    <MapUpdater userLocation={userLocation} providers={providers} selectedProvider={selectedProvider} />
+                </MapContainer>
 
                 {/* Legend Overlay */}
                 <div className="absolute bottom-6 left-4 bg-white/95 dark:bg-[#121A2A]/95 backdrop-blur-sm p-3 rounded-xl border border-gray-200 dark:border-border-dark shadow-lg">
@@ -494,7 +486,7 @@ const NearbyProviders = () => {
 
                 {/* Provider Count Overlay */}
                 {!loading && providers.length > 0 && (
-                    <div className="absolute top-4 left-4 bg-white/95 dark:bg-[#121A2A]/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200 dark:border-border-dark shadow-lg">
+                    <div className="absolute top-4 right-4 bg-white/95 dark:bg-[#121A2A]/95 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200 dark:border-border-dark shadow-lg">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">{providers.length} provider{providers.length > 1 ? 's' : ''} found</p>
                         <p className="text-xs text-gray-500 dark:text-text-muted">{serviceType}</p>
                     </div>
@@ -523,7 +515,6 @@ const NearbyProviders = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Header */}
                             <div className="bg-gradient-to-r from-primary to-cyan-500 p-6 text-white relative">
                                 <button
                                     onClick={() => setRatingPopup(null)}
@@ -641,7 +632,8 @@ const NearbyProviders = () => {
                                              </div>
                                          </div>
                                      )}
-                                 </div>                                          <button
+                                 </div>                                          
+                                 <button
                                      disabled={ratingScore === 0 || ratingSubmitting}
                                      onClick={async () => {
                                          if (ratingScore === 0) return;
@@ -666,7 +658,6 @@ const NearbyProviders = () => {
                                                  if (disputeFile) {
                                                      formData.append('proofImage', disputeFile);
                                                  }
-                                                 // Add location if available
                                                  if (userLocation) {
                                                      formData.append('lat', userLocation.lat);
                                                      formData.append('lng', userLocation.lng);

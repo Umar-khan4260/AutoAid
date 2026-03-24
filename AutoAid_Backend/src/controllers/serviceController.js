@@ -209,6 +209,68 @@ exports.getNearbyProviders = async (req, res) => {
             return res.status(400).json({ error: 'User location is required' });
         }
 
+        // --- AI RECOMMENDER INTEGRATION (For Temporary Driver) ---
+        if (serviceType === 'Temporary Driver' || (serviceType && serviceType.toLowerCase() === 'temporary driver')) {
+            try {
+                // searchRadius is explicitly provided in km by the frontend UI
+                const radiusKm = searchRadius;
+                const aiResponse = await fetch('http://127.0.0.1:8000/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: req.user ? req.user._id.toString() : "anon",
+                        lat: userLocation.lat,
+                        lon: userLocation.lng,
+                        city: "Unknown",
+                        top_n: 20,
+                        radius_km: radiusKm
+                    })
+                });
+
+                if (aiResponse.ok) {
+                    const aiData = await aiResponse.json();
+                    
+                    if (aiData.results && aiData.results.length > 0) {
+                        // The AI Recommender returns results ranked by score.
+                        // We map them back to the frontend's expected format.
+                        
+                        // We need to fetch real provider details from our User DB if available
+                        const providerIds = aiData.results.map(r => r.driver_id)
+                            .filter(id => id && id.length === 24); // Ensure valid object IDs
+                        const dbProviders = await User.find({ _id: { $in: providerIds } });
+                        const dbMap = {};
+                        dbProviders.forEach(p => { dbMap[p._id.toString()] = p; });
+
+                        const mappedProviders = aiData.results.map(aiDriver => {
+                            const dbUser = dbMap[aiDriver.driver_id] || {};
+                            // AI distance is in KM, convert to miles for display
+                            const distMiles = aiDriver.distance_km * 0.621371;
+                            return {
+                                id: aiDriver.driver_id,
+                                name: aiDriver.name || "Unknown Driver",
+                                service: 'Temporary Driver',
+                                rating: aiDriver.rating || 4.5,
+                                reviews: aiDriver.jobs_completed || 0, // Using jobs as reviews proxy if none exist
+                                distance: distMiles.toFixed(1) + ' miles',
+                                distanceValue: distMiles, // numerical for distance sorting
+                                eta: '~' + Math.ceil(distMiles * 3) + ' min',
+                                image: dbUser.providerDetails?.profileImage || 'https://via.placeholder.com/150',
+                                lat: aiDriver.lat,
+                                lng: aiDriver.lon, // frontend expects lng
+                                contactNumber: dbUser.contactNumber || 'N/A',
+                                score: aiDriver.score || 0 // Send the AI score directly!
+                            };
+                        });
+
+                        return res.status(200).json({ success: true, providers: mappedProviders, source: aiData.source });
+                    }
+                }
+            } catch (err) {
+                console.error("[Fallback] AI Recommender failed, falling back to standard search:", err.message);
+            }
+        }
+        // --- END AI RECOMMENDER INTEGRATION ---
+
         // Mapping between service request names and provider signup slugs
         const serviceTypeMapping = {
             'Breakdown Repair': ['breakdown-assistance', 'breakdown repair', 'breakdown', 'mechanic'],
