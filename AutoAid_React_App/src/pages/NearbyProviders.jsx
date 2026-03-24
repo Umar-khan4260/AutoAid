@@ -35,6 +35,8 @@ const NearbyProviders = () => {
     const [hoveredStar, setHoveredStar] = useState(0);
     const [showIssueReport, setShowIssueReport] = useState(false);
     const [issueReport, setIssueReport] = useState('');
+    const [disputeReason, setDisputeReason] = useState('Late arrival');
+    const [disputeFile, setDisputeFile] = useState(null);
     const [ratingSubmitting, setRatingSubmitting] = useState(false);
     const [ratingDone, setRatingDone] = useState(false);
 
@@ -579,58 +581,127 @@ const NearbyProviders = () => {
                                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white resize-none focus:outline-none focus:border-primary transition-colors"
                                     />
                                 </div>
+                                {/* Issue Report Section */}
+                                 <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+                                     <button
+                                         onClick={() => setShowIssueReport(!showIssueReport)}
+                                         className="text-sm text-red-500 hover:text-red-700 font-bold flex items-center gap-2 transition-colors duration-300"
+                                     >
+                                         <span className="bg-red-100 dark:bg-red-900/30 p-1.5 rounded-lg">
+                                            {showIssueReport ? '▲' : '▼'}
+                                         </span>
+                                         Report a Serious Issue
+                                     </button>
+                                     
+                                     {showIssueReport && (
+                                         <div className="mt-4 space-y-4 animate-fade-in">
+                                             {/* Reason Dropdown */}
+                                             <div>
+                                                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                                                     Reason for Report
+                                                 </label>
+                                                 <select
+                                                     value={disputeReason}
+                                                     onChange={(e) => setDisputeReason(e.target.value)}
+                                                     className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-red-500 transition-colors"
+                                                 >
+                                                     <option>Late arrival</option>
+                                                     <option>Overcharging</option>
+                                                     <option>Misbehavior</option>
+                                                     <option>Fake service</option>
+                                                     <option>Safety issue</option>
+                                                 </select>
+                                             </div>
 
-                                {/* Issue Report toggle */}
-                                <div>
-                                    <button
-                                        onClick={() => setShowIssueReport(!showIssueReport)}
-                                        className="text-sm text-red-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
-                                    >
-                                        {showIssueReport ? '▲' : '▼'} Report an Issue
-                                    </button>
-                                    {showIssueReport && (
-                                        <textarea
-                                            rows={3}
-                                            value={issueReport}
-                                            onChange={(e) => setIssueReport(e.target.value)}
-                                            placeholder="Describe the issue you experienced..."
-                                            className="mt-2 w-full bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-xl p-3 text-gray-900 dark:text-white resize-none focus:outline-none focus:border-red-500 transition-colors"
-                                        />
-                                    )}
-                                </div>
+                                             {/* Description */}
+                                             <div>
+                                                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                                                     Detailed Description
+                                                 </label>
+                                                 <textarea
+                                                     rows={3}
+                                                     value={issueReport}
+                                                     onChange={(e) => setIssueReport(e.target.value)}
+                                                     placeholder="Provide details about what happened..."
+                                                     className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white resize-none focus:outline-none focus:border-red-500 transition-colors"
+                                                 />
+                                             </div>
 
-                                {/* Submit Button */}
-                                <button
-                                    disabled={ratingScore === 0 || ratingSubmitting}
-                                    onClick={async () => {
-                                        if (ratingScore === 0) return;
-                                        setRatingSubmitting(true);
-                                        try {
-                                            await fetch(`http://localhost:3000/api/services/request/${ratingPopup.requestId}/rate`, {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                credentials: 'include',
-                                                body: JSON.stringify({
-                                                    score: ratingScore,
-                                                    comment: ratingComment,
-                                                    issueReport: issueReport || undefined
-                                                })
-                                            });
-                                            setRatingDone(true);
-                                        } catch (err) {
-                                            console.error('Failed to submit rating:', err);
-                                        } finally {
-                                            setRatingSubmitting(false);
-                                        }
-                                    }}
-                                    className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
-                                        ratingScore === 0
-                                            ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
-                                            : 'bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]'
-                                    }`}
-                                >
-                                    {ratingSubmitting ? 'Submitting...' : 'Submit Rating'}
-                                </button>
+                                             {/* Proof Upload */}
+                                             <div>
+                                                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                                                     Upload Proof (Optional Image)
+                                                 </label>
+                                                 <input 
+                                                     type="file" 
+                                                     accept="image/*"
+                                                     onChange={(e) => setDisputeFile(e.target.files[0])}
+                                                     className="w-full text-xs text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 dark:file:bg-red-900/20 dark:file:text-red-400"
+                                                 />
+                                             </div>
+                                         </div>
+                                     )}
+                                 </div>                                          <button
+                                     disabled={ratingScore === 0 || ratingSubmitting}
+                                     onClick={async () => {
+                                         if (ratingScore === 0) return;
+                                         setRatingSubmitting(true);
+                                         try {
+                                             // 1. Submit Rating
+                                             await fetch(`http://localhost:3000/api/services/request/${ratingPopup.requestId}/rate`, {
+                                                 method: 'POST',
+                                                 headers: { 'Content-Type': 'application/json' },
+                                                 credentials: 'include',
+                                                 body: JSON.stringify({
+                                                     score: ratingScore,
+                                                     comment: ratingComment
+                                                 })
+                                             });
+
+                                             // 2. Submit Dispute if form is open and description provided
+                                             if (showIssueReport && issueReport) {
+                                                 const formData = new FormData();
+                                                 formData.append('reason', disputeReason);
+                                                 formData.append('description', issueReport);
+                                                 if (disputeFile) {
+                                                     formData.append('proofImage', disputeFile);
+                                                 }
+                                                 // Add location if available
+                                                 if (userLocation) {
+                                                     formData.append('lat', userLocation.lat);
+                                                     formData.append('lng', userLocation.lng);
+                                                 }
+
+                                                 await fetch(`http://localhost:3000/api/services/request/${ratingPopup.requestId}/dispute`, {
+                                                     method: 'POST',
+                                                     body: formData,
+                                                     credentials: 'include'
+                                                 });
+                                             }
+
+                                             setRatingDone(true);
+                                         } catch (err) {
+                                             console.error('Failed to submit feedback:', err);
+                                             alert('Submission failed. Please try again.');
+                                         } finally {
+                                             setRatingSubmitting(false);
+                                         }
+                                     }}
+                                     className={`w-full py-4 rounded-xl font-bold text-white transition-all duration-300 ${
+                                         ratingScore === 0
+                                             ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                                             : 'bg-gradient-to-r from-primary to-cyan-500 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]'
+                                     }`}
+                                 >
+                                     {ratingSubmitting ? (
+                                         <div className="flex items-center justify-center gap-2">
+                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                             <span>Submitting...</span>
+                                         </div>
+                                     ) : (
+                                         'Complete Review'
+                                     )}
+                                 </button>
                             </div>
                         </>
                     )}

@@ -398,6 +398,45 @@ exports.submitRating = async (req, res) => {
     }
 };
 
+const Dispute = require('../models/Dispute');
+
+// @desc    Submit a dispute/report for a service request
+// @route   POST /api/services/request/:id/dispute
+// @access  User
+exports.submitDispute = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason, description, lat, lng } = req.body;
+
+        const request = await ServiceRequest.findById(id);
+        if (!request) {
+            return res.status(404).json({ error: 'Service request not found' });
+        }
+
+        const dispute = new Dispute({
+            userId: request.userId,
+            providerId: request.providerId,
+            serviceType: request.serviceType,
+            serviceRequestId: id,
+            reason,
+            description,
+            proofImage: req.file ? req.file.path : null,
+            location: (lat && lng) ? { lat: Number(lat), lng: Number(lng) } : request.userLocation
+        });
+
+        await dispute.save();
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Report submitted successfully. Our team will review it.',
+            dispute 
+        });
+    } catch (error) {
+        console.error('Error submitting dispute:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // @desc    Get NHA Travel Advisories via Python scraper
 // @route   GET /api/services/nha-advisories
 // @access  Private
