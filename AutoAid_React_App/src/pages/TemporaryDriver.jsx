@@ -117,7 +117,7 @@ const TemporaryDriver = () => {
                     if (response.ok) {
                         const data = await response.json();
                         console.log('Temporary Driver Request submitted:', formData);
-                        navigate('/nearby-providers', { 
+                        navigate('/hire-driver', { 
                             state: { 
                                 serviceType: 'Temporary Driver', 
                                 userLocation: userLocation,

@@ -42,6 +42,7 @@ import FuelDelivery from './pages/FuelDelivery';
 import TemporaryDriver from './pages/TemporaryDriver';
 import RoutePlanning from './pages/RoutePlanning';
 import NearbyProviders from './pages/NearbyProviders';
+import HireDriver from './pages/HireDriver';
 
 // Provider Pages
 import ProviderLayout from './components/ProviderLayout';
@@ -83,6 +84,7 @@ function App() {
                 <Route path="services/temporary-driver" element={<TemporaryDriver />} />
                 <Route path="services/route-planning" element={<RoutePlanning />} />
                 <Route path="nearby-providers" element={<NearbyProviders />} />
+                <Route path="hire-driver" element={<HireDriver />} />
                 <Route path="profile" element={<UserProfile />} />
               </Route>
 
