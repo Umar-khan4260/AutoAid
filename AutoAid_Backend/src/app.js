@@ -89,6 +89,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/contact', require('./routes/contactRoutes'));
+app.use('/api/recommend', require('./routes/recommenderRoutes'));
 
 app.get('/', (req, res) => {
   res.send('AutoAid Backend is running');
