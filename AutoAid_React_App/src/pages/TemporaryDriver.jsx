@@ -1,40 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaPhone, FaUserTie, FaClock, FaMapMarkerAlt, FaCalendarAlt, FaRoute } from 'react-icons/fa';
-import CustomSelect from '../components/CustomSelect';
+import { FaPhone, FaClock } from 'react-icons/fa';
 import { validatePhoneNumber } from '../utils/formValidation';
 
 const TemporaryDriver = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const [formData, setFormData] = useState({
-        pickupLocation: '',
-        destination: '',
-        tripDate: '',
-        tripTime: '',
         drivingDuration: '',
-        driverGender: '',
-        tripType: '',
         contactNumber: '',
         specialRequirements: ''
     });
 
     const [errors, setErrors] = useState({});
-
-    const driverGenderOptions = [
-        { value: '', label: 'Select Preferred Gender', disabled: true },
-        { value: 'Male', label: 'Male' },
-        { value: 'Female', label: 'Female' },
-        { value: 'No Preference', label: 'No Preference' }
-    ];
-
-    const tripTypeOptions = [
-        { value: '', label: 'Select Trip Type', disabled: true },
-        { value: 'One-Way', label: 'One-Way Trip' },
-        { value: 'Round Trip', label: 'Round Trip' },
-        { value: 'Multi-Stop', label: 'Multi-Stop Journey' }
-    ];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -64,15 +43,7 @@ const TemporaryDriver = () => {
             newErrors.drivingDuration = 'Maximum duration is 24 hours for a single booking';
         }
 
-        // Validate trip date (should be today or future date)
-        if (formData.tripDate) {
-            const selectedDate = new Date(formData.tripDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (selectedDate < today) {
-                newErrors.tripDate = 'Trip date cannot be in the past';
-            }
-        }
+        // Validation complete
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -121,7 +92,8 @@ const TemporaryDriver = () => {
                             state: { 
                                 serviceType: 'Temporary Driver', 
                                 userLocation: userLocation,
-                                requestId: data.requestId
+                                requestId: data.requestId,
+                                drivingDuration: formData.drivingDuration
                             } 
                         });
                     } else {
@@ -139,8 +111,7 @@ const TemporaryDriver = () => {
         }
     };
 
-    // Get today's date for min date validation
-    const today = new Date().toISOString().split('T')[0];
+    // Render component
 
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
@@ -163,96 +134,6 @@ const TemporaryDriver = () => {
                 <div className="glassmorphism rounded-2xl p-8 md:p-10 shadow-lg dark:shadow-glow-lg border border-gray-200 dark:border-border-dark bg-surface-light dark:bg-surface-dark transition-colors duration-300">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Pickup Location */}
-                            <div className="space-y-2">
-                                <label htmlFor="pickupLocation" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
-                                    Pickup Location
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaMapMarkerAlt className="text-primary/70" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        id="pickupLocation"
-                                        name="pickupLocation"
-                                        required
-                                        placeholder="Enter pickup address"
-                                        value={formData.pickupLocation}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Destination */}
-                            <div className="space-y-2">
-                                <label htmlFor="destination" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
-                                    Destination
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaRoute className="text-primary/70" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        id="destination"
-                                        name="destination"
-                                        required
-                                        placeholder="Enter destination address"
-                                        value={formData.destination}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Trip Date */}
-                            <div className="space-y-2">
-                                <label htmlFor="tripDate" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
-                                    Trip Date
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaCalendarAlt className="text-primary/70" />
-                                    </div>
-                                    <input
-                                        type="date"
-                                        id="tripDate"
-                                        name="tripDate"
-                                        required
-                                        min={today}
-                                        value={formData.tripDate}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                                    />
-                                </div>
-                                {errors.tripDate && (
-                                    <p className="text-red-400 text-sm mt-1 animate-fadeIn">{errors.tripDate}</p>
-                                )}
-                            </div>
-
-                            {/* Trip Time */}
-                            <div className="space-y-2">
-                                <label htmlFor="tripTime" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
-                                    Trip Time
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaClock className="text-primary/70" />
-                                    </div>
-                                    <input
-                                        type="time"
-                                        id="tripTime"
-                                        name="tripTime"
-                                        required
-                                        value={formData.tripTime}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-[#121A2A]/50 border border-gray-300 dark:border-border-dark rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                                    />
-                                </div>
-                            </div>
-
                             {/* Driving Duration */}
                             <div className="space-y-2">
                                 <label htmlFor="drivingDuration" className="block text-sm font-medium text-gray-700 dark:text-text-muted">
@@ -280,30 +161,6 @@ const TemporaryDriver = () => {
                                     <p className="text-red-400 text-sm mt-1 animate-fadeIn">{errors.drivingDuration}</p>
                                 )}
                             </div>
-
-                            {/* Driver Gender Preference - Custom Select */}
-                            <CustomSelect
-                                label="Preferred Driver Gender"
-                                icon={FaUserTie}
-                                options={driverGenderOptions}
-                                value={formData.driverGender}
-                                onChange={handleChange}
-                                name="driverGender"
-                                placeholder="Select Preferred Gender"
-                                required
-                            />
-
-                            {/* Trip Type - Custom Select */}
-                            <CustomSelect
-                                label="Trip Type"
-                                icon={FaRoute}
-                                options={tripTypeOptions}
-                                value={formData.tripType}
-                                onChange={handleChange}
-                                name="tripType"
-                                placeholder="Select Trip Type"
-                                required
-                            />
 
                             {/* Contact Number */}
                             <div className="space-y-2">
@@ -377,12 +234,6 @@ const TemporaryDriver = () => {
                     animation: fadeIn 0.3s ease-out;
                 }
 
-                /* Style date and time inputs */
-                input[type="date"]::-webkit-calendar-picker-indicator,
-                input[type="time"]::-webkit-calendar-picker-indicator {
-                    filter: invert(1);
-                    cursor: pointer;
-                }
             `}</style>
         </div>
     );
