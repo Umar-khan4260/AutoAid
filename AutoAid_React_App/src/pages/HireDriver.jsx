@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     FaStar, FaChevronLeft, FaClock, FaLocationArrow,
-    FaCheckCircle, FaTimes, FaBrain, FaMapPin, FaSearch
+    FaCheckCircle, FaTimes, FaBrain, FaMapPin, FaSearch, FaRoute, FaMapMarkerAlt
 } from 'react-icons/fa';
 import { MdMyLocation } from 'react-icons/md';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 
 // React-Leaflet imports
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -68,6 +68,32 @@ const userIcon = new L.DivIcon({
     iconAnchor: [10, 10],
 });
 
+const pickupIcon = new L.DivIcon({
+    html: `<div style="background: #22c55e; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; box-shadow: 0 2px 8px rgba(34,197,94,0.6);"></div>`,
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+});
+
+const destinationIcon = new L.DivIcon({
+    html: `<div style="background: #ef4444; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; box-shadow: 0 2px 8px rgba(239,68,68,0.6);"></div>`,
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+});
+
+// ─── Map sub-component: handles clicks to place markers ───────────────────────
+function MapClickHandler({ pickingMode, onMapClick }) {
+    useMapEvents({
+        click(e) {
+            if (pickingMode) {
+                onMapClick(e.latlng);
+            }
+        },
+    });
+    return null;
+}
+
 // ─── Map sub-component: pans map to new center ───────────────────────────────
 function MapFlyTo({ center, zoom = 13 }) {
     const map = useMap();
@@ -95,6 +121,10 @@ const HireDriver = () => {
     const serviceType = location.state?.serviceType || 'Service';
     const userLocation = location.state?.userLocation;   // { lat, lng }
     const requestId    = location.state?.requestId;
+    const drivingDuration = location.state?.drivingDuration;
+
+    // Calculate base fee if present
+    const baseFee = drivingDuration ? parseFloat(drivingDuration) * 200 : 0;
 
     // ── AI / UI state ────────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState('ai');       // 'ai' | 'nearest'
@@ -109,7 +139,12 @@ const HireDriver = () => {
     const [mapCenter, setMapCenter] = useState(
         userLocation ? [userLocation.lat, userLocation.lng] : [31.5204, 74.3587]
     );
-    const [searchQuery, setSearchQuery] = useState('');
+    const [pickupQuery, setPickupQuery] = useState('');
+    const [destinationQuery, setDestinationQuery] = useState('');
+    const [pickupCoords, setPickupCoords] = useState(null);
+    const [destinationCoords, setDestinationCoords] = useState(null);
+    const [pickingMode, setPickingMode] = useState(null); // 'pickup' | 'destination' | null
+    const [useCurrentLocationForPickup, setUseCurrentLocationForPickup] = useState(false);
     const [searchLoading, setSearchLoading] = useState(false);
 
     // ── Real-time marker refs ─────────────────────────────────────────────────
@@ -221,33 +256,66 @@ const HireDriver = () => {
         }
     }, [userLocation, fetchRecommendations]);
 
-    // ── Nominatim city search ─────────────────────────────────────────────────
-    const handleCitySearch = async (e) => {
+    // ── Search with Pickup & Destination ──────────────────────────────────────
+    const handleSearch = async (e) => {
         e.preventDefault();
-        if (!searchQuery.trim()) return;
+        
+        let targetLat, targetLon;
+
         setSearchLoading(true);
         try {
-            const res = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`,
-                { headers: { 'Accept-Language': 'en' } }
-            );
-            const results = await res.json();
-            if (results.length > 0) {
-                const { lat, lon } = results[0];
-                const newLat = parseFloat(lat);
-                const newLon = parseFloat(lon);
-                setMapCenter([newLat, newLon]);
-                // Re-fetch recommendations for the new location
-                await fetchRecommendations(newLat, newLon);
+            if (useCurrentLocationForPickup && userLocation) {
+                targetLat = userLocation.lat;
+                targetLon = userLocation.lng;
+            } else if (pickupCoords && pickupQuery === `${pickupCoords.lat.toFixed(4)}, ${pickupCoords.lng.toFixed(4)}`) {
+                targetLat = pickupCoords.lat;
+                targetLon = pickupCoords.lng;
+            } else if (pickupQuery.trim()) {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(pickupQuery)}&format=json&limit=1`,
+                    { headers: { 'Accept-Language': 'en' } }
+                );
+                const results = await res.json();
+                if (results.length > 0) {
+                    targetLat = parseFloat(results[0].lat);
+                    targetLon = parseFloat(results[0].lon);
+                } else {
+                    alert('Pickup location not found. Try a more specific place.');
+                    setSearchLoading(false);
+                    return;
+                }
             } else {
-                alert('Location not found. Try a more specific city name.');
+                alert('Please enter a pickup location.');
+                setSearchLoading(false);
+                return;
             }
+
+            setMapCenter([targetLat, targetLon]);
+            // Re-fetch recommendations for the pickup location
+            await fetchRecommendations(targetLat, targetLon);
         } catch (err) {
             console.error('[Nominatim] Search error:', err);
+            alert('Error fetching location.');
         } finally {
             setSearchLoading(false);
         }
     };
+
+    // ── Handle Map Clicks for Picking ─────────────────────────────────────────
+    const handleMapClick = useCallback((latlng) => {
+        if (pickingMode === 'pickup') {
+            setPickupCoords(latlng);
+            setPickupQuery(`${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`);
+            setUseCurrentLocationForPickup(false);
+            setPickingMode(null);
+            setMapCenter([latlng.lat, latlng.lng]);
+        } else if (pickingMode === 'destination') {
+            setDestinationCoords(latlng);
+            setDestinationQuery(`${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`);
+            setPickingMode(null);
+            setMapCenter([latlng.lat, latlng.lng]);
+        }
+    }, [pickingMode]);
 
     // ── Hire Driver: assign provider + log AI feedback ────────────────────────
     const handleHire = useCallback(async (provider) => {
@@ -345,41 +413,114 @@ const HireDriver = () => {
 
                 {/* Header */}
                 <div style={{ padding: '16px', borderBottom: '1px solid #1e293b' }}>
-                    <h2 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: 700, color: '#f1f5f9' }}>
-                        {serviceType} — Find a Provider
-                    </h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                        <h2 style={{ margin: '0', fontSize: '18px', fontWeight: 700, color: '#f1f5f9' }}>
+                            {serviceType} — Find a Provider
+                        </h2>
+                        {baseFee > 0 && (
+                            <div style={{ fontSize: '14px', color: '#10b981', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '8px' }}>
+                                PKR {baseFee} <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>+base fee</span>
+                            </div>
+                        )}
+                    </div>
 
-                    {/* Nominatim city search */}
-                    <form onSubmit={handleCitySearch} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <FaSearch style={{
+                    {/* Location Selections */}
+                    <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            <FaMapPin style={{
                                 position: 'absolute', left: '10px', top: '50%',
                                 transform: 'translateY(-50%)', color: '#64748b', fontSize: '13px'
                             }} />
                             <input
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                placeholder="Search a city (e.g. Lahore)…"
+                                value={pickupQuery}
+                                onChange={e => {
+                                    setPickupQuery(e.target.value);
+                                    setUseCurrentLocationForPickup(false);
+                                }}
+                                placeholder="Pickup location..."
+                                required
                                 style={{
-                                    width: '100%', paddingLeft: '32px', paddingRight: '8px',
-                                    paddingTop: '8px', paddingBottom: '8px',
+                                    width: '100%', paddingLeft: '32px', paddingRight: '36px',
+                                    paddingTop: '10px', paddingBottom: '10px',
                                     background: '#1e293b', border: '1px solid #334155',
                                     borderRadius: '8px', color: '#f1f5f9', fontSize: '13px',
                                     outline: 'none', boxSizing: 'border-box',
                                 }}
                             />
+                            <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '4px' }}>
+                                {userLocation && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPickupQuery('Current Location');
+                                            setUseCurrentLocationForPickup(true);
+                                        }}
+                                        style={{
+                                            background: 'transparent', border: 'none', color: useCurrentLocationForPickup ? '#06b6d4' : '#64748b',
+                                            cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                        }}
+                                        title="Use Current Location"
+                                    >
+                                        <MdMyLocation size={16} />
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setPickingMode(pickingMode === 'pickup' ? null : 'pickup')}
+                                    style={{
+                                        background: 'transparent', border: 'none', color: pickingMode === 'pickup' ? '#22c55e' : '#64748b',
+                                        cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}
+                                    title="Pick on Map"
+                                >
+                                    <FaMapMarkerAlt size={16} />
+                                </button>
+                            </div>
+                        </div>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            <FaRoute style={{
+                                position: 'absolute', left: '10px', top: '50%',
+                                transform: 'translateY(-50%)', color: '#64748b', fontSize: '13px'
+                            }} />
+                            <input
+                                value={destinationQuery}
+                                onChange={e => setDestinationQuery(e.target.value)}
+                                placeholder="Destination location..."
+                                required
+                                style={{
+                                    width: '100%', paddingLeft: '32px', paddingRight: '12px',
+                                    paddingTop: '10px', paddingBottom: '10px',
+                                    background: '#1e293b', border: '1px solid #334155',
+                                    borderRadius: '8px', color: '#f1f5f9', fontSize: '13px',
+                                    outline: 'none', boxSizing: 'border-box',
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setPickingMode(pickingMode === 'destination' ? null : 'destination')}
+                                style={{
+                                    position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                                    background: 'transparent', border: 'none', color: pickingMode === 'destination' ? '#ef4444' : '#64748b',
+                                    cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                                title="Pick on Map"
+                            >
+                                <FaMapMarkerAlt size={16} />
+                            </button>
                         </div>
                         <button
                             type="submit"
                             disabled={searchLoading}
                             style={{
-                                padding: '8px 14px', background: '#06b6d4',
+                                width: '100%',
+                                padding: '10px 14px', background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
                                 border: 'none', borderRadius: '8px', color: 'white',
-                                fontWeight: 600, cursor: 'pointer', fontSize: '13px',
-                                opacity: searchLoading ? 0.6 : 1,
+                                fontWeight: 700, cursor: 'pointer', fontSize: '14px',
+                                opacity: searchLoading ? 0.6 : 1, transition: 'all 0.2s',
+                                marginTop: '4px'
                             }}
                         >
-                            {searchLoading ? '…' : 'Go'}
+                            {searchLoading ? 'Finding providers...' : 'Go'}
                         </button>
                     </form>
 
@@ -604,12 +745,26 @@ const HireDriver = () => {
                     <div style={{ fontSize: '11px', color: '#64748b' }}>{serviceType}</div>
                 </div>
 
+                {pickingMode && (
+                    <div style={{
+                        position: 'absolute', top: '24px', left: '50%', transform: 'translateX(-50%)',
+                        background: '#3b82f6', color: 'white', padding: '10px 20px', borderRadius: '30px',
+                        zIndex: 1000, fontWeight: 700, fontSize: '14px', boxShadow: '0 4px 12px rgba(59,130,246,0.5)',
+                        display: 'flex', alignItems: 'center', gap: '12px', cursor: 'default'
+                    }}>
+                        Click map to set {pickingMode === 'pickup' ? 'Pickup' : 'Destination'}
+                        <button onClick={() => setPickingMode(null)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.6)', color: 'white', borderRadius: '16px', padding: '2px 10px', fontSize: '12px', cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                )}
+
                 <MapContainer
                     center={mapCenter}
                     zoom={12}
-                    style={{ width: '100%', height: '100%' }}
+                    style={{ width: '100%', height: '100%', cursor: pickingMode ? 'crosshair' : 'grab' }}
                     zoomControl={true}
                 >
+                    <MapClickHandler pickingMode={pickingMode} onMapClick={handleMapClick} />
+
                     {/* CARTO Dark Basemap */}
                     <TileLayer
                         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -629,6 +784,20 @@ const HireDriver = () => {
                                     <strong>Your Location</strong>
                                 </div>
                             </Popup>
+                        </Marker>
+                    )}
+
+                    {/* Pickup marker */}
+                    {pickupCoords && (
+                        <Marker position={[pickupCoords.lat, pickupCoords.lng]} icon={pickupIcon}>
+                            <Popup>Pickup Location</Popup>
+                        </Marker>
+                    )}
+
+                    {/* Destination marker */}
+                    {destinationCoords && (
+                        <Marker position={[destinationCoords.lat, destinationCoords.lng]} icon={destinationIcon}>
+                            <Popup>Destination</Popup>
                         </Marker>
                     )}
 
