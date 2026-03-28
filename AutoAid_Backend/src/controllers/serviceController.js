@@ -437,6 +437,35 @@ exports.submitDispute = async (req, res) => {
     }
 };
 
+// @desc    Update service request details (service-specific info)
+// @route   PUT /api/services/request/:id/details
+// @access  User
+exports.updateRequestDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { details } = req.body;
+
+        if (!details) {
+            return res.status(400).json({ error: 'Details are required' });
+        }
+
+        const request = await ServiceRequest.findById(id);
+
+        if (!request) {
+            return res.status(404).json({ error: 'Service request not found' });
+        }
+
+        // Merge or overwrite details
+        request.details = { ...request.details, ...details };
+        await request.save();
+
+        res.status(200).json({ success: true, message: 'Request details updated successfully', request });
+    } catch (error) {
+        console.error('Error updating request details:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // @desc    Get NHA Travel Advisories via Python scraper
 // @route   GET /api/services/nha-advisories
 // @access  Private

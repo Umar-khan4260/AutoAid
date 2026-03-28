@@ -14,6 +14,7 @@ router.get('/provider', protect, serviceController.getProviderRequests);
 
 // PUT /api/services/request/:id/status
 router.put('/request/:id/status', protect, serviceController.updateRequestStatus);
+router.put('/request/:id/details', protect, serviceController.updateRequestDetails);
 
 // POST /api/services/request/:id/rate
 router.post('/request/:id/rate', protect, serviceController.submitRating);
