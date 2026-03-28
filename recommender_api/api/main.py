@@ -31,8 +31,8 @@ app.add_middleware(
 )
 
 # --- Configuration ---
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "autoaid")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://autoaidDb:8765%401234@autoaid-database-cluste.7c93xlw.mongodb.net/")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "test")
 MONGO_USERS_COLLECTION = os.getenv("MONGO_USERS_COLLECTION", "users")
 DRIVER_USER_TYPE = os.getenv("DRIVER_USER_TYPE", "driver")
 
@@ -97,28 +97,34 @@ def normalize_driver(doc):
     
     Maps flexible MongoDB field names to the fixed internal keys.
     """
-    # Support both GeoJSON {type, coordinates} and flat lat/lng fields
-    lat, lon = 0.0, 0.0
-    loc = doc.get('location', {})
-    if isinstance(loc, dict) and loc.get('type') == 'Point':
-        coords = loc.get('coordinates', [0, 0])  # GeoJSON: [lon, lat]
-        lon, lat = coords[0], coords[1]
+    # Extract location from User schema's currentLocation
+    curr_loc = doc.get('currentLocation', {})
+    if isinstance(curr_loc, dict) and 'lat' in curr_loc and ('lng' in curr_loc or 'lon' in curr_loc):
+        lat = float(curr_loc.get('lat', 0.0))
+        lon = float(curr_loc.get('lng', curr_loc.get('lon', 0.0)))
     else:
+        # Fallback to old format
         lat = float(doc.get('lat', doc.get('latitude', 0.0)))
         lon = float(doc.get('lon', doc.get('longitude', 0.0)))
+
+    # Ensure valid floats
+    try:
+        lat, lon = float(lat), float(lon)
+    except (ValueError, TypeError):
+        lat, lon = 0.0, 0.0
 
     return {
         'driver_id': str(doc.get('_id', doc.get('driver_id', 'UNKNOWN'))),
         'name': doc.get('name', doc.get('fullName', 'Unknown Driver')),
         'lat': lat,
         'lon': lon,
-        'avg_rating': float(doc.get('avg_rating', doc.get('rating', 4.0))),
-        'rating_count': int(doc.get('rating_count', doc.get('ratingCount', 0))),
-        'completed_jobs': int(doc.get('completed_jobs', doc.get('completedJobs', doc.get('totalTrips', 0)))),
+        'avg_rating': float(doc.get('providerDetails', {}).get('averageRating', doc.get('avg_rating', 4.0))),
+        'rating_count': int(doc.get('providerDetails', {}).get('totalRatings', doc.get('ratingCount', 0))),
+        'completed_jobs': int(doc.get('providerDetails', {}).get('completedJobsCount', doc.get('completedJobs', 0))),
         'accepted_jobs': int(doc.get('accepted_jobs', doc.get('acceptedJobs', 1))),
         'cancellations': int(doc.get('cancellations', 0)),
         'avg_response_time_min': float(doc.get('avg_response_time_min', doc.get('responseTime', 30))),
-        'is_online': bool(doc.get('is_online', doc.get('isOnline', doc.get('online', False)))),
+        'is_online': bool(doc.get('is_online', doc.get('isOnline', doc.get('online', doc.get('isAvailable', False))))),
         'reviews': doc.get('reviews', []),
         'job_timestamps': doc.get('job_timestamps', doc.get('jobTimestamps', [])),
         'license_type': doc.get('license_type', doc.get('licenseType', 'N/A')),
@@ -136,10 +142,12 @@ def fetch_drivers_from_mongo(user_lat, user_lon, radius_km):
     # --- Primary: MongoDB ---
     if collection is not None:
         try:
-            # Query all documents where user_type == driver
-            # We load nearby ones using a simple query (no 2dsphere index required)
-            # If you have a 2dsphere index, we could use $near for server-side filtering
-            cursor = collection.find({"user_type": DRIVER_USER_TYPE})
+            # Query documents for available temporary drivers
+            cursor = collection.find({
+                "role": "provider",
+                "providerDetails.serviceType": {"$in": ["temporary-driver", "Temporary Driver", "Temporary-Driver"]},
+                "isAvailable": True
+            })
             
             nearby_drivers = []
             distances = {}
