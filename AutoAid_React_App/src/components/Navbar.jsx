@@ -91,7 +91,7 @@ const Navbar = () => {
                         </div>
 
 
-                        <NavLink 
+                        {/* <NavLink 
                             to="/careers" 
                             className={({ isActive }) => 
                                 `text-base font-medium leading-normal transition-colors nav-link-underline ${
@@ -100,7 +100,7 @@ const Navbar = () => {
                             }
                         >
                             Careers
-                        </NavLink>
+                        </NavLink> */}
                         <NavLink 
                             to="/about" 
                             className={({ isActive }) => 
@@ -231,7 +231,7 @@ const Navbar = () => {
                     </div>
 
 
-                    <NavLink 
+                    {/* <NavLink 
                         to="/careers" 
                         className={({ isActive }) => 
                             `block px-3 py-2 rounded-md text-base font-medium ${
@@ -240,7 +240,7 @@ const Navbar = () => {
                         }
                     >
                         Careers
-                    </NavLink>
+                    </NavLink> */}
                     <NavLink 
                         to="/about" 
                         className={({ isActive }) => 
