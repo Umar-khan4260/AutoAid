@@ -324,8 +324,29 @@ const HireDriver = () => {
             return;
         }
 
-        // 1. Assign provider via existing Node.js endpoint
         try {
+            // 1. Update the ServiceRequest with the specific details from this page 
+            //    (Pickup, Destination, Contact, Duration)
+            const updateDetails = {
+                pickupLocation: pickupQuery,
+                destinationLocation: destinationQuery,
+                contactNumber: currentUser?.contactNumber || '', // Fallback or use a state if we had a dedicated field
+                drivingDuration: drivingDuration,
+                baseFee: baseFee
+            };
+
+            const updateRes = await fetch(`http://localhost:3000/api/services/request/${requestId}/details`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ details: updateDetails }),
+            });
+
+            if (!updateRes.ok) {
+                console.warn('Failed to update request details, proceeding with assignment anyway...');
+            }
+
+            // 2. Assign provider via existing Node.js endpoint
             const assignRes = await fetch('http://localhost:3000/api/services/assign', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -339,12 +360,12 @@ const HireDriver = () => {
             }
             alert(`Request sent to ${provider.name}!\nProvider has been notified.`);
         } catch (err) {
-            console.error('Assign error:', err);
+            console.error('Hire process error:', err);
             alert('Network error. Please try again.');
             return;
         }
 
-        // 2. Log feedback to AI model (fire-and-forget — don't block UX)
+        // 3. Log feedback to AI model (fire-and-forget — don't block UX)
         if (interactionId) {
             const shownDriverIds = displayProviders.map(p => p.driver_id);
             fetch('http://localhost:3000/api/recommend/feedback', {
@@ -359,7 +380,7 @@ const HireDriver = () => {
                 }),
             }).catch(err => console.warn('[Feedback] Log failed (non-critical):', err));
         }
-    }, [requestId, interactionId, displayProviders, currentUser]);
+    }, [requestId, interactionId, displayProviders, currentUser, pickupQuery, destinationQuery, drivingDuration, baseFee]);
 
     // ── Submit rating helper ──────────────────────────────────────────────────
     const handleRatingSubmit = async () => {
