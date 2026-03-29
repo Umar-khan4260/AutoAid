@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import StatCard from '../../components/admin/StatCard';
 import { FaUsers, FaTools, FaHourglassHalf, FaBalanceScale } from 'react-icons/fa';
 
 const AdminDashboard = () => {
-    // Mock data
+    const [statsData, setStatsData] = useState({
+        totalUsers: 0,
+        activeProviders: 0,
+        pendingApprovals: 0,
+        activeDisputes: 0
+    });
+    const [loading, setLoading] = useState(true);
+
+    const fetchStats = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:3000/api/admin/stats', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.success) {
+                setStatsData(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
     const stats = [
-        { title: 'Total Users', value: '12,345', change: 12, icon: <FaUsers />, color: 'blue' },
-        { title: 'Active Providers', value: '1,234', change: 5, icon: <FaTools />, color: 'green' },
-        { title: 'Pending Approvals', value: '45', change: -2, icon: <FaHourglassHalf />, color: 'yellow' },
-        { title: 'Active Disputes', value: '8', change: 0, icon: <FaBalanceScale />, color: 'red' },
+        { title: 'Total Users', value: loading ? '...' : statsData.totalUsers.toLocaleString(), change: 12, icon: <FaUsers />, color: 'blue' },
+        { title: 'Active Providers', value: loading ? '...' : statsData.activeProviders.toLocaleString(), change: 5, icon: <FaTools />, color: 'green' },
+        { title: 'Pending Approvals', value: loading ? '...' : statsData.pendingApprovals.toLocaleString(), change: -2, icon: <FaHourglassHalf />, color: 'yellow' },
+        { title: 'Active Disputes', value: loading ? '...' : statsData.activeDisputes.toLocaleString(), change: 0, icon: <FaBalanceScale />, color: 'red' },
     ];
 
     const recentActivity = [

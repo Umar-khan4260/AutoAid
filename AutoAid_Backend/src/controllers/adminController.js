@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Dispute = require('../models/Dispute');
 const { sendEmail } = require('../config/email');
 
 // @desc    Get all pending provider approvals
@@ -213,6 +214,107 @@ exports.removeAdmin = async (req, res) => {
         res.status(200).json({ success: true, message: 'Admin removed successfully' });
     } catch (error) {
         console.error(error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+
+// @desc    Get all disputes
+// @route   GET /api/admin/disputes
+// @access  Private/Admin
+exports.getAllDisputes = async (req, res) => {
+    try {
+        const disputes = await Dispute.aggregate([
+            {
+                // Join with User for Reporter (matching userId string to User.uid)
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId', // The Firebase UID stored in Dispute
+                    foreignField: 'uid',   // The Firebase UID stored in User
+                    as: 'userId'
+                }
+            },
+            {
+                // Join with User for Provider (matching providerId ObjectId to User._id)
+                $lookup: {
+                    from: 'users',
+                    localField: 'providerId',
+                    foreignField: '_id',
+                    as: 'providerId'
+                }
+            },
+            { $unwind: { path: '$userId', preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: '$providerId', preserveNullAndEmptyArrays: true } },
+            {
+                // Project only needed fields and exclude sensitive data
+                $project: {
+                    'userId.password': 0,
+                    'providerId.password': 0,
+                }
+            },
+            { $sort: { timestamp: -1 } }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            count: disputes.length,
+            data: disputes
+        });
+    } catch (error) {
+        console.error('Error fetching disputes:', error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+
+// @desc    Update dispute status
+// @route   PUT /api/admin/disputes/:id/status
+// @access  Private/Admin
+exports.updateDisputeStatus = async (req, res) => {
+    const { status } = req.body;
+
+    if (!['Pending', 'Reviewed', 'Resolved'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status. Use Pending, Reviewed, or Resolved.' });
+    }
+
+    try {
+        const dispute = await Dispute.findById(req.params.id);
+
+        if (!dispute) {
+            return res.status(404).json({ error: 'Dispute not found' });
+        }
+
+        dispute.status = status;
+        await dispute.save();
+
+        res.status(200).json({ success: true, data: dispute });
+    } catch (error) {
+        console.error('Error updating dispute status:', error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+
+// @desc    Get dashboard statistics
+// @route   GET /api/admin/stats
+// @access  Private/Admin
+exports.getDashboardStats = async (req, res) => {
+    try {
+        const [totalUsers, activeProviders, pendingApprovals, activeDisputes] = await Promise.all([
+            User.countDocuments({ role: 'user' }),
+            User.countDocuments({ role: 'provider', isAvailable: true }),
+            User.countDocuments({ role: 'provider', isAdminApproved: false }),
+            Dispute.countDocuments({ status: 'Pending' })
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalUsers,
+                activeProviders,
+                pendingApprovals,
+                activeDisputes
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
         res.status(500).json({ error: 'Server Error' });
     }
 };
