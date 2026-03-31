@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 
-const testimonials = [
+const dummyTestimonials = [
     {
         name: 'Ahmed Khan',
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDST2iVpTmwzvXOnCa66roPsk62QVHWFewABWvhiJUYqKYsZv87X0zB7VbIeHA-w0nR0V7Tu__fYR_z9oreDRIoy40e6CHcXcuc4h3hRfkHK2I-v8uyc1AHC3WhPAYjJNjsoQQB8_eKCTifRr3oTjn5iKpXfuEuRRVFxbvxP96oAZO2zorGzYQSkCXwN7Gzf0IB61Jvn17wMNj8rXX3oDgx1RrXVd5bci0KlVgFFfpF9oE-q64trTriv2Dvt1OILjCzs257Y1Iek3E',
@@ -23,9 +23,41 @@ const testimonials = [
 ];
 
 const Testimonials = () => {
+    const [testimonials, setTestimonials] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTestimonials = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/api/services/testimonials');
+                const data = await response.json();
+                if (data.success && data.testimonials && data.testimonials.length > 0) {
+                    setTestimonials(data.testimonials);
+                } else {
+                    setTestimonials(dummyTestimonials);
+                }
+            } catch (error) {
+                console.error('Error fetching testimonials:', error);
+                setTestimonials(dummyTestimonials);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTestimonials();
+    }, []);
+
+    // Helper to format image URL
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return 'https://via.placeholder.com/150';
+        if (imagePath.startsWith('http') || imagePath.startsWith('blob:')) return imagePath;
+        return `http://localhost:3000/${imagePath.replace(/\\/g, '/')}`;
+    };
+
     // Duplicate testimonials to create a seamless scrolling effect
-    const row1 = [...testimonials, ...testimonials, ...testimonials, ...testimonials];
-    const row2 = [...testimonials, ...testimonials, ...testimonials, ...testimonials];
+    // We use a larger multiplier for less data to ensure no gaps in animation
+    const displayData = testimonials.length > 0 ? testimonials : dummyTestimonials;
+    const row1 = [...displayData, ...displayData, ...displayData, ...displayData];
+    const row2 = [...displayData, ...displayData, ...displayData, ...displayData];
 
     return (
         <section className="py-16 sm:py-24 bg-background-light dark:bg-background-dark overflow-hidden transition-colors duration-300">
@@ -41,12 +73,13 @@ const Testimonials = () => {
                 <div className="relative w-full overflow-hidden">
                     <div className="flex gap-8 animate-scroll-right w-max pause-on-hover pl-4">
                         {row1.map((testimonial, index) => (
-                            <div key={`row1-${index}`} className="glassmorphism p-6 rounded-xl flex flex-col w-[350px] shrink-0">
+                            <div key={`row1-${index}`} className="glassmorphism p-6 rounded-xl flex flex-col w-[350px] shrink-0 border border-white/10 shadow-lg">
                                 <div className="flex items-center mb-4">
                                     <img
-                                        className="size-12 rounded-full mr-4 border-2 border-primary/50"
+                                        className="size-12 rounded-full mr-4 border-2 border-primary/50 object-cover"
                                         alt={`Profile picture of ${testimonial.name}`}
-                                        src={testimonial.image}
+                                        src={getImageUrl(testimonial.image)}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
                                     />
                                     <div>
                                         <p className="font-bold text-gray-900 dark:text-white">{testimonial.name}</p>
@@ -59,7 +92,14 @@ const Testimonials = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-gray-600 dark:text-text-muted text-sm italic">{testimonial.text}</p>
+                                <p className="text-gray-600 dark:text-text-muted text-sm italic leading-relaxed">
+                                    {testimonial.text.startsWith('"') ? testimonial.text : `"${testimonial.text}"`}
+                                </p>
+                                {testimonial.serviceType && (
+                                    <span className="mt-4 text-[10px] uppercase tracking-wider font-bold text-primary/70 dark:text-primary/50">
+                                        {testimonial.serviceType}
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -69,12 +109,13 @@ const Testimonials = () => {
                 <div className="relative w-full overflow-hidden">
                     <div className="flex gap-8 animate-scroll-left w-max pause-on-hover pl-4">
                         {row2.map((testimonial, index) => (
-                            <div key={`row2-${index}`} className="glassmorphism p-6 rounded-xl flex flex-col w-[350px] shrink-0">
+                            <div key={`row2-${index}`} className="glassmorphism p-6 rounded-xl flex flex-col w-[350px] shrink-0 border border-white/10 shadow-lg">
                                 <div className="flex items-center mb-4">
                                     <img
-                                        className="size-12 rounded-full mr-4 border-2 border-primary/50"
+                                        className="size-12 rounded-full mr-4 border-2 border-primary/50 object-cover"
                                         alt={`Profile picture of ${testimonial.name}`}
-                                        src={testimonial.image}
+                                        src={getImageUrl(testimonial.image)}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
                                     />
                                     <div>
                                         <p className="font-bold text-gray-900 dark:text-white">{testimonial.name}</p>
@@ -87,7 +128,14 @@ const Testimonials = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-gray-600 dark:text-text-muted text-sm italic">{testimonial.text}</p>
+                                <p className="text-gray-600 dark:text-text-muted text-sm italic leading-relaxed">
+                                    {testimonial.text.startsWith('"') ? testimonial.text : `"${testimonial.text}"`}
+                                </p>
+                                {testimonial.serviceType && (
+                                    <span className="mt-4 text-[10px] uppercase tracking-wider font-bold text-primary/70 dark:text-primary/50">
+                                        {testimonial.serviceType}
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -98,3 +146,4 @@ const Testimonials = () => {
 };
 
 export default Testimonials;
+

@@ -523,3 +523,41 @@ exports.getNhaAdvisories = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+// @desc    Get Testimonials (Service Requests with ratings)
+// @route   GET /api/services/testimonials
+// @access  Public
+exports.getTestimonials = async (req, res) => {
+    try {
+        // Find service requests that have a rating score, sorted by newest
+        const requests = await ServiceRequest.find({ 
+            'rating.score': { $exists: true, $ne: null }
+        })
+        .sort({ createdAt: -1 })
+        .limit(6); // Get up to 6 to make sure we have enough for a good scroll
+
+        // Map to format for frontend
+        const testimonials = await Promise.all(requests.map(async (reqItem) => {
+            // Find provider using MongoDB _id from providerId field
+            const provider = await User.findById(reqItem.providerId);
+            
+            return {
+                id: reqItem._id,
+                name: provider ? provider.fullName : 'Verified Provider',
+                image: provider?.providerDetails?.profileImage || 'https://via.placeholder.com/150',
+                rating: reqItem.rating?.score || 5,
+                text: reqItem.rating?.comment || 'Exceptional service! Very satisfied with the outcome.',
+                serviceType: reqItem.serviceType
+            };
+        }));
+
+        res.status(200).json({ 
+            success: true, 
+            testimonials: testimonials.filter(t => t.text && t.text.length > 5) 
+        });
+    } catch (error) {
+        console.error('Error fetching testimonials:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
