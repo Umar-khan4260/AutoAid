@@ -58,12 +58,12 @@ const AdminLayout = () => {
                                 Dispute Resolution
                             </Link>
                         </li>
-                        <li>
+                        {/* <li>
                             <Link to="/admin/audit-logs" className={`flex items-center px-6 py-3 transition-colors ${isActive('/admin/audit-logs')}`}>
                                 <span className="mr-3">📝</span>
                                 Audit Logs
                             </Link>
-                        </li>
+                        </li> */}
                         <li>
                             <Link to="/admin/contact-messages" className={`flex items-center px-6 py-3 transition-colors ${isActive('/admin/contact-messages')}`}>
                                 <span className="mr-3">💬</span>

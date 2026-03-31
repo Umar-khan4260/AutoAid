@@ -6,6 +6,9 @@ const { protect } = require('../middleware/authMiddleware');
 
 const upload = require('../middleware/upload');
 
+// Testimonials - Public
+router.get('/testimonials', serviceController.getTestimonials);
+
 // POST /api/services/request
 router.post('/request', protect, serviceController.createServiceRequest);
 router.post('/nearby', protect, serviceController.getNearbyProviders);
