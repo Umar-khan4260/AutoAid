@@ -10,7 +10,9 @@ const {
     removeAdmin,
     getAllDisputes,
     updateDisputeStatus,
-    getDashboardStats
+    getDashboardStats,
+    getServiceDistribution,
+    getServiceTrend
 } = require('../controllers/adminController');
 const { protect, admin, superAdminOnly } = require('../middleware/authMiddleware');
 
@@ -31,5 +33,7 @@ router.delete('/admins/:id', superAdminOnly, removeAdmin);
 router.get('/disputes', getAllDisputes);
 router.put('/disputes/:id/status', updateDisputeStatus);
 router.get('/stats', getDashboardStats);
+router.get('/service-distribution', getServiceDistribution);
+router.get('/service-trend', getServiceTrend);
 
 module.exports = router;
