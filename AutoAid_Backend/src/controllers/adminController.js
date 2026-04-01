@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Dispute = require('../models/Dispute');
+const ServiceRequest = require('../models/ServiceRequest');
 const { sendEmail } = require('../config/email');
 
 // @desc    Get all pending provider approvals
@@ -315,6 +316,107 @@ exports.getDashboardStats = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching dashboard stats:', error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+
+// @desc    Get service distribution stats
+// @route   GET /api/admin/service-distribution
+// @access  Private/Admin
+exports.getServiceDistribution = async (req, res) => {
+    const { period } = req.query; // 'this-month', 'last-month', 'last-6-months', 'overall'
+    
+    let dateFilter = {};
+    const now = new Date();
+    
+    if (period === 'this-month') {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        dateFilter = { createdAt: { $gte: startOfMonth } };
+    } else if (period === 'last-month') {
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        dateFilter = { createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } };
+    } else if (period === 'last-6-months') {
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        dateFilter = { createdAt: { $gte: sixMonthsAgo } };
+    }
+    // 'overall' leaves dateFilter as empty object {}
+
+    try {
+        const distribution = await ServiceRequest.aggregate([
+            {
+                $match: {
+                    status: 'Completed',
+                    ...dateFilter
+                }
+            },
+            {
+                $group: {
+                    _id: '$serviceType',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    name: '$_id',
+                    value: '$count',
+                    _id: 0
+                }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: distribution
+        });
+    } catch (error) {
+        console.error('Error fetching service distribution:', error);
+        res.status(500).json({ error: 'Server Error' });
+    }
+};
+
+// @desc    Get service requests trend (monthly)
+// @route   GET /api/admin/service-trend
+// @access  Private/Admin
+exports.getServiceTrend = async (req, res) => {
+    try {
+        const now = new Date();
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+        const trend = await ServiceRequest.aggregate([
+            {
+                $match: {
+                    status: 'Completed',
+                    createdAt: { $gte: startOfYear }
+                }
+            },
+            {
+                $group: {
+                    _id: { $month: '$createdAt' },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ]);
+
+        // Map month numbers to names and ensure all 12 months are present
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const formattedTrend = monthNames.map((month, index) => {
+            const found = trend.find(t => t._id === index + 1);
+            return {
+                month,
+                count: found ? found.count : 0
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: formattedTrend
+        });
+    } catch (error) {
+        console.error('Error fetching service trend:', error);
         res.status(500).json({ error: 'Server Error' });
     }
 };

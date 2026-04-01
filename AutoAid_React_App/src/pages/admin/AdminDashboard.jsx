@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import StatCard from '../../components/admin/StatCard';
 import { FaUsers, FaTools, FaHourglassHalf, FaBalanceScale } from 'react-icons/fa';
+import { 
+    PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip,
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
+} from 'recharts';
+
+const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
 
 const AdminDashboard = () => {
     const [statsData, setStatsData] = useState({
@@ -9,28 +15,55 @@ const AdminDashboard = () => {
         pendingApprovals: 0,
         activeDisputes: 0
     });
+    const [distributionData, setDistributionData] = useState([]);
+    const [trendData, setTrendData] = useState([]);
+    const [period, setPeriod] = useState('this-month');
     const [loading, setLoading] = useState(true);
 
     const fetchStats = async () => {
         try {
-            setLoading(true);
             const response = await fetch('http://localhost:3000/api/admin/stats', {
                 credentials: 'include'
             });
             const data = await response.json();
-            if (data.success) {
-                setStatsData(data.data);
-            }
+            if (data.success) setStatsData(data.data);
         } catch (error) {
             console.error('Error fetching stats:', error);
-        } finally {
-            setLoading(false);
+        }
+    };
+
+    const fetchDistribution = async () => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/admin/service-distribution?period=${period}`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.success) setDistributionData(data.data);
+        } catch (error) {
+            console.error('Error fetching distribution:', error);
+        }
+    };
+
+    const fetchTrend = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/api/admin/service-trend', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.success) setTrendData(data.data);
+        } catch (error) {
+            console.error('Error fetching trend:', error);
         }
     };
 
     useEffect(() => {
-        fetchStats();
-    }, []);
+        const loadDashboard = async () => {
+            setLoading(true);
+            await Promise.all([fetchStats(), fetchDistribution(), fetchTrend()]);
+            setLoading(false);
+        };
+        loadDashboard();
+    }, [period]);
 
     const stats = [
         { title: 'Total Users', value: loading ? '...' : statsData.totalUsers.toLocaleString(), change: 12, icon: <FaUsers />, color: 'blue' },
@@ -39,12 +72,18 @@ const AdminDashboard = () => {
         { title: 'Active Disputes', value: loading ? '...' : statsData.activeDisputes.toLocaleString(), change: 0, icon: <FaBalanceScale />, color: 'red' },
     ];
 
-    const recentActivity = [
-        { id: 1, user: 'John Doe', action: 'Registered as Mechanic', time: '2 mins ago', status: 'Pending' },
-        { id: 2, user: 'Jane Smith', action: 'Requested Towing', time: '15 mins ago', status: 'Completed' },
-        { id: 3, user: 'Mike Ross', action: 'Uploaded Documents', time: '1 hour ago', status: 'Review' },
-        { id: 4, user: 'Sarah Connor', action: 'Reported Issue', time: '2 hours ago', status: 'Open' },
-    ];
+    const CustomPieTooltip = ({ active, payload }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-black/80 border border-white/10 p-2 rounded shadow-lg text-white text-xs">
+                    <p className="font-semibold">{`${payload[0].name}`}</p>
+                    <p className="text-primary">{`Count: ${payload[0].value}`}</p>
+                    <p className="text-gray-400">{`${((payload[0].value / distributionData.reduce((a, b) => a + b.value, 0)) * 100).toFixed(1)}%`}</p>
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <div className="space-y-6">
@@ -55,48 +94,96 @@ const AdminDashboard = () => {
                 ))}
             </div>
 
-            {/* Charts & Activity Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Chart Area (Mock) */}
-                <div className="lg:col-span-2 bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-none transition-colors duration-300">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Platform Activity</h3>
-                    <div className="h-64 flex items-end justify-between space-x-2 px-4">
-                        {/* Simple CSS Bar Chart Mock */}
-                        {[40, 65, 45, 80, 55, 70, 90, 60, 75, 50, 85, 95].map((height, i) => (
-                            <div key={i} className="w-full bg-primary/20 rounded-t hover:bg-primary/40 transition-colors relative group" style={{ height: `${height}%` }}>
-                                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {height}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-                        <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+                {/* Service Requests Trend Bar Chart */}
+                <div className="lg:col-span-2 bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg transition-colors duration-300">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Service Requests Trend</h3>
+                    <div className="h-72 w-full">
+                        {loading ? (
+                            <div className="h-full flex items-center justify-center text-gray-400 text-sm">Loading Chart...</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={trendData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                                    <XAxis 
+                                        dataKey="month" 
+                                        stroke="#888" 
+                                        fontSize={12} 
+                                        tickLine={false} 
+                                        axisLine={false}
+                                    />
+                                    <YAxis 
+                                        stroke="#888" 
+                                        fontSize={12} 
+                                        tickLine={false} 
+                                        axisLine={false}
+                                        tickFormatter={(value) => `${value}`}
+                                    />
+                                    <Tooltip 
+                                        cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                                        contentStyle={{ backgroundColor: '#1a1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
+                                        itemStyle={{ color: '#8b5cf6' }}
+                                    />
+                                    <Bar 
+                                        dataKey="count" 
+                                        fill="#8b5cf6" 
+                                        radius={[4, 4, 0, 0]} 
+                                        barSize={30}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
-                {/* Recent Activity Feed */}
-                <div className="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-none transition-colors duration-300">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
-                    <div className="space-y-4">
-                        {recentActivity.map((item) => (
-                            <div key={item.id} className="flex items-start space-x-3 pb-3 border-b border-gray-100 dark:border-white/5 last:border-0">
-                                <div className="w-2 h-2 mt-2 rounded-full bg-primary"></div>
-                                <div>
-                                    <p className="text-sm text-gray-900 dark:text-white font-medium">{item.user}</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.action}</p>
-                                    <div className="flex items-center mt-1 space-x-2">
-                                        <span className="text-[10px] text-gray-500">{item.time}</span>
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${item.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                item.status === 'Completed' ? 'bg-green-500/20 text-green-400' :
-                                                    item.status === 'Review' ? 'bg-blue-500/20 text-blue-400' :
-                                                        'bg-red-500/20 text-red-400'
-                                            }`}>{item.status}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                {/* Service Distribution Pie Chart */}
+                <div className="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg transition-colors duration-300">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Distribution</h3>
+                        <select 
+                            value={period}
+                            onChange={(e) => setPeriod(e.target.value)}
+                            className="bg-white dark:bg-[#1a1c1e] border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-xs text-gray-700 dark:text-white focus:outline-none focus:border-primary/50 cursor-pointer"
+                        >
+                            <option value="this-month" className="bg-white dark:bg-[#1a1c1e] text-gray-700 dark:text-white">This Month</option>
+                            <option value="last-month" className="bg-white dark:bg-[#1a1c1e] text-gray-700 dark:text-white">Last Month</option>
+                            <option value="last-6-months" className="bg-white dark:bg-[#1a1c1e] text-gray-700 dark:text-white">Last 6 Months</option>
+                            <option value="overall" className="bg-white dark:bg-[#1a1c1e] text-gray-700 dark:text-white">Overall</option>
+                        </select>
+                    </div>
+
+                    <div className="h-72 w-full">
+                        {loading ? (
+                            <div className="h-full flex items-center justify-center text-gray-400 text-sm">Loading Chart...</div>
+                        ) : distributionData.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-gray-400 text-sm">No data available</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={distributionData}
+                                        cx="50%"
+                                        cy="45%"
+                                        innerRadius={60}
+                                        outerRadius={85}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {distributionData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip content={<CustomPieTooltip />} />
+                                    <Legend 
+                                        verticalAlign="bottom" 
+                                        align="center"
+                                        iconType="circle"
+                                        layout="horizontal"
+                                        formatter={(value) => <span className="text-[10px] text-gray-500 dark:text-gray-400">{value}</span>}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
             </div>
