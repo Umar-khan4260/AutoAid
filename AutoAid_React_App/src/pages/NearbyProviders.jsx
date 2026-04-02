@@ -39,6 +39,12 @@ const NearbyProviders = () => {
     const [disputeFile, setDisputeFile] = useState(null);
     const [ratingSubmitting, setRatingSubmitting] = useState(false);
     const [ratingDone, setRatingDone] = useState(false);
+    
+    // Timeout/Countdown state
+    const [requestCountdown, setRequestCountdown] = useState(0);
+    const [isWaitingForProvider, setIsWaitingForProvider] = useState(false);
+    const [activeRequestProvider, setActiveRequestProvider] = useState(null);
+    const countdownIntervalRef = useRef(null);
 
     // Initialize Socket.IO connection and listeners
     useEffect(() => {
@@ -88,6 +94,16 @@ const NearbyProviders = () => {
                 
                 markerToUpdate.setPosition(newPos);
             }
+        });
+
+        // Listen for job acceptance to clear timer
+        socket.on('job_accepted', (data) => {
+            console.log("JOB ACCEPTED:", data);
+            setIsWaitingForProvider(false);
+            setRequestCountdown(0);
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            alert(`Great news! ${data.providerName} has accepted your request.`);
+            // You could navigate to a tracking page here
         });
 
         // Listen for job completion to show rating popup
@@ -225,10 +241,60 @@ const NearbyProviders = () => {
 
     }, [userLocation]);
 
+    // Handle auto-cancelling the request
+    const handleAutoCancel = useCallback(async () => {
+        if (!requestId) return;
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/services/request/${requestId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: 'Cancelled' }),
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                alert("No response from provider. Please select another provider or try again.");
+                setIsWaitingForProvider(false);
+                setRequestCountdown(0);
+                setActiveRequestProvider(null);
+            }
+        } catch (error) {
+            console.error('Error auto-cancelling request:', error);
+        }
+    }, [requestId]);
+
+    // Timer effect for countdown
+    useEffect(() => {
+        if (isWaitingForProvider && requestCountdown > 0) {
+            countdownIntervalRef.current = setInterval(() => {
+                setRequestCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(countdownIntervalRef.current);
+                        handleAutoCancel();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        };
+    }, [isWaitingForProvider, handleAutoCancel]);
+
     // Handle requesting a specific provider
     const handleRequest = useCallback(async (provider) => {
         if (!requestId) {
             alert("No active request found. Please go back and request again.");
+            return;
+        }
+
+        if (isWaitingForProvider) {
+            alert("Please wait for the current provider to respond or for the timeout.");
             return;
         }
         
@@ -247,7 +313,11 @@ const NearbyProviders = () => {
 
             const data = await response.json();
             if (response.ok) {
-                alert(`Request sent to ${provider.name}!\nProvider has been notified.`);
+                // Start 60s countdown
+                setIsWaitingForProvider(true);
+                setRequestCountdown(60);
+                setActiveRequestProvider(provider);
+                // alert(`Request sent to ${provider.name}!\nProvider has been notified.`);
             } else {
                 alert(`Error: ${data.error || 'Failed to send request'}`);
             }
@@ -255,7 +325,7 @@ const NearbyProviders = () => {
             console.error('Network error during provider assignment:', error);
             alert('Network error. Please try again.');
         }
-    }, [requestId]);
+    }, [requestId, isWaitingForProvider]);
 
     // Add provider markers to map
     const addProviderMarkers = useCallback(() => {
@@ -708,7 +778,64 @@ const NearbyProviders = () => {
                 </div>
             </div>
         )}
+        {/* ---- Waiting for Provider Overlay ---- */}
+        {isWaitingForProvider && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[10000] p-4">
+                <div className="bg-white dark:bg-[#111827] rounded-3xl w-full max-w-sm shadow-2xl border border-gray-200 dark:border-gray-800 p-8 text-center space-y-6 animate-scale-in">
+                    <div className="relative w-32 h-32 mx-auto">
+                        {/* Circular Progress */}
+                        <svg className="w-full h-full rotate-[-90deg]">
+                            <circle
+                                cx="64"
+                                cy="64"
+                                r="58"
+                                fill="transparent"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                className="text-gray-100 dark:text-gray-800"
+                            />
+                            <circle
+                                cx="64"
+                                cy="64"
+                                r="58"
+                                fill="transparent"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                strokeDasharray="364.4"
+                                strokeDashoffset={364.4 - (364.4 * requestCountdown) / 60}
+                                strokeLinecap="round"
+                                className="text-primary transition-all duration-1000 ease-linear"
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-4xl font-bold text-gray-900 dark:text-white">{requestCountdown}</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Waiting for {activeRequestProvider?.name}</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">
+                            The provider has 60 seconds to accept your <strong>{serviceType}</strong> request.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-center gap-2 text-primary font-medium text-sm animate-pulse">
+                            <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                            Connecting to provider...
+                        </div>
+                        <button
+                            onClick={handleAutoCancel}
+                            className="text-gray-500 hover:text-red-500 text-sm font-semibold transition-colors pt-2"
+                        >
+                            Cancel Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         </>
+
     );
 };
 

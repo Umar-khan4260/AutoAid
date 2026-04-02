@@ -283,10 +283,10 @@ exports.getNearbyProviders = async (req, res) => {
 exports.updateRequestStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; // 'Accepted', 'Rejected', 'Completed'
-        const providerId = req.user._id;
+        const { status } = req.body; // 'Accepted', 'Rejected', 'Completed', 'Cancelled'
+        const userId = req.user._id;
 
-        if (!['Accepted', 'Rejected', 'Completed'].includes(status)) {
+        if (!['Accepted', 'Rejected', 'Completed', 'Cancelled'].includes(status)) {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
@@ -296,47 +296,71 @@ exports.updateRequestStatus = async (req, res) => {
             return res.status(404).json({ error: 'Service request not found' });
         }
 
-        // Verify that this request belongs to this provider
-        if (request.providerId.toString() !== providerId.toString()) {
-            return res.status(403).json({ error: 'Not authorized to update this request' });
+        // Authorization check
+        if (status === 'Cancelled') {
+            // Only the user who created the request can cancel it
+            if (request.userId.toString() !== req.user.uid.toString()) {
+                return res.status(403).json({ error: 'Not authorized to cancel this request' });
+            }
+        } else {
+            // For Accepted, Rejected, Completed, only the assigned provider can update
+            if (!request.providerId || request.providerId.toString() !== userId.toString()) {
+                return res.status(403).json({ error: 'Not authorized to update this request' });
+            }
         }
 
         request.status = status;
         await request.save();
 
+        const io = req.app.get('io');
+        const connectedUsers = req.app.get('connectedUsers');
+        const connectedProviders = req.app.get('connectedProviders');
+
         // Update provider availability based on the new status
         if (status === 'Accepted') {
-            await User.findByIdAndUpdate(providerId, { isAvailable: false });
+            await User.findByIdAndUpdate(request.providerId, { isAvailable: false });
+            
+            // Notify user that provider accepted
+            const userSocketId = connectedUsers.get(request.userId.toString());
+            if (io && userSocketId) {
+                const provider = await User.findById(request.providerId);
+                io.to(userSocketId).emit('job_accepted', {
+                    requestId: request._id,
+                    providerName: provider?.fullName || 'Service Provider'
+                });
+            }
         } else if (status === 'Completed') {
-            await User.findByIdAndUpdate(providerId, { 
+            await User.findByIdAndUpdate(request.providerId, { 
                 isAvailable: true,
                 $inc: { 'providerDetails.completedJobsCount': 1 }
             });
-        } else if (status === 'Rejected' || status === 'Cancelled') {
-            await User.findByIdAndUpdate(providerId, { isAvailable: true });
-        }
 
-        // Notify user via Socket.IO when job is Completed so they can rate the provider
-        if (status === 'Completed') {
-            const io = req.app.get('io');
-            const connectedUsers = req.app.get('connectedUsers');
-            const targetUID = request.userId.toString();
-            
-            console.log(`Attempting to notify user ${targetUID} of job completion. Found users:`, [...connectedUsers.keys()]);
-            
-            if (io && connectedUsers) {
-                const userSocketId = connectedUsers.get(targetUID);
-                if (userSocketId) {
-                    console.log(`Emitting job_completed to socket ID: ${userSocketId}`);
-                    const provider = await User.findById(providerId);
-                    io.to(userSocketId).emit('job_completed', {
-                        requestId: request._id,
-                        providerId: providerId,
-                        providerName: provider?.fullName || 'Service Provider',
-                        serviceType: request.serviceType
-                    });
-                } else {
-                    console.log(`Socket ID NOT FOUND for user UID: ${targetUID}`);
+            // Notify user via Socket.IO when job is Completed
+            const userSocketId = connectedUsers.get(request.userId.toString());
+            if (io && userSocketId) {
+                const provider = await User.findById(request.providerId);
+                io.to(userSocketId).emit('job_completed', {
+                    requestId: request._id,
+                    providerId: request.providerId,
+                    providerName: provider?.fullName || 'Service Provider',
+                    serviceType: request.serviceType
+                });
+            }
+        } else if (status === 'Rejected' || status === 'Cancelled') {
+            if (request.providerId) {
+                await User.findByIdAndUpdate(request.providerId, { isAvailable: true });
+                
+                // If user cancelled, notify provider
+                if (status === 'Cancelled') {
+                    const provider = await User.findById(request.providerId);
+                    if (provider) {
+                        const providerSocketId = connectedProviders.get(provider.uid);
+                        if (io && providerSocketId) {
+                            io.to(providerSocketId).emit('job_cancelled', {
+                                requestId: request._id
+                            });
+                        }
+                    }
                 }
             }
         }
