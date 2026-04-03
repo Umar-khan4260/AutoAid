@@ -40,6 +40,13 @@ exports.signup = async (req, res) => {
                 model: req.body.towingModel
             }
         };
+        // Save charges per hour for temporary drivers
+        if (req.body.serviceType === 'temporary-driver' && req.body.chargesPerHour) {
+            const cph = parseInt(req.body.chargesPerHour, 10);
+            if (cph >= 200 && cph <= 1000) {
+                providerDetails.chargesPerHour = cph;
+            }
+        }
     }
 
     // 2. Generate OTP
@@ -217,7 +224,20 @@ exports.logout = (req, res) => {
 // @access  Private
 exports.updateProfile = async (req, res) => {
     try {
-        const { fullName, contactNumber, location, services, bio } = req.body;
+        const { 
+            fullName, 
+            contactNumber, 
+            location, 
+            services, 
+            bio, 
+            age, 
+            gender, 
+            chargesPerHour, 
+            vehicleNumber, 
+            vehicleMake, 
+            vehicleModel 
+        } = req.body;
+        
         const user = await User.findById(req.user.id);
 
         if (!user) {
@@ -229,14 +249,43 @@ exports.updateProfile = async (req, res) => {
         if (contactNumber) user.contactNumber = contactNumber;
         if (location) user.location = location;
         
+        // Update profile image if uploaded
+        if (req.file) {
+            user.providerDetails.profileImage = req.file.path;
+        }
+        
         // Update provider specific details
         if (user.role === 'provider') {
+            if (!user.providerDetails) {
+                user.providerDetails = {};
+            }
+
             if (services) {
-                if (Array.isArray(services) && services.length >= 0) {
-                     user.providerDetails.serviceType = services.join(', '); // Store as comma separated if multiple
+                if (Array.isArray(services)) {
+                     user.providerDetails.serviceType = services.join(', '); 
                 } else {
                     user.providerDetails.serviceType = services;
                 }
+            }
+
+            if (age) user.providerDetails.age = parseInt(age, 10);
+            if (gender) user.providerDetails.gender = gender;
+            
+            if (chargesPerHour) {
+                const cph = parseInt(chargesPerHour, 10);
+                if (cph >= 200 && cph <= 1000) {
+                    user.providerDetails.chargesPerHour = cph;
+                }
+            }
+
+            // Update Vehicle Details
+            if (vehicleNumber || vehicleMake || vehicleModel) {
+                if (!user.providerDetails.vehicleDetails) {
+                    user.providerDetails.vehicleDetails = {};
+                }
+                if (vehicleNumber) user.providerDetails.vehicleDetails.number = vehicleNumber;
+                if (vehicleMake) user.providerDetails.vehicleDetails.make = vehicleMake;
+                if (vehicleModel) user.providerDetails.vehicleDetails.model = vehicleModel;
             }
         }
 

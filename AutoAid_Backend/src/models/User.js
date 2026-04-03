@@ -56,6 +56,11 @@ const UserSchema = new mongoose.Schema({
     profileImage: String,
     cnicImage: String,
     licenseImage: String,
+    chargesPerHour: {
+        type: Number,
+        min: 200,
+        max: 1000
+    },
     vehicleDetails: {
         number: String,
         make: String,

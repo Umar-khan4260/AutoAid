@@ -122,9 +122,8 @@ const HireDriver = () => {
     const userLocation = location.state?.userLocation;   // { lat, lng }
     const requestId    = location.state?.requestId;
     const drivingDuration = location.state?.drivingDuration;
-
-    // Calculate base fee if present
-    const baseFee = drivingDuration ? parseFloat(drivingDuration) * 200 : 0;
+    // Duration for cost calculation
+    const hours = drivingDuration ? parseFloat(drivingDuration) : 0;
 
     // ── AI / UI state ────────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState('ai');       // 'ai' | 'nearest'
@@ -394,7 +393,7 @@ const HireDriver = () => {
                 destinationLocation: destinationQuery,
                 contactNumber: currentUser?.contactNumber || '',
                 drivingDuration: drivingDuration,
-                baseFee: baseFee
+                estimatedCost: provider.charges_per_hour ? provider.charges_per_hour * hours : null
             };
 
             const updateRes = await fetch(`http://localhost:3000/api/services/request/${requestId}/details`, {
@@ -447,7 +446,7 @@ const HireDriver = () => {
                 }),
             }).catch(err => console.warn('[Feedback] Log failed (non-critical):', err));
         }
-    }, [requestId, interactionId, displayProviders, currentUser, pickupQuery, destinationQuery, drivingDuration, baseFee]);
+    }, [requestId, interactionId, displayProviders, currentUser, pickupQuery, destinationQuery, drivingDuration, hours]);
 
     // ── Submit rating helper ──────────────────────────────────────────────────
     const handleRatingSubmit = async () => {
@@ -505,9 +504,9 @@ const HireDriver = () => {
                         <h2 style={{ margin: '0', fontSize: '18px', fontWeight: 700, color: '#f1f5f9' }}>
                             {serviceType} — Find a Provider
                         </h2>
-                        {baseFee > 0 && (
-                            <div style={{ fontSize: '14px', color: '#10b981', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '8px' }}>
-                                PKR {baseFee} <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>+base fee</span>
+                        {hours > 0 && (
+                            <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '8px' }}>
+                                Duration: <span style={{ color: '#06b6d4', fontWeight: 700 }}>{hours} hr{hours !== 1 ? 's' : ''}</span>
                             </div>
                         )}
                     </div>
@@ -770,6 +769,24 @@ const HireDriver = () => {
                                                     ETA: {etaFromKm(provider.distance_km || 0)}
                                                 </span>
                                             </div>
+
+                                            {/* Per-driver cost */}
+                                            {hours > 0 && provider.charges_per_hour && (
+                                                <div style={{
+                                                    marginTop: '6px', padding: '6px 10px',
+                                                    background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.1))',
+                                                    border: '1px solid rgba(16,185,129,0.3)',
+                                                    borderRadius: '8px',
+                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                                }}>
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                                        PKR {provider.charges_per_hour}/hr × {hours} hr{hours !== 1 ? 's' : ''}
+                                                    </span>
+                                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>
+                                                        PKR {provider.charges_per_hour * hours}
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             {/* License */}
                                             {provider.license && provider.license !== 'N/A' && (
