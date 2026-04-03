@@ -106,6 +106,16 @@ const NearbyProviders = () => {
             // You could navigate to a tracking page here
         });
 
+        // Listen for job rejection
+        socket.on('job_rejected', (data) => {
+            console.log("JOB REJECTED:", data);
+            setIsWaitingForProvider(false);
+            setRequestCountdown(0);
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            alert("The provider declined your request. Please select another provider.");
+            setActiveRequestProvider(null);
+        });
+
         // Listen for job completion to show rating popup
         socket.on('job_completed', (data) => {
             console.log("JOB COMPLETED EVENT RECEIVED:", data);
@@ -459,21 +469,6 @@ const NearbyProviders = () => {
                 <div className="p-4 border-b border-gray-200 dark:border-border-dark flex flex-col gap-3">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nearby {serviceType} Providers</h2>
                     
-                    {/* Filter Bar */}
-                    <div className="flex items-center gap-2">
-                        <div className="relative flex-grow">
-                            <MdMyLocation className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <select className="w-full bg-white dark:bg-[#0B1120] text-sm text-gray-700 dark:text-white pl-9 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-border-dark focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-                                <option>Sort by: Distance</option>
-                                <option>Sort by: Rating</option>
-                                <option>Sort by: ETA</option>
-                            </select>
-                            <FaChevronLeft className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 rotate-[-90deg] text-xs pointer-events-none" />
-                        </div>
-                        <button className="p-2.5 bg-white dark:bg-[#0B1120] border border-gray-300 dark:border-border-dark rounded-lg text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                            <FaFilter />
-                        </button>
-                    </div>
                 </div>
 
                 {/* Provider List */}
@@ -537,12 +532,6 @@ const NearbyProviders = () => {
                     )}
                 </div>
 
-                {/* Footer - Search Radius */}
-                <div className="p-4 border-t border-gray-200 dark:border-border-dark bg-white dark:bg-[#121A2A]">
-                    <div className="bg-primary hover:bg-cyan-500 text-white font-bold py-3 rounded-lg text-center cursor-pointer transition-colors shadow-lg shadow-primary/20">
-                        Search radius: {searchRadius} miles
-                    </div>
-                </div>
             </div>
 
             {/* Map Area - Google Maps */}

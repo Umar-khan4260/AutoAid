@@ -168,6 +168,13 @@ const HireDriver = () => {
     const [activeRequestProvider, setActiveRequestProvider] = useState(null);
     const countdownIntervalRef = useRef(null);
 
+    // Counter offer state (user side)
+    const [counterOffer, setCounterOffer] = useState(null); // { requestId, counterRate, providerName }
+    const [counterResponding, setCounterResponding] = useState(false);
+
+    // Per-card counter offer input state { [driver_id]: { open: bool, value: string } }
+    const [userCounterState, setUserCounterState] = useState({});
+
     // ── Socket.IO ─────────────────────────────────────────────────────────────
     useEffect(() => {
         socketRef.current = io('http://localhost:3000', { withCredentials: true });
@@ -214,6 +221,14 @@ const HireDriver = () => {
             setRequestCountdown(0);
             if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
             alert(`Great news! ${data.providerName} has accepted your request.`);
+        });
+
+        // Listen for counter offer from provider
+        socket.on('counter_offer', (data) => {
+            setIsWaitingForProvider(false);
+            setRequestCountdown(0);
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            setCounterOffer(data); // { requestId, counterRate, providerName }
         });
 
         socket.on('disconnect', () => {});
@@ -374,8 +389,8 @@ const HireDriver = () => {
         };
     }, [isWaitingForProvider, handleAutoCancel]);
 
-    // ── Hire Driver: assign provider + log AI feedback ────────────────────────
-    const handleHire = useCallback(async (provider) => {
+    // ── Hire Driver: assign provider + optional userCounterRate ──────────────
+    const handleHire = useCallback(async (provider, userCounterRate = null) => {
         if (!requestId) {
             alert('No active request found. Please go back and submit a service request first.');
             return;
@@ -387,7 +402,7 @@ const HireDriver = () => {
         }
 
         try {
-            // 1. Update the ServiceRequest with the specific details from this page
+            // 1. Update the ServiceRequest with trip details + negotiation info
             const updateDetails = {
                 pickupLocation: pickupQuery,
                 destinationLocation: destinationQuery,
@@ -395,6 +410,12 @@ const HireDriver = () => {
                 drivingDuration: drivingDuration,
                 estimatedCost: provider.charges_per_hour ? provider.charges_per_hour * hours : null
             };
+
+            // If user sent a counter offer, initialise negotiation block
+            const negotiationPayload = userCounterRate ? {
+                originalRate: provider.charges_per_hour || null,
+                offeredRate: userCounterRate
+            } : null;
 
             const updateRes = await fetch(`http://localhost:3000/api/services/request/${requestId}/details`, {
                 method: 'PUT',
@@ -407,20 +428,24 @@ const HireDriver = () => {
                 console.warn('Failed to update request details, proceeding with assignment anyway...');
             }
 
-            // 2. Assign provider via existing Node.js endpoint
+            // 2. Assign provider (+ optional negotiation payload)
             const assignRes = await fetch('http://localhost:3000/api/services/assign', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ requestId, providerId: provider.driver_id }),
+                body: JSON.stringify({ requestId, providerId: provider.driver_id, negotiation: negotiationPayload }),
             });
             const assignData = await assignRes.json();
             if (!assignRes.ok) {
                 alert(`Error: ${assignData.error || 'Failed to send request'}`);
                 return;
             }
-            
-            // Start 60s countdown
+            const sentMsg = userCounterRate
+                ? `Counter offer sent to ${provider.name}!\nYour offered rate: PKR ${userCounterRate}/hr`
+                : `Request sent to ${provider.name}!\nProvider has been notified.`;
+            alert(sentMsg);
+            // Reset counter input for this card
+            setUserCounterState(prev => ({ ...prev, [provider.driver_id]: { open: false, value: '' } }));
             setIsWaitingForProvider(true);
             setRequestCountdown(60);
             setActiveRequestProvider(provider);
@@ -447,6 +472,40 @@ const HireDriver = () => {
             }).catch(err => console.warn('[Feedback] Log failed (non-critical):', err));
         }
     }, [requestId, interactionId, displayProviders, currentUser, pickupQuery, destinationQuery, drivingDuration, hours]);
+
+    // ── Handle user response to counter offer ─────────────────────────────────
+    const handleCounterResponse = async (action) => {
+        if (!counterOffer?.requestId) return;
+        setCounterResponding(true);
+        try {
+            const res = await fetch(
+                `http://localhost:3000/api/services/request/${counterOffer.requestId}/counter/respond`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ action }),
+                }
+            );
+            const data = await res.json();
+            if (!res.ok) {
+                alert(`Error: ${data.error || 'Failed to respond'}`);
+                return;
+            }
+            if (action === 'accept') {
+                alert(`✅ Counter offer accepted! Final rate: PKR ${counterOffer.counterRate}/hr`);
+            } else {
+                alert('❌ Counter offer rejected. The request has been cancelled.');
+            }
+            setCounterOffer(null);
+        } catch (err) {
+            console.error('Counter response error:', err);
+            alert('Network error. Please try again.');
+        } finally {
+            setCounterResponding(false);
+        }
+    };
+
 
     // ── Submit rating helper ──────────────────────────────────────────────────
     const handleRatingSubmit = async () => {
@@ -646,6 +705,59 @@ const HireDriver = () => {
                     </div>
                 </div>
 
+                {/* ── Counter Offer Banner (Temporary Driver only) ─────────── */}
+                {counterOffer && (
+                    <div style={{
+                        margin: '10px 12px',
+                        padding: '14px',
+                        background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,88,12,0.12))',
+                        border: '1.5px solid rgba(245,158,11,0.5)',
+                        borderRadius: '12px',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '18px' }}>🤝</span>
+                            <div>
+                                <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#fbbf24' }}>
+                                    Counter Offer from {counterOffer.providerName}
+                                </p>
+                                <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                                    Proposed rate: <strong style={{ color: '#f1f5f9' }}>PKR {counterOffer.counterRate}/hr</strong>
+                                    {hours > 0 && (
+                                        <span> → Total: <strong style={{ color: '#10b981' }}>PKR {counterOffer.counterRate * hours}</strong></span>
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                disabled={counterResponding}
+                                onClick={() => handleCounterResponse('reject')}
+                                style={{
+                                    flex: 1, padding: '8px', border: '1px solid rgba(239,68,68,0.6)',
+                                    borderRadius: '8px', background: 'transparent', color: '#f87171',
+                                    fontWeight: 600, fontSize: '13px', cursor: 'pointer',
+                                    opacity: counterResponding ? 0.6 : 1,
+                                }}
+                            >
+                                ✕ Reject
+                            </button>
+                            <button
+                                disabled={counterResponding}
+                                onClick={() => handleCounterResponse('accept')}
+                                style={{
+                                    flex: 1, padding: '8px', border: 'none',
+                                    borderRadius: '8px',
+                                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                    color: 'white', fontWeight: 700, fontSize: '13px', cursor: 'pointer',
+                                    opacity: counterResponding ? 0.6 : 1,
+                                }}
+                            >
+                                ✓ Accept
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* AI Error Banner */}
                 {aiError && (
                     <div style={{
@@ -656,6 +768,7 @@ const HireDriver = () => {
                         ⚠️ {aiError}
                     </div>
                 )}
+
 
                 {/* Source badge */}
                 {!loading && providers.length > 0 && (
@@ -797,23 +910,107 @@ const HireDriver = () => {
                                         </div>
                                     </div>
 
-                                    {/* Hire button */}
-                                    <button
-                                        onClick={e => { e.stopPropagation(); handleHire(provider); }}
-                                        style={{
-                                            marginTop: '10px', width: '100%',
-                                            padding: '8px 0',
-                                            background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
-                                            border: 'none', borderRadius: '8px',
-                                            color: 'white', fontWeight: 700, fontSize: '13px',
-                                            cursor: 'pointer', transition: 'opacity 0.2s',
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                                    >
-                                        Hire Driver
-                                    </button>
+                                    {/* Action buttons: Hire at rate + Counter Offer */}
+                                    {(() => {
+                                        const ucs = userCounterState[provider.driver_id] || {};
+                                        return (
+                                            <div style={{ marginTop: '10px' }} onClick={e => e.stopPropagation()}>
+                                                {/* Two action buttons */}
+                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                    {/* Hire at driver's rate */}
+                                                    <button
+                                                        onClick={() => handleHire(provider)}
+                                                        style={{
+                                                            flex: 1, padding: '8px 0',
+                                                            background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+                                                            border: 'none', borderRadius: '8px',
+                                                            color: 'white', fontWeight: 700, fontSize: '12px',
+                                                            cursor: 'pointer',
+                                                        }}
+                                                    >
+                                                        Hire {provider.charges_per_hour ? `@ PKR ${provider.charges_per_hour}/hr` : ''}
+                                                    </button>
+
+                                                    {/* Counter offer toggle */}
+                                                    {provider.charges_per_hour && (
+                                                        <button
+                                                            onClick={() => setUserCounterState(prev => ({
+                                                                ...prev,
+                                                                [provider.driver_id]: { open: !ucs.open, value: ucs.value || '' }
+                                                            }))}
+                                                            style={{
+                                                                flex: 1, padding: '8px 0',
+                                                                background: ucs.open ? 'rgba(245,158,11,0.2)' : 'transparent',
+                                                                border: '1px solid rgba(245,158,11,0.6)',
+                                                                borderRadius: '8px', color: '#fbbf24',
+                                                                fontWeight: 600, fontSize: '12px', cursor: 'pointer',
+                                                            }}
+                                                        >
+                                                            🤝 Counter Offer
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* Inline counter price input */}
+                                                {ucs.open && (
+                                                    <div style={{
+                                                        marginTop: '8px', padding: '10px',
+                                                        background: 'rgba(245,158,11,0.08)',
+                                                        border: '1px solid rgba(245,158,11,0.3)',
+                                                        borderRadius: '8px',
+                                                    }}>
+                                                        <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#fbbf24', fontWeight: 600 }}>
+                                                            Your price offer (PKR/hr)
+                                                        </p>
+                                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max={provider.charges_per_hour - 1}
+                                                                placeholder={`< ${provider.charges_per_hour}`}
+                                                                value={ucs.value}
+                                                                onChange={e => setUserCounterState(prev => ({
+                                                                    ...prev,
+                                                                    [provider.driver_id]: { ...prev[provider.driver_id], value: e.target.value }
+                                                                }))}
+                                                                style={{
+                                                                    flex: 1, padding: '6px 10px',
+                                                                    background: '#1e293b', border: '1px solid #334155',
+                                                                    borderRadius: '6px', color: '#f1f5f9',
+                                                                    fontSize: '13px', outline: 'none',
+                                                                }}
+                                                            />
+                                                            <button
+                                                                onClick={() => {
+                                                                    const rate = parseInt(ucs.value, 10);
+                                                                    if (!rate || rate <= 0) { alert('Enter a valid offer price.'); return; }
+                                                                    if (provider.charges_per_hour && rate >= provider.charges_per_hour) {
+                                                                        alert(`Your offer must be lower than PKR ${provider.charges_per_hour}/hr.`); return;
+                                                                    }
+                                                                    handleHire(provider, rate);
+                                                                }}
+                                                                style={{
+                                                                    padding: '6px 12px',
+                                                                    background: '#f59e0b', border: 'none',
+                                                                    borderRadius: '6px', color: 'white',
+                                                                    fontWeight: 700, fontSize: '12px', cursor: 'pointer',
+                                                                }}
+                                                            >
+                                                                Send
+                                                            </button>
+                                                        </div>
+                                                        {ucs.value && hours > 0 && (
+                                                            <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>
+                                                                Your total offer: <strong style={{ color: '#10b981' }}>PKR {parseInt(ucs.value || 0) * hours}</strong>
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
+
                             );
                         })
                     )}

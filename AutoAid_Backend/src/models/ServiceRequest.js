@@ -32,8 +32,16 @@ const ServiceRequestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Accepted', 'In Progress', 'Completed', 'Cancelled'],
+        enum: ['Pending', 'Countered', 'Accepted', 'Rejected', 'In Progress', 'Completed', 'Cancelled'],
         default: 'Pending'
+    },
+    // Negotiation block — only set for Temporary Driver requests
+    negotiation: {
+        originalRate:  { type: Number },   // rate driver registered with
+        offeredRate:   { type: Number },   // rate user agreed to pay (from estimatedCost)
+        counterRate:   { type: Number },   // rate driver proposes
+        finalRate:     { type: Number },   // rate both settled on
+        counterSent:   { type: Boolean, default: false }  // one-time guard
     },
     // Flexible schema for service-specific details
     details: {
