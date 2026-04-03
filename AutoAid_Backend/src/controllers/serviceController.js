@@ -41,15 +41,25 @@ exports.createServiceRequest = async (req, res) => {
 
 exports.assignProvider = async (req, res) => {
     try {
-        const { requestId, providerId } = req.body;
+        const { requestId, providerId, negotiation } = req.body;
         
         if (!requestId || !providerId) {
             return res.status(400).json({ error: 'Request ID and Provider ID are required' });
         }
 
+        // Build update object
+        const updateObj = { providerId };
+        if (negotiation && negotiation.offeredRate) {
+            updateObj.negotiation = {
+                originalRate: negotiation.originalRate || null,
+                offeredRate: Number(negotiation.offeredRate),
+                counterSent: false
+            };
+        }
+
         const request = await ServiceRequest.findByIdAndUpdate(
-            requestId, 
-            { providerId }, 
+            requestId,
+            updateObj,
             { new: true }
         );
 
@@ -65,14 +75,14 @@ exports.assignProvider = async (req, res) => {
         const connectedProviders = req.app.get('connectedProviders');
         
         if (io && connectedProviders) {
-            // Find provider's UID since our connectedProviders map uses uid, not _id
             const provider = await User.findById(providerId);
             if (provider) {
                 const socketId = connectedProviders.get(provider.uid);
                 if (socketId) {
                     io.to(socketId).emit('new_service_request', {
                         request,
-                        user: user ? { name: user.fullName, contact: user.contactNumber } : null
+                        user: user ? { name: user.fullName, contact: user.contactNumber } : null,
+                        negotiation: request.negotiation || null
                     });
                 }
             }
@@ -84,6 +94,141 @@ exports.assignProvider = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+// @desc    Provider sends a counter offer (Temporary Driver only, one-time)
+// @route   POST /api/services/request/:id/counter
+// @access  Provider
+exports.sendCounterOffer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { counterRate } = req.body;
+        const providerId = req.user._id;
+
+        if (!counterRate || isNaN(counterRate) || counterRate <= 0) {
+            return res.status(400).json({ error: 'A valid counterRate is required' });
+        }
+
+        const request = await ServiceRequest.findById(id);
+        if (!request) return res.status(404).json({ error: 'Service request not found' });
+        if (request.serviceType !== 'Temporary Driver') {
+            return res.status(400).json({ error: 'Counter offer is only for Temporary Driver requests' });
+        }
+        if (request.providerId.toString() !== providerId.toString()) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+        if (['Accepted', 'Rejected', 'Cancelled', 'Countered'].includes(request.status)) {
+            return res.status(400).json({ error: 'Cannot counter at this stage' });
+        }
+        if (request.negotiation?.counterSent) {
+            return res.status(400).json({ error: 'You have already sent one counter offer' });
+        }
+
+        // Update negotiation block
+        request.negotiation = {
+            ...request.negotiation,
+            counterRate: Number(counterRate),
+            counterSent: true
+        };
+        request.status = 'Countered';
+        await request.save();
+
+        // Notify user via socket
+        const io = req.app.get('io');
+        const connectedUsers = req.app.get('connectedUsers');
+        if (io && connectedUsers) {
+            const userSocketId = connectedUsers.get(request.userId.toString());
+            if (userSocketId) {
+                const provider = await User.findById(providerId);
+                io.to(userSocketId).emit('counter_offer', {
+                    requestId: request._id,
+                    counterRate: Number(counterRate),
+                    providerName: provider?.fullName || 'Driver'
+                });
+            }
+        }
+
+        res.status(200).json({ success: true, message: 'Counter offer sent', request });
+    } catch (error) {
+        console.error('Error sending counter offer:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// @desc    User accepts or rejects a counter offer
+// @route   POST /api/services/request/:id/counter/respond
+// @access  User
+exports.respondToCounter = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action } = req.body; // 'accept' | 'reject'
+
+        if (!['accept', 'reject'].includes(action)) {
+            return res.status(400).json({ error: 'action must be "accept" or "reject"' });
+        }
+
+        const request = await ServiceRequest.findById(id);
+        if (!request) return res.status(404).json({ error: 'Service request not found' });
+        if (request.status !== 'Countered') {
+            return res.status(400).json({ error: 'No pending counter offer to respond to' });
+        }
+
+        const io = req.app.get('io');
+        const connectedProviders = req.app.get('connectedProviders');
+
+        if (action === 'accept') {
+            request.negotiation.finalRate = request.negotiation.counterRate;
+            request.status = 'Accepted';
+            await request.save();
+
+            // Mark provider unavailable
+            if (request.providerId) {
+                await User.findByIdAndUpdate(request.providerId, { isAvailable: false });
+            }
+
+            // Notify provider
+            if (io && connectedProviders) {
+                const provider = await User.findById(request.providerId);
+                if (provider) {
+                    const providerSocketId = connectedProviders.get(provider.uid);
+                    if (providerSocketId) {
+                        io.to(providerSocketId).emit('counter_accepted', {
+                            requestId: request._id,
+                            finalRate: request.negotiation.finalRate
+                        });
+                    }
+                }
+            }
+        } else {
+            request.status = 'Cancelled';
+            await request.save();
+
+            // Re-enable provider
+            if (request.providerId) {
+                await User.findByIdAndUpdate(request.providerId, { isAvailable: true });
+            }
+
+            // Notify provider
+            if (io && connectedProviders) {
+                const provider = await User.findById(request.providerId);
+                if (provider) {
+                    const providerSocketId = connectedProviders.get(provider.uid);
+                    if (providerSocketId) {
+                        io.to(providerSocketId).emit('counter_rejected', {
+                            requestId: request._id
+                        });
+                    }
+                }
+            }
+        }
+
+        res.status(200).json({ success: true, request });
+    } catch (error) {
+        console.error('Error responding to counter offer:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
 
 exports.getProviderRequests = async (req, res) => {
     try {
@@ -310,6 +455,12 @@ exports.updateRequestStatus = async (req, res) => {
         }
 
         request.status = status;
+
+        // If provider accepts a user's counter offer
+        if (status === 'Accepted' && request.negotiation && request.negotiation.offeredRate && !request.negotiation.finalRate) {
+            request.negotiation.finalRate = request.negotiation.offeredRate;
+        }
+
         await request.save();
 
         const io = req.app.get('io');

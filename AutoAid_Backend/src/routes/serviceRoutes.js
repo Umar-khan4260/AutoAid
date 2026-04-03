@@ -19,6 +19,10 @@ router.get('/provider', protect, serviceController.getProviderRequests);
 router.put('/request/:id/status', protect, serviceController.updateRequestStatus);
 router.put('/request/:id/details', protect, serviceController.updateRequestDetails);
 
+// Counter Offer routes (Temporary Driver only)
+router.post('/request/:id/counter', protect, serviceController.sendCounterOffer);
+router.post('/request/:id/counter/respond', protect, serviceController.respondToCounter);
+
 // POST /api/services/request/:id/rate
 router.post('/request/:id/rate', protect, serviceController.submitRating);
 
