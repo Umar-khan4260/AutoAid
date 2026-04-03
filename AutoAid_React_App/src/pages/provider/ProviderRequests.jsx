@@ -145,58 +145,107 @@ const ProviderRequests = () => {
     const details = request.details || {};
     const type = request.serviceType;
 
+    const DetailItem = ({ label, value, icon: Icon }) => {
+        if (!value) return null;
+        return (
+            <div className="flex items-center gap-2 py-1 px-2 bg-gray-50/50 dark:bg-gray-800/30 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                <Icon className="text-primary shrink-0" size={14} />
+                <span className="text-[11px] font-black text-gray-500 uppercase tracking-tighter whitespace-nowrap">{label}:</span>
+                <span className="text-xs font-bold text-gray-900 dark:text-gray-200 truncate">{value}</span>
+            </div>
+        );
+    };
+
+    const renderHeader = (title) => (
+        <div className="flex items-center gap-2 mb-3 border-b border-gray-100 dark:border-gray-700/50 pb-2">
+            <div className="w-1.5 h-4 bg-primary rounded-full"></div>
+            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{title}</h4>
+        </div>
+    );
+
     switch (type) {
         case 'Breakdown Repair':
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle: </span> {details.carCompany || 'N/A'} {details.makeModel || ''}</div>
-                    {details.vehicleNumber && <div><span className="font-semibold text-gray-900 dark:text-gray-300">Number Plate: </span> {details.vehicleNumber}</div>}
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Issue: </span> {details.issueDescription || 'No description provided.'}</div>
+                <div className="mt-4 p-4 bg-white/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-inner">
+                    {renderHeader('Breakdown Information')}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <DetailItem label="Issue" value={details.issueType} icon={FaExclamationTriangle} />
+                        <DetailItem label="Manufacturer" value={details.carCompany} icon={FaCar} />
+                        <DetailItem label="Plate #" value={details.vehicleNumber} icon={FaIdCard} />
+                        <DetailItem label="Model/Year" value={details.makeModel} icon={FaCar} />
+                    </div>
+                    {details.description && (
+                        <div className="mt-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10">
+                            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Issue Description</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 italic">"{details.description}"</p>
+                        </div>
+                    )}
                 </div>
             );
         case 'Fuel Delivery':
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Fuel Type: </span> {details.fuelType || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Quantity: </span> {details.quantity ? `${details.quantity} Liters` : 'Unknown'}</div>
+                <div className="mt-4 p-4 bg-white/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-inner">
+                    {renderHeader('Fuel Request Details')}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <DetailItem label="Fuel Type" value={details.fuelType} icon={FaCar} />
+                        <DetailItem label="Quantity" value={details.quantity ? `${details.quantity} Liters` : null} icon={FaClock} />
+                    </div>
                 </div>
             );
         case 'Lockout Service':
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle: </span> {details.carCompany || 'N/A'} {details.makeModel || ''}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Lockout Type: </span> {details.lockoutType || 'Unknown'}</div>
+                <div className="mt-4 p-4 bg-white/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-inner">
+                    {renderHeader('Lockout Assistance Details')}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <DetailItem label="Lock Type" value={details.lockoutType} icon={FaExclamationTriangle} />
+                        <DetailItem label="Manufacturer" value={details.carCompany} icon={FaCar} />
+                        <DetailItem label="Model/Year" value={details.makeModel} icon={FaCar} />
+                    </div>
                 </div>
             );
         case 'Towing Service':
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Vehicle: </span> {details.carCompany || 'N/A'} {details.makeModel || ''}</div>
-                    {details.vehicleNumber && <div><span className="font-semibold text-gray-900 dark:text-gray-300">Number Plate: </span> {details.vehicleNumber}</div>}
+                <div className="mt-4 p-4 bg-white/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-inner">
+                    {renderHeader('Towing Logistics')}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <DetailItem label="Manufacturer" value={details.carCompany} icon={FaCar} />
+                        <DetailItem label="Model/Year" value={details.makeModel} icon={FaCar} />
+                        <DetailItem label="Plate #" value={details.vehicleNumber} icon={FaIdCard} />
+                    </div>
                 </div>
             );
         case 'Temporary Driver':
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">From: </span> {details.pickupLocation || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">To: </span> {details.destination || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Date/Time: </span> {details.tripDate} {details.tripTime}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Duration/Type: </span> {details.drivingDuration || 'N/A'} - {details.tripType || 'N/A'}</div>
+                <div className="mt-4 p-4 bg-white/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-inner">
+                    {renderHeader('Trip Itinerary')}
+                    <div className="grid grid-cols-1 gap-2">
+                        <DetailItem label="From" value={details.pickupLocation} icon={FaMapMarkerAlt} />
+                        <DetailItem label="To" value={details.destination} icon={FaMapMarkerAlt} />
+                        <div className="grid grid-cols-2 gap-2">
+                            <DetailItem label="Date" value={details.tripDate} icon={FaClock} />
+                            <DetailItem label="Time" value={details.tripTime} icon={FaClock} />
+                            <DetailItem label="Duration" value={details.drivingDuration} icon={FaClock} />
+                            <DetailItem label="Type" value={details.tripType} icon={FaBriefcase} />
+                        </div>
+                    </div>
                 </div>
             );
         case 'Route Planning':
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">From: </span> {details.startLocation || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">To: </span> {details.endLocation || 'Unknown'}</div>
-                    <div><span className="font-semibold text-gray-900 dark:text-gray-300">Date: </span> {details.travelDate || 'Unknown'}</div>
+                <div className="mt-4 p-4 bg-white/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-inner">
+                    {renderHeader('Route Parameters')}
+                    <div className="grid grid-cols-1 gap-2">
+                        <DetailItem label="Start" value={details.startLocation} icon={FaMapMarkerAlt} />
+                        <DetailItem label="End" value={details.endLocation} icon={FaMapMarkerAlt} />
+                        <DetailItem label="Travel Date" value={details.travelDate} icon={FaClock} />
+                    </div>
                 </div>
             );
         default:
             return (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    <span className="font-semibold text-gray-900 dark:text-gray-300">Details: </span> 
-                    {JSON.stringify(details)}
+                <div className="mt-4 p-4 bg-white/50 dark:bg-gray-900/40 rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-inner">
+                    {renderHeader('Request Summary')}
+                    <p className="text-xs text-gray-500 italic">No specific details available for this service type.</p>
                 </div>
             );
     }

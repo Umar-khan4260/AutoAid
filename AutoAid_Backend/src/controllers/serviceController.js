@@ -350,6 +350,17 @@ exports.updateRequestStatus = async (req, res) => {
             if (request.providerId) {
                 await User.findByIdAndUpdate(request.providerId, { isAvailable: true });
                 
+                // If provider rejected, notify user so they can pick someone else
+                if (status === 'Rejected') {
+                    const userSocketId = connectedUsers.get(request.userId.toString());
+                    if (io && userSocketId) {
+                        io.to(userSocketId).emit('job_rejected', {
+                            requestId: request._id,
+                            providerId: request.providerId
+                        });
+                    }
+                }
+                
                 // If user cancelled, notify provider
                 if (status === 'Cancelled') {
                     const provider = await User.findById(request.providerId);

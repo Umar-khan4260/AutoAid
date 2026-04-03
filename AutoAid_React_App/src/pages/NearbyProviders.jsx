@@ -106,6 +106,16 @@ const NearbyProviders = () => {
             // You could navigate to a tracking page here
         });
 
+        // Listen for job rejection
+        socket.on('job_rejected', (data) => {
+            console.log("JOB REJECTED:", data);
+            setIsWaitingForProvider(false);
+            setRequestCountdown(0);
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            alert("The provider declined your request. Please select another provider.");
+            setActiveRequestProvider(null);
+        });
+
         // Listen for job completion to show rating popup
         socket.on('job_completed', (data) => {
             console.log("JOB COMPLETED EVENT RECEIVED:", data);
