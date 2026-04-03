@@ -122,9 +122,8 @@ const HireDriver = () => {
     const userLocation = location.state?.userLocation;   // { lat, lng }
     const requestId    = location.state?.requestId;
     const drivingDuration = location.state?.drivingDuration;
-
-    // Calculate base fee if present
-    const baseFee = drivingDuration ? parseFloat(drivingDuration) * 200 : 0;
+    // Duration for cost calculation
+    const hours = drivingDuration ? parseFloat(drivingDuration) : 0;
 
     // ── AI / UI state ────────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState('ai');       // 'ai' | 'nearest'
@@ -162,6 +161,12 @@ const HireDriver = () => {
     const [disputeFile, setDisputeFile] = useState(null);
     const [ratingSubmitting, setRatingSubmitting] = useState(false);
     const [ratingDone, setRatingDone] = useState(false);
+    
+    // Timeout/Countdown state
+    const [requestCountdown, setRequestCountdown] = useState(0);
+    const [isWaitingForProvider, setIsWaitingForProvider] = useState(false);
+    const [activeRequestProvider, setActiveRequestProvider] = useState(null);
+    const countdownIntervalRef = useRef(null);
 
     // ── Socket.IO ─────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -200,6 +205,15 @@ const HireDriver = () => {
             setShowIssueReport(false);
             setIssueReport('');
             setRatingDone(false);
+        });
+
+        // Listen for job acceptance to clear timer
+        socket.on('job_accepted', (data) => {
+            console.log("JOB ACCEPTED:", data);
+            setIsWaitingForProvider(false);
+            setRequestCountdown(0);
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            alert(`Great news! ${data.providerName} has accepted your request.`);
         });
 
         socket.on('disconnect', () => {});
@@ -317,6 +331,49 @@ const HireDriver = () => {
         }
     }, [pickingMode]);
 
+    // Handle auto-cancelling the request
+    const handleAutoCancel = useCallback(async () => {
+        if (!requestId) return;
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/services/request/${requestId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'Cancelled' }),
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                alert("No response from provider. Please select another provider or try again.");
+                setIsWaitingForProvider(false);
+                setRequestCountdown(0);
+                setActiveRequestProvider(null);
+            }
+        } catch (error) {
+            console.error('Error auto-cancelling request:', error);
+        }
+    }, [requestId]);
+
+    // Timer effect for countdown
+    useEffect(() => {
+        if (isWaitingForProvider && requestCountdown > 0) {
+            countdownIntervalRef.current = setInterval(() => {
+                setRequestCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(countdownIntervalRef.current);
+                        handleAutoCancel();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        };
+    }, [isWaitingForProvider, handleAutoCancel]);
+
     // ── Hire Driver: assign provider + log AI feedback ────────────────────────
     const handleHire = useCallback(async (provider) => {
         if (!requestId) {
@@ -324,15 +381,19 @@ const HireDriver = () => {
             return;
         }
 
+        if (isWaitingForProvider) {
+            alert("Please wait for the current driver to respond or for the timeout.");
+            return;
+        }
+
         try {
-            // 1. Update the ServiceRequest with the specific details from this page 
-            //    (Pickup, Destination, Contact, Duration)
+            // 1. Update the ServiceRequest with the specific details from this page
             const updateDetails = {
                 pickupLocation: pickupQuery,
                 destinationLocation: destinationQuery,
-                contactNumber: currentUser?.contactNumber || '', // Fallback or use a state if we had a dedicated field
+                contactNumber: currentUser?.contactNumber || '',
                 drivingDuration: drivingDuration,
-                baseFee: baseFee
+                estimatedCost: provider.charges_per_hour ? provider.charges_per_hour * hours : null
             };
 
             const updateRes = await fetch(`http://localhost:3000/api/services/request/${requestId}/details`, {
@@ -358,7 +419,12 @@ const HireDriver = () => {
                 alert(`Error: ${assignData.error || 'Failed to send request'}`);
                 return;
             }
-            alert(`Request sent to ${provider.name}!\nProvider has been notified.`);
+            
+            // Start 60s countdown
+            setIsWaitingForProvider(true);
+            setRequestCountdown(60);
+            setActiveRequestProvider(provider);
+
         } catch (err) {
             console.error('Hire process error:', err);
             alert('Network error. Please try again.');
@@ -380,7 +446,7 @@ const HireDriver = () => {
                 }),
             }).catch(err => console.warn('[Feedback] Log failed (non-critical):', err));
         }
-    }, [requestId, interactionId, displayProviders, currentUser, pickupQuery, destinationQuery, drivingDuration, baseFee]);
+    }, [requestId, interactionId, displayProviders, currentUser, pickupQuery, destinationQuery, drivingDuration, hours]);
 
     // ── Submit rating helper ──────────────────────────────────────────────────
     const handleRatingSubmit = async () => {
@@ -438,9 +504,9 @@ const HireDriver = () => {
                         <h2 style={{ margin: '0', fontSize: '18px', fontWeight: 700, color: '#f1f5f9' }}>
                             {serviceType} — Find a Provider
                         </h2>
-                        {baseFee > 0 && (
-                            <div style={{ fontSize: '14px', color: '#10b981', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '8px' }}>
-                                PKR {baseFee} <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>+base fee</span>
+                        {hours > 0 && (
+                            <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'right', whiteSpace: 'nowrap', marginLeft: '8px' }}>
+                                Duration: <span style={{ color: '#06b6d4', fontWeight: 700 }}>{hours} hr{hours !== 1 ? 's' : ''}</span>
                             </div>
                         )}
                     </div>
@@ -704,6 +770,24 @@ const HireDriver = () => {
                                                 </span>
                                             </div>
 
+                                            {/* Per-driver cost */}
+                                            {hours > 0 && provider.charges_per_hour && (
+                                                <div style={{
+                                                    marginTop: '6px', padding: '6px 10px',
+                                                    background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.1))',
+                                                    border: '1px solid rgba(16,185,129,0.3)',
+                                                    borderRadius: '8px',
+                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                                }}>
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                                        PKR {provider.charges_per_hour}/hr × {hours} hr{hours !== 1 ? 's' : ''}
+                                                    </span>
+                                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>
+                                                        PKR {provider.charges_per_hour * hours}
+                                                    </span>
+                                                </div>
+                                            )}
+
                                             {/* License */}
                                             {provider.license && provider.license !== 'N/A' && (
                                                 <div style={{ fontSize: '10px', color: '#64748b', marginTop: '3px' }}>
@@ -908,6 +992,13 @@ const HireDriver = () => {
             @keyframes pulse {
                 0%, 100% { box-shadow: 0 3px 12px rgba(245,158,11,0.7); }
                 50% { box-shadow: 0 3px 20px rgba(245,158,11,1); }
+            }
+            .pulse-dot {
+                animation: pulse-dot 1.5s infinite;
+            }
+            @keyframes pulse-dot {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.5); opacity: 0.5; }
             }
             /* Make Leaflet popups match dark theme */
             .leaflet-popup-content-wrapper {
@@ -1140,7 +1231,75 @@ const HireDriver = () => {
                 </div>
             </div>
         )}
+        {/* ── Waiting for Provider Overlay ── */}
+        {isWaitingForProvider && (
+            <div style={{
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+                backdropFilter: 'blur(8px)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '16px',
+            }}>
+                <div style={{
+                    background: '#111827', borderRadius: '24px', width: '100%', maxWidth: '380px',
+                    boxShadow: '0 24px 64px rgba(0,0,0,0.6)', border: '1px solid #1e293b',
+                    padding: '32px', textAlign: 'center',
+                }}>
+                    <div style={{ position: 'relative', width: '128px', height: '128px', margin: '0 auto 24px' }}>
+                        <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                            <circle
+                                cx="64" cy="64" r="58"
+                                fill="transparent" stroke="#1f2937" strokeWidth="8"
+                            />
+                            <circle
+                                cx="64" cy="64" r="58"
+                                fill="transparent" stroke="#06b6d4" strokeWidth="8"
+                                strokeDasharray="364.4"
+                                strokeDashoffset={364.4 - (364.4 * requestCountdown) / 60}
+                                strokeLinecap="round"
+                                style={{ transition: 'stroke-dashoffset 1s linear' }}
+                            />
+                        </svg>
+                        <div style={{
+                            position: 'absolute', inset: 0, display: 'flex',
+                            alignItems: 'center', justifyContent: 'center',
+                            fontSize: '36px', fontWeight: 800, color: 'white',
+                        }}>
+                            {requestCountdown}
+                        </div>
+                    </div>
+
+                    <h3 style={{ margin: '0 0 8px 0', color: 'white', fontSize: '20px', fontWeight: 700 }}>
+                        Waiting for {activeRequestProvider?.name}
+                    </h3>
+                    <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 24px 0', lineHeight: 1.5 }}>
+                        The driver has 60 seconds to accept your hire request.
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: '8px', color: '#06b6d4', fontSize: '14px', fontWeight: 600,
+                        }}>
+                            <div className="pulse-dot" style={{ width: '8px', height: '8px', background: '#06b6d4', borderRadius: '50%' }}></div>
+                            Connecting to driver...
+                        </div>
+                        <button
+                            onClick={handleAutoCancel}
+                            style={{
+                                background: 'transparent', border: 'none', color: '#64748b',
+                                fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+                                transition: 'color 0.2s', padding: '8px',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                            onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                        >
+                            Cancel Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         </>
+
     );
 };
 

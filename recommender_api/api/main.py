@@ -128,6 +128,7 @@ def normalize_driver(doc):
         'reviews': doc.get('reviews', []),
         'job_timestamps': doc.get('job_timestamps', doc.get('jobTimestamps', [])),
         'license_type': doc.get('license_type', doc.get('licenseType', 'N/A')),
+        'charges_per_hour': int(doc.get('providerDetails', {}).get('chargesPerHour', 300)),
     }
 
 
@@ -281,7 +282,8 @@ def search_drivers(req: SearchRequest):
             "license": driver.get('license_type', 'N/A'),
             "is_online": driver['is_online'],
             "distance_km": round(distances[driver['driver_id']], 2),
-            "score": round(score, 4)
+            "score": round(score, 4),
+            "charges_per_hour": driver.get('charges_per_hour', 300)
         })
 
     interaction_id = f"SRCH_{int(datetime.now().timestamp())}_{req.user_id[-4:]}"

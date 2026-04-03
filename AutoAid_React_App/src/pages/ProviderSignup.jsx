@@ -20,6 +20,7 @@ const ProviderSignup = () => {
         towingVehicleNumber: '',
         towingMake: '',
         towingModel: '',
+        chargesPerHour: '',
         password: '',
         confirmPassword: '',
     });
@@ -287,6 +288,7 @@ const ProviderSignup = () => {
 
                                         {/* Conditional Fields */}
                                         {serviceType === 'temporary-driver' && (
+                                            <>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark">Driving License Picture</label>
                                                 <div className="mt-1 flex items-center justify-between p-2 border border-gray-300 dark:border-border-dark rounded-md bg-white dark:bg-gray-700">
@@ -297,6 +299,31 @@ const ProviderSignup = () => {
                                                     </label>
                                                 </div>
                                             </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="chargesPerHour">
+                                                    Charges Per Hour (PKR)
+                                                    <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(PKR 200 – 1000)</span>
+                                                </label>
+                                                <div className="mt-1">
+                                                    <input
+                                                        className="block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
+                                                        id="chargesPerHour"
+                                                        name="chargesPerHour"
+                                                        type="number"
+                                                        min="200"
+                                                        max="1000"
+                                                        step="50"
+                                                        placeholder="e.g. 500"
+                                                        required
+                                                        value={formData.chargesPerHour}
+                                                        onChange={handleChange}
+                                                    />
+                                                    {formData.chargesPerHour && (parseInt(formData.chargesPerHour) < 200 || parseInt(formData.chargesPerHour) > 1000) && (
+                                                        <p className="text-xs text-red-500 mt-1">Must be between PKR 200 and PKR 1000.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            </>
                                         )}
 
                                         {serviceType === 'towing-service' && (
