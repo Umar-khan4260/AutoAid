@@ -61,6 +61,12 @@ const UserSchema = new mongoose.Schema({
         min: 200,
         max: 1000
     },
+    petrolPrice: {
+        type: Number,
+    },
+    dieselPrice: {
+        type: Number,
+    },
     vehicleDetails: {
         number: String,
         make: String,

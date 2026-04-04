@@ -406,7 +406,9 @@ exports.getNearbyProviders = async (req, res) => {
                     image: provider.providerDetails?.profileImage || 'https://via.placeholder.com/150',
                     lat: provider.currentLocation.lat,
                     lng: provider.currentLocation.lng,
-                    contactNumber: provider.contactNumber
+                    contactNumber: provider.contactNumber,
+                    petrolPrice: provider.providerDetails?.petrolPrice,
+                    dieselPrice: provider.providerDetails?.dieselPrice
                 };
             }
             return null;
