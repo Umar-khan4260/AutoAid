@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaPhoneAlt, FaCommentAlt, FaMapMarkerAlt, FaCheckCircle, FaLocationArrow, FaArrowLeft } from 'react-icons/fa';
+import { FaPhoneAlt, FaCommentAlt, FaMapMarkerAlt, FaCheckCircle, FaLocationArrow, FaArrowLeft, FaTimes, FaPaperPlane, FaCheckDouble } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { io } from 'socket.io-client';
 
 const defaultCenter = { lat: 31.5204, lng: 74.3587 }; // Lahore default
 
@@ -22,6 +23,75 @@ const ProviderActiveJob = () => {
   const providerMarkerRef = useRef(null);
   const watchIdRef = useRef(null);
   const providerLocationRef = useRef(null);
+
+  // Chat states
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const socketRef = useRef(null);
+  const chatEndRef = useRef(null);
+
+  // Setup sockets
+  useEffect(() => {
+    if (!job || !currentUser) return;
+    
+    socketRef.current = io('http://localhost:3000', { withCredentials: true });
+    
+    socketRef.current.on('connect', () => {
+        socketRef.current.emit('register_provider', currentUser.uid);
+        socketRef.current.emit('join_job_room', job._id);
+    });
+
+    socketRef.current.on('new_job_message', (message) => {
+        setMessages((prev) => [...prev, message]);
+        // Auto-mark seen if chat is open
+        if (isChatOpen && message.senderId !== currentUser.uid) {
+            socketRef.current.emit('mark_messages_seen', { requestId: job._id, readerId: currentUser.uid });
+        }
+    });
+
+    socketRef.current.on('messages_updated', (updatedMessages) => {
+        setMessages(updatedMessages);
+    });
+
+    return () => {
+        if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [job, currentUser, isChatOpen]);
+
+  // Handle Mark Seen when opening chat
+  useEffect(() => {
+    if (isChatOpen && job && socketRef.current) {
+        socketRef.current.emit('mark_messages_seen', { requestId: job._id, readerId: currentUser.uid });
+    }
+  }, [isChatOpen, job, currentUser]);
+
+  // Load existing messages when job is fetched
+  useEffect(() => {
+    if (job?.messages) {
+        setMessages(job.messages);
+    }
+  }, [job]);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !job || jobStatus === 'Completed') return;
+
+    socketRef.current.emit('send_job_message', {
+        requestId: job._id,
+        senderId: currentUser.uid,
+        senderModel: 'Provider',
+        text: newMessage.trim()
+    });
+    setNewMessage('');
+  };
+
+  useEffect(() => {
+    // Scroll chat to bottom
+    if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isChatOpen]);
 
   // Fetch active job consistently
   useEffect(() => {
@@ -305,8 +375,17 @@ const ProviderActiveJob = () => {
               <a href={`tel:${displayJob.phone}`} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors font-medium">
                 <FaPhoneAlt /> Call
               </a>
-              <button disabled className="opacity-50 cursor-not-allowed flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium">
-                <FaCommentAlt /> Chat
+              <button 
+                onClick={() => setIsChatOpen(!isChatOpen)}
+                disabled={jobStatus === 'Completed'}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-white transition-colors font-medium ${jobStatus === 'Completed' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+              >
+                <FaCommentAlt /> Chat 
+                {messages.filter(m => !m.seen && m.senderId !== currentUser.uid).length > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-1">
+                        {messages.filter(m => !m.seen && m.senderId !== currentUser.uid).length}
+                    </span>
+                )}
               </button>
             </div>
           </div>
@@ -424,6 +503,81 @@ const ProviderActiveJob = () => {
           </div>
         </div>
       </div>
+      
+      {/* Floating Chat Modal */}
+      {isChatOpen && (
+        <div className="fixed bottom-4 right-4 w-80 md:w-96 bg-white dark:bg-surface-dark rounded-t-xl rounded-bl-xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50 overflow-hidden transform transition-all animate-fade-in h-[500px]">
+            {/* Header */}
+            <div className="bg-primary text-white p-4 flex justify-between items-center rounded-t-xl shadow-md">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+                        {displayJob.user.charAt(0)}
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-sm leading-tight">{displayJob.user}</h3>
+                        <p className="text-[10px] text-primary-100">{jobStatus === 'Completed' ? 'Chat Closed' : 'Active Job'}</p>
+                    </div>
+                </div>
+                <button onClick={() => setIsChatOpen(false)} className="hover:text-gray-200 transition-colors p-2">
+                    <FaTimes />
+                </button>
+            </div>
+
+            {/* Messages Area */}
+            <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-[#0B1120] space-y-3 custom-scrollbar relative">
+                {messages.length === 0 ? (
+                    <div className="text-center text-gray-500 text-xs mt-10">Start communicating with the customer...</div>
+                ) : (
+                    messages.map((msg, index) => {
+                        const isMe = msg.senderId === currentUser.uid;
+                        return (
+                            <div key={index} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                <div className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm rounded-tl-none border border-gray-100 dark:border-gray-700'}`}>
+                                    {msg.text}
+                                </div>
+                                <div className="flex items-center gap-1 mt-1 px-1">
+                                    <span className="text-[10px] text-gray-400">
+                                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    {isMe && (
+                                        <FaCheckDouble className={`text-[10px] ${msg.seen ? 'text-blue-500' : 'text-gray-400'}`} />
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+                {jobStatus === 'Completed' && (
+                    <div className="text-center bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs py-2 rounded-lg my-4">
+                        Job is completed. Chat is read-only.
+                    </div>
+                )}
+                <div ref={chatEndRef} />
+            </div>
+
+            {/* Input Area */}
+            <div className="p-3 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700">
+                <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <input 
+                        type="text" 
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        disabled={jobStatus === 'Completed'}
+                        placeholder={jobStatus === 'Completed' ? "Chat disabled" : "Type a message..."}
+                        className="flex-1 bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-primary/50 text-gray-900 dark:text-white rounded-full px-4 py-2 text-sm outline-none transition-colors disabled:opacity-50"
+                    />
+                    <button 
+                        type="submit" 
+                        disabled={!newMessage.trim() || jobStatus === 'Completed'}
+                        className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:bg-gray-400"
+                    >
+                        <FaPaperPlane className="text-xs ml-1" />
+                    </button>
+                </form>
+            </div>
+        </div>
+      )}
+
     </div>
   );
 };
