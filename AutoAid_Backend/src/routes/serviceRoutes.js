@@ -29,8 +29,11 @@ router.post('/request/:id/rate', protect, serviceController.submitRating);
 // POST /api/services/request/:id/dispute
 router.post('/request/:id/dispute', protect, upload.single('proofImage'), serviceController.submitDispute);
 
-// GET /api/services/active-job
+// GET /api/services/active-job (Provider)
 router.get('/active-job', protect, serviceController.getActiveJob);
+
+// GET /api/services/user/active-job (User)
+router.get('/user/active-job', protect, serviceController.getUserActiveJob);
 
 // PUT /api/services/provider/location
 router.put('/provider/location', protect, serviceController.updateProviderLocation);

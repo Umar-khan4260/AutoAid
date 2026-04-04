@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const cookieParser = require('cookie-parser');
 const http = require('http');
 const { Server } = require('socket.io');
+const ServiceRequest = require('./models/ServiceRequest');
 
 // Load env vars
 dotenv.config();
@@ -66,6 +67,58 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    // Chat Events
+    socket.on('join_job_room', (requestId) => {
+        if (requestId) {
+            socket.join(`job_${requestId}`);
+            console.log(`Socket ${socket.id} joined room job_${requestId}`);
+        }
+    });
+
+    socket.on('send_job_message', async ({ requestId, senderId, senderModel, text }) => {
+        try {
+            const request = await ServiceRequest.findById(requestId);
+            if (request && ['Accepted', 'In Progress'].includes(request.status)) {
+                const message = {
+                    senderId,
+                    senderModel,
+                    text,
+                    timestamp: new Date(),
+                    seen: false
+                };
+                request.messages.push(message);
+                await request.save();
+                
+                io.to(`job_${requestId}`).emit('new_job_message', message);
+            }
+        } catch (error) {
+            console.error('Error saving message:', error);
+        }
+    });
+
+    socket.on('mark_messages_seen', async ({ requestId, readerId }) => {
+        try {
+            const request = await ServiceRequest.findById(requestId);
+            if (request) {
+                let updated = false;
+                request.messages.forEach(msg => {
+                    // If message is NOT from the reader, mark as seen
+                    if (msg.senderId !== readerId && !msg.seen) {
+                        msg.seen = true;
+                        updated = true;
+                    }
+                });
+                if (updated) {
+                    await request.save();
+                    io.to(`job_${requestId}`).emit('messages_updated', request.messages);
+                }
+            }
+        } catch (error) {
+             console.error('Error marking messages as seen:', error);
+        }
+    });
+
 });
 
 // Make io and connectedProviders available to routes

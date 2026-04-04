@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaStar, FaFilter, FaChevronLeft, FaClock, FaLocationArrow, FaCheckCircle, FaTimes } from 'react-icons/fa';
+import { FaStar, FaFilter, FaChevronLeft, FaClock, FaLocationArrow, FaCheckCircle, FaTimes, FaCommentAlt, FaPaperPlane, FaCheckDouble } from 'react-icons/fa';
 import { MdMyLocation } from 'react-icons/md';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +48,73 @@ const NearbyProviders = () => {
     const [activeRequestProvider, setActiveRequestProvider] = useState(null);
     const countdownIntervalRef = useRef(null);
 
+    // Chat and Active Job states
+    const [activeJob, setActiveJob] = useState(null);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const chatEndRef = useRef(null);
+    const activeJobRef = useRef(null);
+
+    // Fetch Active Job on mount (restores chat if page refreshed)
+    useEffect(() => {
+        const fetchUserActiveJob = async () => {
+            if (!currentUser) return;
+            try {
+                const response = await fetch('http://localhost:3000/api/services/user/active-job', {
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.success && data.request) {
+                    setActiveJob(data.request);
+                    setMessages(data.request.messages || []);
+                    // Don't wait for provider if we already have an accepted job
+                    setIsWaitingForProvider(false);
+                }
+            } catch (error) {
+                console.error("Error fetching user active job:", error);
+            }
+        };
+        fetchUserActiveJob();
+    }, [currentUser]);
+
+    // Make sure we join the chat room if we have an active job AND socket connects
+    useEffect(() => {
+        activeJobRef.current = activeJob;
+        if (activeJob && activeJob._id && socketRef.current && socketRef.current.connected) {
+            socketRef.current.emit('join_job_room', activeJob._id);
+            console.log(`Re-joined job room ${activeJob._id} on load/update`);
+        }
+    }, [activeJob]);
+
+    // Handle Mark Seen when opening chat
+    useEffect(() => {
+        if (isChatOpen && activeJob && socketRef.current) {
+            socketRef.current.emit('mark_messages_seen', { requestId: activeJob._id, readerId: currentUser.uid });
+        }
+    }, [isChatOpen, activeJob, currentUser]);
+
+    // Scroll chat to bottom
+    useEffect(() => {
+        if (chatEndRef.current) {
+            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, isChatOpen]);
+
+    const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !activeJob || activeJob.status === 'Completed') return;
+
+        socketRef.current.emit('send_job_message', {
+            requestId: activeJob._id,
+            senderId: currentUser.uid,
+            senderModel: 'User',
+            text: newMessage.trim()
+        });
+        setNewMessage('');
+    };
+
     // Initialize Socket.IO connection and listeners
     useEffect(() => {
         console.log("Initializing socket connection...");
@@ -69,12 +136,18 @@ const NearbyProviders = () => {
         socket.on('connect', () => {
             console.log("Socket connected:", socket.id);
             registerUser();
+            if (activeJobRef.current?._id) {
+                socket.emit('join_job_room', activeJobRef.current._id);
+            }
         });
 
         // If already connected when this effect runs
         if (socket.connected) {
             console.log("Socket already connected, registering immediately:", socket.id);
             registerUser();
+            if (activeJobRef.current?._id) {
+                socket.emit('join_job_room', activeJobRef.current._id);
+            }
         }
 
         // Listen for real-time location updates from any provider
@@ -105,7 +178,28 @@ const NearbyProviders = () => {
             setRequestCountdown(0);
             if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
             alert(`Great news! ${data.providerName} has accepted your request.`);
-            // You could navigate to a tracking page here
+            
+            // Set active job locally so chat opens up
+            setActiveJob({
+                _id: data.requestId,
+                providerName: data.providerName,
+                status: 'Accepted'
+            });
+            // Also join room
+            socket.emit('join_job_room', data.requestId);
+        });
+
+        // Listen for new chat messages
+        socket.on('new_job_message', (message) => {
+            setMessages((prev) => [...prev, message]);
+            if (isChatOpen && message.senderId !== currentUser?.uid && activeJob) {
+                socket.emit('mark_messages_seen', { requestId: activeJob._id, readerId: currentUser.uid });
+            }
+        });
+
+        // Listen for message seen updates
+        socket.on('messages_updated', (updatedMessages) => {
+            setMessages(updatedMessages);
         });
 
         // Listen for job rejection
@@ -132,6 +226,11 @@ const NearbyProviders = () => {
             setShowIssueReport(false);
             setIssueReport('');
             setRatingDone(false);
+
+            if (activeJob && activeJob._id === data.requestId) {
+                setActiveJob(prev => ({ ...prev, status: 'Completed' }));
+                setIsChatOpen(false); // Optionally close array or show read-only
+            }
         });
 
         socket.on('disconnect', (reason) => {
@@ -146,7 +245,7 @@ const NearbyProviders = () => {
             console.log("Cleaning up socket...");
             socket.disconnect();
         };
-    }, [currentUser]);
+    }, [currentUser, isChatOpen, activeJob]);
 
     // Fetch providers from backend
     useEffect(() => {
@@ -787,6 +886,101 @@ const NearbyProviders = () => {
                 </div>
             </div>
         )}
+
+        {/* ---- User Side Chat Overlay ---- */}
+        {activeJob && (
+            <>
+                {/* Floating Action Button for Chat */}
+                {!isChatOpen && activeJob.status !== 'Completed' && (
+                    <button 
+                        onClick={() => setIsChatOpen(true)}
+                        className="fixed bottom-6 right-6 p-4 rounded-full bg-primary text-white shadow-2xl hover:bg-primary-dark transition-transform hover:scale-110 z-50 flex items-center justify-center animate-bounce-short"
+                    >
+                        <FaCommentAlt size={24} />
+                        {messages.filter(m => !m.seen && m.senderId !== currentUser?.uid).length > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 border-2 border-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
+                                {messages.filter(m => !m.seen && m.senderId !== currentUser?.uid).length}
+                            </span>
+                        )}
+                    </button>
+                )}
+
+                {/* Chat Window */}
+                {isChatOpen && (
+                    <div className="fixed bottom-6 right-6 w-80 md:w-96 bg-white dark:bg-surface-dark rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-[9999] overflow-hidden transform transition-all animate-fade-in h-[450px]">
+                        {/* Header */}
+                        <div className="bg-primary text-white p-4 flex justify-between items-center rounded-t-xl shadow-md">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+                                    {activeJob.providerName?.charAt(0) || 'P'}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-sm leading-tight">{activeJob.providerName || 'Provider'}</h3>
+                                    <p className="text-[10px] text-primary-100">{activeJob.status === 'Completed' ? 'Chat Closed' : 'Active Job'}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsChatOpen(false)} className="hover:text-gray-200 transition-colors p-2">
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        {/* Messages Area */}
+                        <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-[#0B1120] space-y-3 custom-scrollbar relative">
+                            {messages.length === 0 ? (
+                                <div className="text-center text-gray-500 text-xs mt-10">Start communicating with the provider...</div>
+                            ) : (
+                                messages.map((msg, index) => {
+                                    const isMe = msg.senderId === currentUser?.uid;
+                                    return (
+                                        <div key={index} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                            <div className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm rounded-tl-none border border-gray-100 dark:border-gray-700'}`}>
+                                                {msg.text}
+                                            </div>
+                                            <div className="flex items-center gap-1 mt-1 px-1">
+                                                <span className="text-[10px] text-gray-400">
+                                                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                                {isMe && (
+                                                    <FaCheckDouble className={`text-[10px] ${msg.seen ? 'text-blue-500' : 'text-gray-400'}`} />
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                            {activeJob.status === 'Completed' && (
+                                <div className="text-center bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs py-2 rounded-lg my-4">
+                                    Job is completed. Chat is read-only.
+                                </div>
+                            )}
+                            <div ref={chatEndRef} />
+                        </div>
+
+                        {/* Input Area */}
+                        <div className="p-3 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700">
+                            <form onSubmit={handleSendMessage} className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    disabled={activeJob.status === 'Completed'}
+                                    placeholder={activeJob.status === 'Completed' ? "Chat disabled" : "Type a message..."}
+                                    className="flex-1 bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-primary/50 text-gray-900 dark:text-white rounded-full px-4 py-2 text-sm outline-none transition-colors disabled:opacity-50"
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={!newMessage.trim() || activeJob.status === 'Completed'}
+                                    className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:bg-gray-400"
+                                >
+                                    <FaPaperPlane className="text-xs ml-1" />
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </>
+        )}
+
         {/* ---- Waiting for Provider Overlay ---- */}
         {isWaitingForProvider && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[10000] p-4">
@@ -844,7 +1038,6 @@ const NearbyProviders = () => {
             </div>
         )}
         </>
-
     );
 };
 

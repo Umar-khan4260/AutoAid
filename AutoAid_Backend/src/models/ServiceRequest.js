@@ -58,7 +58,14 @@ const ServiceRequestSchema = new mongoose.Schema({
     },
     issueReport: {
         type: String
-    }
+    },
+    messages: [{
+        senderId: { type: String, required: true },
+        senderModel: { type: String, enum: ['User', 'Provider'], required: true },
+        text: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        seen: { type: Boolean, default: false }
+    }]
 });
 
 module.exports = mongoose.model('ServiceRequest', ServiceRequestSchema);
