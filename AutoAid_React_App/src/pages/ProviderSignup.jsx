@@ -23,6 +23,8 @@ const ProviderSignup = () => {
         chargesPerHour: '',
         password: '',
         confirmPassword: '',
+        petrolPrice: '',
+        dieselPrice: '',
     });
 
     const handleServiceSelect = (type) => {
@@ -324,6 +326,47 @@ const ProviderSignup = () => {
                                                 </div>
                                             </div>
                                             </>
+                                        )}
+
+                                        {serviceType === 'fuel-provider' && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="petrolPrice">
+                                                        Petrol Price (Per Liter)
+                                                    </label>
+                                                    <div className="mt-1">
+                                                        <input
+                                                            className="block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
+                                                            id="petrolPrice"
+                                                            name="petrolPrice"
+                                                            type="number"
+                                                            step="0.01"
+                                                            placeholder="e.g. 270.50"
+                                                            required
+                                                            value={formData.petrolPrice}
+                                                            onChange={handleChange}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-subtle-dark" htmlFor="dieselPrice">
+                                                        Diesel Price (Per Liter)
+                                                    </label>
+                                                    <div className="mt-1">
+                                                        <input
+                                                            className="block w-full py-2 px-3 border border-gray-300 dark:border-border-dark rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-text-dark"
+                                                            id="dieselPrice"
+                                                            name="dieselPrice"
+                                                            type="number"
+                                                            step="0.01"
+                                                            placeholder="e.g. 280.20"
+                                                            required
+                                                            value={formData.dieselPrice}
+                                                            onChange={handleChange}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
                                         )}
 
                                         {serviceType === 'towing-service' && (

@@ -47,6 +47,11 @@ exports.signup = async (req, res) => {
                 providerDetails.chargesPerHour = cph;
             }
         }
+        // Save fuel prices for fuel providers
+        if (req.body.serviceType === 'fuel-provider') {
+            if (req.body.petrolPrice) providerDetails.petrolPrice = parseFloat(req.body.petrolPrice);
+            if (req.body.dieselPrice) providerDetails.dieselPrice = parseFloat(req.body.dieselPrice);
+        }
     }
 
     // 2. Generate OTP
@@ -235,7 +240,9 @@ exports.updateProfile = async (req, res) => {
             chargesPerHour, 
             vehicleNumber, 
             vehicleMake, 
-            vehicleModel 
+            vehicleModel,
+            petrolPrice,
+            dieselPrice
         } = req.body;
         
         const user = await User.findById(req.user.id);
@@ -277,6 +284,10 @@ exports.updateProfile = async (req, res) => {
                     user.providerDetails.chargesPerHour = cph;
                 }
             }
+
+            // Update Fuel Prices
+            if (petrolPrice) user.providerDetails.petrolPrice = parseFloat(petrolPrice);
+            if (dieselPrice) user.providerDetails.dieselPrice = parseFloat(dieselPrice);
 
             // Update Vehicle Details
             if (vehicleNumber || vehicleMake || vehicleModel) {

@@ -12,6 +12,8 @@ const NearbyProviders = () => {
     const serviceType = location.state?.serviceType || 'Service';
     const userLocation = location.state?.userLocation;
     const requestId = location.state?.requestId;
+    const fuelType = location.state?.fuelType;
+    const quantity = location.state?.quantity;
     const [searchRadius, setSearchRadius] = useState(50);
     const [providers, setProviders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -386,6 +388,15 @@ const NearbyProviders = () => {
                         <span>⏱ ${provider.eta}</span>
                     </div>
                     <div style="margin-top: 4px; font-size: 12px; color: #f59e0b;">⭐ ${provider.rating}</div>
+                    ${serviceType === 'Fuel Delivery' && fuelType && quantity ? `
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                            <p style="margin: 0; font-size: 13px; font-weight: 700; color: #00BCD4;">
+                                Cost: Rs. ${((fuelType === 'Petrol' ? provider.petrolPrice : provider.dieselPrice) || 0) * parseFloat(quantity)}
+                            </p>
+                            <p style="margin: 2px 0 0 0; font-size: 10px; color: #666;">@ Rs. ${(fuelType === 'Petrol' ? provider.petrolPrice : provider.dieselPrice) || 0} / L</p>
+                            <p style="margin: 0; font-size: 10px; color: #888;">+ Delivery charges</p>
+                        </div>
+                    ` : ''}
                     <button id="iw-request-btn-${provider.id}" style="margin-top: 12px; width: 100%; padding: 6px 12px; background-color: #00BCD4; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">
                         Request Service
                     </button>
@@ -506,6 +517,15 @@ const NearbyProviders = () => {
                                         </div>
                                         <h3 className="text-gray-900 dark:text-white font-bold text-base leading-tight mb-1">{provider.name}</h3>
                                         <p className="text-gray-500 dark:text-text-muted text-xs">{provider.service}</p>
+                                        
+                                        {serviceType === 'Fuel Delivery' && fuelType && quantity && (
+                                            <div className="mt-2 text-primary font-bold text-sm">
+                                                <div>Rs. {((fuelType === 'Petrol' ? provider.petrolPrice : provider.dieselPrice) || 0) * parseFloat(quantity)}</div>
+                                                <div className="text-[10px] text-gray-500 dark:text-gray-400 font-normal">
+                                                    @ Rs. {(fuelType === 'Petrol' ? provider.petrolPrice : provider.dieselPrice) || 0} / L + Delivery charges
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     
                                     <button 

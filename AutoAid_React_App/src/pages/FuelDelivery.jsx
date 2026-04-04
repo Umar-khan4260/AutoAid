@@ -96,7 +96,9 @@ const FuelDelivery = () => {
                             state: { 
                                 serviceType: 'Fuel Delivery', 
                                 userLocation: userLocation,
-                                requestId: data.requestId
+                                requestId: data.requestId,
+                                fuelType: formData.fuelType,
+                                quantity: formData.quantity
                             } 
                         });
                     } else {

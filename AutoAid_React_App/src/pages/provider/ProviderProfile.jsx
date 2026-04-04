@@ -22,7 +22,9 @@ const ProviderProfile = () => {
         chargesPerHour: '',
         vehicleNumber: '',
         vehicleMake: '',
-        vehicleModel: ''
+        vehicleModel: '',
+        petrolPrice: '',
+        dieselPrice: ''
     });
     const [profileImage, setProfileImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -39,7 +41,9 @@ const ProviderProfile = () => {
                 chargesPerHour: currentUser.providerDetails?.chargesPerHour || '',
                 vehicleNumber: currentUser.providerDetails?.vehicleDetails?.number || '',
                 vehicleMake: currentUser.providerDetails?.vehicleDetails?.make || '',
-                vehicleModel: currentUser.providerDetails?.vehicleDetails?.model || ''
+                vehicleModel: currentUser.providerDetails?.vehicleDetails?.model || '',
+                petrolPrice: currentUser.providerDetails?.petrolPrice || '',
+                dieselPrice: currentUser.providerDetails?.dieselPrice || ''
             });
         }
     }, [currentUser]);
@@ -304,6 +308,42 @@ const ProviderProfile = () => {
                                                 <span className="font-black text-primary text-xl">Rs. {formData.chargesPerHour || '0'}</span>
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {currentUser.providerDetails?.serviceType?.includes('fuel') && (
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Fuel Prices (PKR / L)</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase">Petrol</label>
+                                                {isEditing ? (
+                                                    <input 
+                                                        type="number" name="petrolPrice" value={formData.petrolPrice}
+                                                        onChange={handleInputChange} step="0.01"
+                                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-transparent dark:border-gray-700/50 rounded-2xl p-4 text-gray-900 dark:text-white focus:border-primary focus:ring-0 outline-none transition-all font-medium"
+                                                    />
+                                                ) : (
+                                                    <div className="p-4 bg-gray-100 dark:bg-gray-800/30 rounded-2xl min-h-[56px] flex items-center">
+                                                        <span className="font-bold text-primary">Rs. {formData.petrolPrice || '--'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase">Diesel</label>
+                                                {isEditing ? (
+                                                    <input 
+                                                        type="number" name="dieselPrice" value={formData.dieselPrice}
+                                                        onChange={handleInputChange} step="0.01"
+                                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-transparent dark:border-gray-700/50 rounded-2xl p-4 text-gray-900 dark:text-white focus:border-primary focus:ring-0 outline-none transition-all font-medium"
+                                                    />
+                                                ) : (
+                                                    <div className="p-4 bg-gray-100 dark:bg-gray-800/30 rounded-2xl min-h-[56px] flex items-center">
+                                                        <span className="font-bold text-primary">Rs. {formData.dieselPrice || '--'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
