@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaMapMarkerAlt, FaSearch, FaExclamationTriangle, FaRoad, FaClock, FaSyncAlt, FaMap, FaDirections, FaCalendarAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const RoutePlanning = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { error, info } = useNotification();
     const [formData, setFormData] = useState({
         startLocation: '',
         endLocation: '',
@@ -80,7 +82,7 @@ const RoutePlanning = () => {
         e.preventDefault();
         
         if (!currentUser) {
-            alert('Please login to use route planning features.');
+            info('Please login to use route planning features.');
             return;
         }
 

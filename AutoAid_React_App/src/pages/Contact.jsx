@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
+import { useNotification } from '../context/NotificationContext';
 
 const Contact = () => {
+    const { success, error } = useNotification();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -101,13 +103,14 @@ const Contact = () => {
 
             if (data.success) {
                 setSuccessMessage('Message sent successfully! We will get back to you soon.');
+                success('Message sent successfully!');
                 setFormData({ name: '', email: '', subject: '', message: '' });
             } else {
-                alert(data.error || 'Failed to send message. Please try again.');
+                error(data.error || 'Failed to send message. Please try again.');
             }
-        } catch (error) {
-            console.error('Error submitting contact form:', error);
-            alert('Network error. Please try again later.');
+        } catch (err) {
+            console.error('Error submitting contact form:', err);
+            error('Network error. Please try again later.');
         } finally {
             setIsSubmitting(false);
         }

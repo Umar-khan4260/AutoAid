@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaMapMarkerAlt, FaUser, FaCar, FaClock, FaCheck, FaTimes, FaExclamationTriangle, FaIdCard, FaBriefcase, FaTag } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { io } from 'socket.io-client';
 
 const ProviderRequests = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { success, error, info, warn } = useNotification();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   // Counter offer UI state: { [requestId]: { open: bool, value: string, sending: bool } }
@@ -59,7 +61,7 @@ const ProviderRequests = () => {
 
       // Counter was accepted by user — remove from list, go to active job
       socket.on('counter_accepted', ({ requestId, finalRate }) => {
-        alert(`Your counter offer was accepted! Final rate: PKR ${finalRate}/hr`);
+        success(`Your counter offer was accepted! Final rate: PKR ${finalRate}/hr`);
         setRequests(prev => {
           const req = prev.find(r => r._id === requestId);
           if (req) navigate('/provider/active-job', { state: { job: req } });
@@ -69,7 +71,7 @@ const ProviderRequests = () => {
 
       // Counter was rejected by user
       socket.on('counter_rejected', ({ requestId }) => {
-        alert('The user declined your counter offer. The request has been cancelled.');
+        warn('The user declined your counter offer. The request has been cancelled.');
         setRequests(prev => prev.filter(r => r._id !== requestId));
       });
 
@@ -93,15 +95,15 @@ const ProviderRequests = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        alert('Request Accepted!');
+        success('Request Accepted!');
         setRequests(requests.filter(req => req._id !== request._id));
         navigate('/provider/active-job', { state: { job: request } });
       } else {
-        alert(`Failed to accept: ${data.error}`);
+        error(`Failed to accept: ${data.error}`);
       }
-    } catch (error) {
-      console.error("Error accepting request:", error);
-      alert('Network error. Failed to accept request.');
+    } catch (err) {
+      console.error("Error accepting request:", err);
+      error('Network error. Failed to accept request.');
     }
   };
 
@@ -116,12 +118,13 @@ const ProviderRequests = () => {
       const data = await response.json();
       if (response.ok) {
         setRequests(requests.filter(req => req._id !== requestId));
+        success('Request rejected.');
       } else {
-        alert(`Failed to reject: ${data.error}`);
+        error(`Failed to reject: ${data.error}`);
       }
-    } catch (error) {
-      console.error("Error rejecting request:", error);
-      alert('Network error. Failed to reject request.');
+    } catch (err) {
+      console.error("Error rejecting request:", err);
+      error('Network error. Failed to reject request.');
     }
   };
 
@@ -136,7 +139,7 @@ const ProviderRequests = () => {
   const handleSendCounter = async (requestId) => {
     const state = counterState[requestId];
     const rate = parseInt(state?.value, 10);
-    if (!rate || rate <= 0) { alert('Please enter a valid rate.'); return; }
+    if (!rate || rate <= 0) { warn('Please enter a valid rate.'); return; }
 
     setCounterState(prev => ({ ...prev, [requestId]: { ...prev[requestId], sending: true } }));
     try {
@@ -148,17 +151,17 @@ const ProviderRequests = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('Counter offer sent! Waiting for user response.');
+        success('Counter offer sent! Waiting for user response.');
         // Update local request status to Countered so buttons update
         setRequests(prev => prev.map(r => r._id === requestId ? { ...r, status: 'Countered', negotiation: { ...(r.negotiation || {}), counterSent: true, counterRate: rate } } : r));
         setCounterState(prev => ({ ...prev, [requestId]: { open: false, value: '', sending: false } }));
       } else {
-        alert(`Error: ${data.error}`);
+        error(`Error: ${data.error}`);
         setCounterState(prev => ({ ...prev, [requestId]: { ...prev[requestId], sending: false } }));
       }
     } catch (err) {
       console.error('Counter offer error:', err);
-      alert('Network error.');
+      error('Network error.');
       setCounterState(prev => ({ ...prev, [requestId]: { ...prev[requestId], sending: false } }));
     }
   };

@@ -4,11 +4,13 @@ import { FaStar, FaFilter, FaChevronLeft, FaClock, FaLocationArrow, FaCheckCircl
 import { MdMyLocation } from 'react-icons/md';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const NearbyProviders = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { success, error, info, warn } = useNotification();
     const serviceType = location.state?.serviceType || 'Service';
     const userLocation = location.state?.userLocation;
     const requestId = location.state?.requestId;
@@ -177,7 +179,7 @@ const NearbyProviders = () => {
             setIsWaitingForProvider(false);
             setRequestCountdown(0);
             if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-            alert(`Great news! ${data.providerName} has accepted your request.`);
+            success(`Great news! ${data.providerName} has accepted your request.`);
             
             // Set active job locally so chat opens up
             setActiveJob({
@@ -208,7 +210,7 @@ const NearbyProviders = () => {
             setIsWaitingForProvider(false);
             setRequestCountdown(0);
             if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-            alert("The provider declined your request. Please select another provider.");
+            warn("The provider declined your request. Please select another provider.");
             setActiveRequestProvider(null);
         });
 
@@ -367,7 +369,7 @@ const NearbyProviders = () => {
             });
 
             if (response.ok) {
-                alert("No response from provider. Please select another provider or try again.");
+                warn("No response from provider. Please select another provider or try again.");
                 setIsWaitingForProvider(false);
                 setRequestCountdown(0);
                 setActiveRequestProvider(null);
@@ -400,12 +402,12 @@ const NearbyProviders = () => {
     // Handle requesting a specific provider
     const handleRequest = useCallback(async (provider) => {
         if (!requestId) {
-            alert("No active request found. Please go back and request again.");
+            error("No active request found. Please go back and request again.");
             return;
         }
 
         if (isWaitingForProvider) {
-            alert("Please wait for the current provider to respond or for the timeout.");
+            info("Please wait for the current provider to respond or for the timeout.");
             return;
         }
         
@@ -430,11 +432,11 @@ const NearbyProviders = () => {
                 setActiveRequestProvider(provider);
                 // alert(`Request sent to ${provider.name}!\nProvider has been notified.`);
             } else {
-                alert(`Error: ${data.error || 'Failed to send request'}`);
+                error(`Error: ${data.error || 'Failed to send request'}`);
             }
-        } catch (error) {
-            console.error('Network error during provider assignment:', error);
-            alert('Network error. Please try again.');
+        } catch (err) {
+            console.error('Network error during provider assignment:', err);
+            error('Network error. Please try again.');
         }
     }, [requestId, isWaitingForProvider]);
 

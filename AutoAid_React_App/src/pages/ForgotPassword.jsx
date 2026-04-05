@@ -4,11 +4,13 @@ import { FaCar } from 'react-icons/fa';
 import { MdMail } from 'react-icons/md';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
+import { useNotification } from '../context/NotificationContext';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const navigate = useNavigate();
+    const { success } = useNotification();
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -32,7 +34,7 @@ const ForgotPassword = () => {
             };
 
             await sendPasswordResetEmail(auth, email, actionCodeSettings);
-            alert('Password reset email sent! Please check your inbox.');
+            success('Password reset email sent! Please check your inbox.');
             navigate('/login');
         } catch (error) {
             console.error('Error sending password reset email:', error);

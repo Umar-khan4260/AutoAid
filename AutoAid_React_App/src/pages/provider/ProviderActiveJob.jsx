@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaPhoneAlt, FaCommentAlt, FaMapMarkerAlt, FaCheckCircle, FaLocationArrow, FaArrowLeft, FaTimes, FaPaperPlane, FaCheckDouble } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { io } from 'socket.io-client';
 
 const defaultCenter = { lat: 31.5204, lng: 74.3587 }; // Lahore default
@@ -10,6 +11,7 @@ const ProviderActiveJob = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, fetchUserProfile } = useAuth();
+  const { success, error } = useNotification();
   
   const [job, setJob] = useState(location.state?.job || null);
   const [loading, setLoading] = useState(!job);
@@ -298,15 +300,15 @@ const ProviderActiveJob = () => {
                 if (currentUser) {
                     await fetchUserProfile(currentUser);
                 }
-                alert('Job marked as completed successfully!');
+                success('Job marked as completed successfully!');
                 setJob(null); // Empties the active job page
             }
         } else {
-            alert(`Failed to update status: ${data.error}`);
+            error(`Failed to update status: ${data.error}`);
         }
-      } catch (error) {
-          console.error("Error updating status:", error);
-          alert('Network error while updating status.');
+      } catch (err) {
+          console.error("Error updating status:", err);
+          error('Network error while updating status.');
       }
   };
 
@@ -372,13 +374,10 @@ const ProviderActiveJob = () => {
             </div>
             
             <div className="flex gap-3">
-              <a href={`tel:${displayJob.phone}`} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors font-medium">
-                <FaPhoneAlt /> Call
-              </a>
               <button 
                 onClick={() => setIsChatOpen(!isChatOpen)}
                 disabled={jobStatus === 'Completed'}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-white transition-colors font-medium ${jobStatus === 'Completed' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg text-white transition-colors font-medium ${jobStatus === 'Completed' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
                 <FaCommentAlt /> Chat 
                 {messages.filter(m => !m.seen && m.senderId !== currentUser.uid).length > 0 && (
@@ -423,14 +422,6 @@ const ProviderActiveJob = () => {
             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-4">Update Status</h3>
             {jobStatus !== 'Completed' ? (
               <div className="space-y-3">
-                {jobStatus === 'Accepted' && (
-                  <button 
-                    onClick={() => handleStatusUpdate('In Progress')}
-                    className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg transition-all"
-                  >
-                    Mark as In Progress
-                  </button>
-                )}
                 <button 
                   onClick={() => handleStatusUpdate('Completed')}
                   className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow-lg shadow-green-600/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
@@ -452,20 +443,6 @@ const ProviderActiveJob = () => {
           <div className="bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex-1 min-h-[400px] relative overflow-hidden group transition-colors duration-300">
             
             <div ref={mapRef} className="w-full h-full rounded-xl"></div>
-            
-            {/* Overlay Controls */}
-            {providerLocation && (
-                <div className="absolute bottom-4 right-4 flex gap-2">
-                  <button 
-                    onClick={() => {
-                        window.open(`https://www.google.com/maps/dir/?api=1&origin=${providerLocation.lat},${providerLocation.lng}&destination=${job.userLocation.lat},${job.userLocation.lng}`, '_blank');
-                    }}
-                    className="bg-primary p-3 rounded-lg text-white shadow-lg flex items-center gap-2 hover:bg-primary-dark transition-colors z-10"
-                  >
-                    <FaLocationArrow /> Navigate Externally
-                  </button>
-                </div>
-            )}
           </div>
 
           {/* Timeline */}
