@@ -588,6 +588,15 @@ const HireDriver = () => {
             }
             if (action === 'accept') {
                 alert(`✅ Counter offer accepted! Final rate: PKR ${counterOffer.counterRate}/hr`);
+                // Set active job locally so chat opens up
+                setActiveJob({
+                    _id: counterOffer.requestId,
+                    providerName: counterOffer.providerName,
+                    status: 'Accepted'
+                });
+                if (socketRef.current) {
+                    socketRef.current.emit('join_job_room', counterOffer.requestId);
+                }
             } else {
                 alert('❌ Counter offer rejected. The request has been cancelled.');
             }
