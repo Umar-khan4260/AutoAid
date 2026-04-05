@@ -6,10 +6,12 @@ import { MdMail, MdLock } from 'react-icons/md';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const Login = () => {
     const navigate = useNavigate();
     const { fetchUserProfile } = useAuth();
+    const { error } = useNotification();
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
     const [password, setPassword] = useState('');
@@ -79,18 +81,17 @@ const Login = () => {
                 } 
             } else {
                 // Backend Error (e.g., pending approval)
-                alert(data.error);
+                error(data.error);
                 // Optionally sign out from Firebase if backend rejects
                 // await auth.signOut();
             }
-
-        } catch (error) {
-            console.error('Login Error:', error);
+        } catch (err) {
+            console.error('Login Error:', err);
             // Handle Firebase Errors
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                alert('Invalid email or password.');
+            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                error('Invalid email or password.');
             } else {
-                alert('Login failed: ' + error.message);
+                error('Login failed: ' + err.message);
             }
         }
     };

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminTable from '../../components/admin/AdminTable';
 import StatusBadge from '../../components/admin/StatusBadge';
+import { useNotification } from '../../context/NotificationContext';
 
 const ProviderApprovals = () => {
   const [providers, setProviders] = useState([]);
+  const { success, error } = useNotification();
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState(null); // For modal
 
@@ -41,16 +43,16 @@ const ProviderApprovals = () => {
         const data = await response.json();
         if (data.success) {
             setProviders(providers.filter(p => p._id !== id));
-            alert(status === 'active' ? 'Provider Approved' : 'Provider Rejected');
+            success(status === 'active' ? 'Provider Approved' : 'Provider Rejected');
             if (selectedProvider && selectedProvider._id === id) {
                 setSelectedProvider(null);
             }
         } else {
-            alert(data.error);
+            error(data.error);
         }
-    } catch (error) {
-        console.error("Failed to update status", error);
-        alert("Failed to update status");
+    } catch (err) {
+        console.error("Failed to update status", err);
+        error("Failed to update status");
     }
   };
 

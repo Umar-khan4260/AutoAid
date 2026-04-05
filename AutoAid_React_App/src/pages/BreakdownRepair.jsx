@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { FaCar, FaTools, FaPhone, FaExclamationTriangle, FaIdCard, FaChevronDown } from 'react-icons/fa';
 
 // Custom Select Component
@@ -87,6 +88,7 @@ const CustomSelect = ({ label, icon: Icon, options, value, onChange, name, place
 const BreakdownRepair = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { success, error, info, warn } = useNotification();
     const [formData, setFormData] = useState({
         issueType: '',
         carCompany: '',
@@ -166,7 +168,7 @@ const BreakdownRepair = () => {
         e.preventDefault();
         
         if (!currentUser) {
-            alert('Please login to request a service.');
+            info('Please login to request a service.');
             return;
         }
 
@@ -178,7 +180,7 @@ const BreakdownRepair = () => {
 
             // Get user location first
             if (!navigator.geolocation) {
-                alert("Geolocation is not supported by your browser.");
+                error("Geolocation is not supported by your browser.");
                 return;
             }
 
@@ -216,15 +218,15 @@ const BreakdownRepair = () => {
                         });
                     } else {
                         const errorData = await response.json();
-                        alert(`Error: ${errorData.error || 'Failed to submit request'}`);
+                        error(`Error: ${errorData.error || 'Failed to submit request'}`);
                     }
-                } catch (error) {
-                    console.error('Network error:', error);
-                    alert('Network error. Please try again.');
+                } catch (err) {
+                    console.error('Network error:', err);
+                    error('Network error. Please try again.');
                 }
-            }, (error) => {
-                console.error("Error getting location:", error);
-                alert("Unable to get your location. Please allow location access and try again.");
+            }, (err) => {
+                console.error("Error getting location:", err);
+                error("Unable to get your location. Please allow location access and try again.");
             });
         }
     };

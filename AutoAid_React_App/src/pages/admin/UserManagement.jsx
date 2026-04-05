@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminTable from '../../components/admin/AdminTable';
 import StatusBadge from '../../components/admin/StatusBadge';
+import { useNotification } from '../../context/NotificationContext';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
+  const { success, error } = useNotification();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -43,12 +45,13 @@ const UserManagement = () => {
         const data = await response.json();
         if (data.success) {
             setUsers(users.map(u => u._id === id ? { ...u, status: newStatus } : u));
+            success(`User ${newStatus === 'active' ? 'activated' : 'suspended'} successfully`);
         } else {
-            alert(data.error);
+            error(data.error);
         }
-    } catch (error) {
-        console.error("Failed to update status", error);
-        alert("Status update failed");
+    } catch (err) {
+        console.error("Failed to update status", err);
+        error("Status update failed");
     }
   };
 

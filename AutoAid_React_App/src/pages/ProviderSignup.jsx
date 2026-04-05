@@ -6,9 +6,11 @@ import { MdPerson, MdMail, MdCall, MdCalendarToday, MdLock } from 'react-icons/m
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import { useNotification } from '../context/NotificationContext';
 
 const ProviderSignup = () => {
     const navigate = useNavigate();
+    const { error } = useNotification();
     const [serviceType, setServiceType] = useState('');
     const [files, setFiles] = useState({});
     const [formData, setFormData] = useState({
@@ -75,13 +77,13 @@ const ProviderSignup = () => {
         e.preventDefault();
         
         if (formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match");
+            error("Passwords do not match");
             return;
         }
 
         const age = calculateAge(formData.dob);
         if (age < 18) {
-            alert("You must be at least 18 years old to register as a provider.");
+            error("You must be at least 18 years old to register as a provider.");
             return;
         }
 
@@ -119,12 +121,12 @@ const ProviderSignup = () => {
             if (response.ok) {
                 navigate('/verify-account', { state: { email: formData.email } });
             } else {
-                alert(`Error: ${result.error}`);
+                error(`Error: ${result.error}`);
             }
 
-        } catch (error) {
-            console.error("Signup Error:", error);
-            alert(`Error: ${error.message}`);
+        } catch (err) {
+            console.error("Signup Error:", err);
+            error(`Error: ${err.message}`);
         }
     };
 

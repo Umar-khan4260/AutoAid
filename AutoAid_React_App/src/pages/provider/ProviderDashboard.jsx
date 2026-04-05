@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { FaWallet, FaCheckCircle, FaStar, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 
 const ProviderDashboard = () => {
     const { currentUser, fetchUserProfile } = useAuth();
+    const { error, info } = useNotification();
     const [isAvailable, setIsAvailable] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -38,13 +40,13 @@ const ProviderDashboard = () => {
                     fetchUserProfile(currentUser); 
                 }
             } else {
-                alert('Failed to update status: ' + data.error);
+                error('Failed to update status: ' + data.error);
                 // Revert state if failed
                 setIsAvailable(!status); 
             }
-        } catch (error) {
-            console.error('Error updating status:', error);
-            alert('An error occurred while updating status');
+        } catch (err) {
+            console.error('Error updating status:', err);
+            error('An error occurred while updating status');
             setIsAvailable(!status);
         } finally {
             setIsLoading(false);
@@ -62,13 +64,13 @@ const ProviderDashboard = () => {
                         const { latitude, longitude } = position.coords;
                         updateStatus(true, { lat: latitude, lng: longitude });
                     },
-                    (error) => {
-                        console.error("Error getting location:", error);
-                        alert("We need your location to set you Online. Please enable location access.");
+                    (err) => {
+                        console.error("Error getting location:", err);
+                        info("We need your location to set you Online. Please enable location access.");
                     }
                 );
             } else {
-                alert("Geolocation is not supported by this browser.");
+                error("Geolocation is not supported by this browser.");
             }
         } else {
             // Turning OFF

@@ -5,9 +5,11 @@ import { MdMail, MdLock, MdPerson, MdCall } from 'react-icons/md';
 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
+import { useNotification } from '../context/NotificationContext';
 
 const Signup = () => {
     const navigate = useNavigate();
+    const { error } = useNotification();
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -117,8 +119,8 @@ const Signup = () => {
                 errorMessage = 'Password is too weak.';
             }
             setErrors({ ...errors, api: errorMessage });
-            // Temporary: Alert the actual error for debugging
-            alert(`Debug Error: ${error.message}`);
+            // Temporary: Notify the actual error for debugging
+            error(`Debug Error: ${error.message}`);
         }
     };
 

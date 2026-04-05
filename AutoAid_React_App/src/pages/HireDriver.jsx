@@ -8,6 +8,7 @@ import {
 import { MdMyLocation } from 'react-icons/md';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 // React-Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
@@ -118,6 +119,7 @@ const HireDriver = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const { success, error, info, warn } = useNotification();
 
     const serviceType = location.state?.serviceType || 'Service';
     const userLocation = location.state?.userLocation;   // { lat, lng }
@@ -293,7 +295,7 @@ const HireDriver = () => {
             setIsWaitingForProvider(false);
             setRequestCountdown(0);
             if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-            alert(`Great news! ${data.providerName} has accepted your request.`);
+            success(`Great news! ${data.providerName} has accepted your request.`);
             
             // Set active job locally so chat opens up
             setActiveJob({
@@ -403,12 +405,12 @@ const HireDriver = () => {
                     targetLat = parseFloat(results[0].lat);
                     targetLon = parseFloat(results[0].lon);
                 } else {
-                    alert('Pickup location not found. Try a more specific place.');
+                    error('Pickup location not found. Try a more specific place.');
                     setSearchLoading(false);
                     return;
                 }
             } else {
-                alert('Please enter a pickup location.');
+                warn('Please enter a pickup location.');
                 setSearchLoading(false);
                 return;
             }
@@ -418,7 +420,7 @@ const HireDriver = () => {
             await fetchRecommendations(targetLat, targetLon);
         } catch (err) {
             console.error('[Nominatim] Search error:', err);
-            alert('Error fetching location.');
+            error('Error fetching location.');
         } finally {
             setSearchLoading(false);
         }
@@ -453,7 +455,7 @@ const HireDriver = () => {
             });
 
             if (response.ok) {
-                alert("No response from provider. Please select another provider or try again.");
+                warn("No response from provider. Please select another provider or try again.");
                 setIsWaitingForProvider(false);
                 setRequestCountdown(0);
                 setActiveRequestProvider(null);
@@ -486,12 +488,12 @@ const HireDriver = () => {
     // ── Hire Driver: assign provider + optional userCounterRate ──────────────
     const handleHire = useCallback(async (provider, userCounterRate = null) => {
         if (!requestId) {
-            alert('No active request found. Please go back and submit a service request first.');
+            error('No active request found. Please go back and submit a service request first.');
             return;
         }
 
         if (isWaitingForProvider) {
-            alert("Please wait for the current driver to respond or for the timeout.");
+            info("Please wait for the current driver to respond or for the timeout.");
             return;
         }
 
@@ -531,13 +533,13 @@ const HireDriver = () => {
             });
             const assignData = await assignRes.json();
             if (!assignRes.ok) {
-                alert(`Error: ${assignData.error || 'Failed to send request'}`);
+                error(`Error: ${assignData.error || 'Failed to send request'}`);
                 return;
             }
             const sentMsg = userCounterRate
                 ? `Counter offer sent to ${provider.name}!\nYour offered rate: PKR ${userCounterRate}/hr`
                 : `Request sent to ${provider.name}!\nProvider has been notified.`;
-            alert(sentMsg);
+            success(sentMsg);
             // Reset counter input for this card
             setUserCounterState(prev => ({ ...prev, [provider.driver_id]: { open: false, value: '' } }));
             setIsWaitingForProvider(true);
@@ -546,7 +548,7 @@ const HireDriver = () => {
 
         } catch (err) {
             console.error('Hire process error:', err);
-            alert('Network error. Please try again.');
+            error('Network error. Please try again.');
             return;
         }
 
@@ -583,11 +585,11 @@ const HireDriver = () => {
             );
             const data = await res.json();
             if (!res.ok) {
-                alert(`Error: ${data.error || 'Failed to respond'}`);
+                error(`Error: ${data.error || 'Failed to respond'}`);
                 return;
             }
             if (action === 'accept') {
-                alert(`✅ Counter offer accepted! Final rate: PKR ${counterOffer.counterRate}/hr`);
+                success(`✅ Counter offer accepted! Final rate: PKR ${counterOffer.counterRate}/hr`);
                 // Set active job locally so chat opens up
                 setActiveJob({
                     _id: counterOffer.requestId,
@@ -598,12 +600,12 @@ const HireDriver = () => {
                     socketRef.current.emit('join_job_room', counterOffer.requestId);
                 }
             } else {
-                alert('❌ Counter offer rejected. The request has been cancelled.');
+                warn('❌ Counter offer rejected. The request has been cancelled.');
             }
             setCounterOffer(null);
         } catch (err) {
             console.error('Counter response error:', err);
-            alert('Network error. Please try again.');
+            error('Network error. Please try again.');
         } finally {
             setCounterResponding(false);
         }
@@ -640,7 +642,7 @@ const HireDriver = () => {
             setRatingDone(true);
         } catch (err) {
             console.error('Rating submit error:', err);
-            alert('Submission failed. Please try again.');
+            error('Submission failed. Please try again.');
         } finally {
             setRatingSubmitting(false);
         }
@@ -1086,9 +1088,9 @@ const HireDriver = () => {
                                                             <button
                                                                 onClick={() => {
                                                                     const rate = parseInt(ucs.value, 10);
-                                                                    if (!rate || rate <= 0) { alert('Enter a valid offer price.'); return; }
+                                                                    if (!rate || rate <= 0) { warn('Enter a valid offer price.'); return; }
                                                                     if (provider.charges_per_hour && rate >= provider.charges_per_hour) {
-                                                                        alert(`Your offer must be lower than PKR ${provider.charges_per_hour}/hr.`); return;
+                                                                        warn(`Your offer must be lower than PKR ${provider.charges_per_hour}/hr.`); return;
                                                                     }
                                                                     handleHire(provider, rate);
                                                                 }}

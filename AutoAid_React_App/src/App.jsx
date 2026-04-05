@@ -5,6 +5,8 @@ import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationContainer from './components/NotificationContainer';
 
 // Pages
 import Home from './pages/Home';
@@ -55,10 +57,12 @@ import ProviderHistory from './pages/provider/ProviderHistory';
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white min-h-screen transition-colors duration-300">
-            <Routes>
+      <NotificationProvider>
+        <AuthProvider>
+          <Router>
+            <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white min-h-screen transition-colors duration-300">
+              <NotificationContainer />
+              <Routes>
               {/* Public Routes without Layout */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -119,7 +123,8 @@ function App() {
           </div>
         </Router>
       </AuthProvider>
-    </ThemeProvider>
+    </NotificationProvider>
+  </ThemeProvider>
   );
 }
 

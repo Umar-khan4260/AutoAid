@@ -5,9 +5,11 @@ import {
     FaToolbox, FaIdCard, FaEdit, FaSave, FaStar, 
     FaBriefcase, FaCar, FaTimes, FaCamera 
 } from 'react-icons/fa';
+import { useNotification } from '../../context/NotificationContext';
 
 const ProviderProfile = () => {
     const { currentUser, fetchUserProfile } = useAuth();
+    const { success, error } = useNotification();
     const [isEditing, setIsEditing] = useState(false);
     const [updating, setUpdating] = useState(false);
     
@@ -89,13 +91,13 @@ const ProviderProfile = () => {
                 setIsEditing(false);
                 // The context update will trigger re-renders
                 if (currentUser) await fetchUserProfile(currentUser); 
-                alert('Profile updated successfully!');
+                success('Profile updated successfully!');
             } else {
-                alert('Failed to update profile: ' + result.error);
+                error('Failed to update profile: ' + result.error);
             }
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            alert('An error occurred while updating profile');
+        } catch (err) {
+            console.error('Error updating profile:', err);
+            error('An error occurred while updating profile');
         } finally {
             setUpdating(false);
         }
