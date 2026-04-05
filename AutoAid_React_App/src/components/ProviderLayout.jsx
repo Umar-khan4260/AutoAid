@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
   FaTachometerAlt, 
   FaClipboardList, 
@@ -17,6 +18,18 @@ const ProviderLayout = () => {
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+  
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error("Failed to log out", error);
+    }
   };
 
   const navItems = [
@@ -73,7 +86,10 @@ const ProviderLayout = () => {
           </nav>
 
           <div className="p-4 border-t border-gray-700">
-            <button className="flex items-center space-x-3 px-4 py-3 w-full text-left text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors duration-200">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center space-x-3 px-4 py-3 w-full text-left text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors duration-200"
+            >
               <FaSignOutAlt className="text-xl" />
               <span className="font-medium">Logout</span>
             </button>
